@@ -1,0 +1,99 @@
+/*
+ * Manifold.hpp
+ *
+ *  Created on: 28.07.2012
+ *      Author: hannes
+ */
+
+#ifndef MANIFOLD_HPP_
+#define MANIFOLD_HPP_
+
+#include "bsplines/DynamicOrTemplateInt.hpp"
+namespace manifolds {
+
+	template <typename TConfiguration, typename TConfigurationDerived = TConfiguration>
+	class DiffManifold : public DiffManifold<typename TConfiguration::ParentConf, TConfigurationDerived>{
+		typedef DiffManifold<typename TConfiguration::ParentConf, TConfigurationDerived> parent_t;
+	protected:
+		DiffManifold(const TConfigurationDerived & conf) : parent_t(conf) {}
+	};
+
+	class DiffManifoldConfigurationBase {
+	};
+
+	template <int IDimension, int IPointSize, typename TScalar>
+	struct DiffManifoldConfiguration : public DiffManifoldConfigurationBase {
+		typedef DiffManifoldConfigurationBase ParentConf;
+
+		typedef eigenTools::DynamicOrTemplateInt<IDimension> Dimension;
+		typedef eigenTools::DynamicOrTemplateInt<IPointSize> PointSize;
+
+		Dimension getDimension() const;
+		PointSize getPointSize() const;
+
+		typedef DiffManifold<DiffManifoldConfiguration, DiffManifoldConfiguration> Manifold;
+		typedef TScalar scalar_t;
+
+	};
+
+	namespace internal {
+		template <typename TConfiguration>
+		struct DiffManifoldConfigurationData : public TConfiguration {
+		};
+
+		template <typename TConfiguration>
+		struct DiffManifoldConfigurationTypeTrait {
+			enum { Dimension = TConfiguration::Dimension::VALUE, PointSize = TConfiguration::PointSize::VALUE};
+
+			typedef TConfiguration configuration_t;
+			typedef typename TConfiguration::scalar_t scalar_t;
+			typedef Eigen::Matrix<scalar_t, PointSize, 1> point_t;
+			typedef Eigen::Matrix<scalar_t, Dimension, 1> tangent_vector_t;
+			typedef Eigen::Matrix<scalar_t, PointSize, Dimension> dmatrix_t;
+		};
+
+		template <typename TManifoldConf, typename TConfigurationDerived = TManifoldConf>
+		struct DiffManifoldPointUpdateTraits : public DiffManifoldPointUpdateTraits<typename TManifoldConf::ParentConf, TConfigurationDerived> {
+		};
+
+		template <typename TConfigurationDerived>
+		struct DiffManifoldPointUpdateTraits<DiffManifoldConfigurationBase, TConfigurationDerived> {
+			typedef manifolds::internal::DiffManifoldConfigurationTypeTrait<TConfigurationDerived> Types;
+			typedef typename Types::point_t point_t;
+			typedef typename Types::tangent_vector_t tangent_vector_t;
+			static void update(point_t & point, const tangent_vector_t & vec);
+		};
+	}
+
+	template <typename TConfigurationDerived>
+	class DiffManifold<DiffManifoldConfigurationBase, TConfigurationDerived> {
+	private:
+		const TConfigurationDerived _configuration;
+	public:
+		typedef internal::DiffManifoldConfigurationTypeTrait<TConfigurationDerived> Types;
+		enum { Dimension = Types::Dimension, PointSize = Types::PointSize};
+		typedef typename Types::configuration_t configuration_t;
+		typedef typename Types::scalar_t scalar_t;
+		typedef typename Types::point_t point_t;
+		typedef typename Types::tangent_vector_t tangent_vector_t;
+		typedef typename Types::dmatrix_t dmatrix_t;
+
+		inline DiffManifold(const TConfigurationDerived & configuration) : _configuration(configuration) {}
+
+		inline configuration_t getConfiguration() const { return _configuration; }
+		inline typename configuration_t::Dimension getDimension() const { return _configuration.getDimension(); };
+		inline typename configuration_t::PointSize getPointSize() const  { return _configuration.getPointSize(); };
+
+		point_t getDefaultPoint() const;
+
+		static inline void scaleVectorInPlace(tangent_vector_t & vec, const scalar_t scalar){ vec *= scalar; }
+		static inline void scaleVectorInto(const tangent_vector_t & vec, const scalar_t scalar, tangent_vector_t & result){ result = vec * scalar;}
+		static inline tangent_vector_t scaleVector(const tangent_vector_t & vec, const scalar_t scalar){ return vec * scalar; }
+
+		bool isInManifold(const point_t & pt) const { return true; }
+		void projectIntoManifold(point_t & pt) const { }
+		void randomizePoint(point_t & pt) const { pt = point_t::random(getPointSize()); }
+	};
+}
+
+#endif /* MANIFOLD_HPP_ */

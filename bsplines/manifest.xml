@@ -1,0 +1,30 @@
+<package>
+  <description brief="bsplines">
+
+     bsplines
+
+  </description>
+  <author>Paul Furgale</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/splines</url>
+
+  <rosdep name="eigen"/>
+  <depend package="numpy_eigen"/>
+  <depend package="sm_common"/>
+  <depend package="sm_timing"/>
+  <depend package="sm_kinematics"/>
+  <depend package="opencv2"/>
+<depend package="sparse_block_matrix" />
+  <!-- Python test facility -->
+  <depend package="rostest"/>
+  
+  <export>
+    <python path="${prefix}/python"/>
+    <cpp cflags="`rosboost-cfg --cflags` -I${prefix}/include"
+         lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lbsplines"/>
+  </export>
+
+</package>
+
+

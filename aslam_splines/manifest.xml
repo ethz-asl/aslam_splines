@@ -1,0 +1,25 @@
+<package>
+  <description brief="aslam_splines">
+
+     aslam_splines
+
+  </description>
+  <author>Paul Furgale</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/aslam_splines</url>
+
+  <depend package="aslam_backend_expressions"/>
+  <depend package="bsplines"/>
+  <depend package="numpy_eigen"/>
+  
+  <export>
+    <python path="${prefix}/python"/>
+    <cpp cflags="-I${prefix}/include"
+	     lflags="-L${prefix}/lib -laslam_splines" />
+  </export>
+
+
+</package>
+
+

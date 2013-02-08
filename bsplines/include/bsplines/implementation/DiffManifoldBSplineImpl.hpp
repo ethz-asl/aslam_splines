@@ -1,0 +1,833 @@
+/*
+ * DiffManifoldBSpline.hpp
+ *
+ *  Created on: Apr 23, 2012
+ *      Author: Hannes Sommer
+ */
+
+#include "bsplines/NumericIntegrator.hpp"
+
+namespace bsplines {
+
+
+#define _TEMPLATE template <class TDiffManifoldConfiguration, int ISplineOrder, typename TTimePolicy, typename TConfigurationDerived>
+#define _CLASS DiffManifoldBSpline<DiffManifoldBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>, TConfigurationDerived>
+
+	_TEMPLATE
+	inline
+	const typename _CLASS::manifold_t & _CLASS::getManifold() const {
+		return _manifold;
+	}
+
+	_TEMPLATE
+	inline typename _CLASS::segment_map_t & _CLASS::getSegmentMap(){
+		return * _segments;
+	}
+
+	_TEMPLATE
+	inline const typename _CLASS::segment_map_t & _CLASS::getSegmentMap() const {
+		return * _segments;
+	}
+
+	//TODO optimize : enable returning reference
+	_TEMPLATE
+	inline const typename _CLASS::SegmentConstIterator _CLASS::getAbsoluteBegin() const {
+		return _segments->begin();
+	}
+
+	_TEMPLATE
+	inline const typename _CLASS::SegmentIterator _CLASS::getAbsoluteBegin() {
+		return _segments->begin();
+	}
+
+	_TEMPLATE
+	inline const typename _CLASS::SegmentConstIterator _CLASS::getAbsoluteEnd() const {
+		return _segments->end();
+	}
+
+	_TEMPLATE
+	inline const typename _CLASS::SegmentIterator _CLASS::getAbsoluteEnd() {
+		return _segments->end();
+	}
+
+
+	_TEMPLATE
+	inline size_t _CLASS::getAbsoluteNumberOfSegments() const {
+		return _segments->size();
+	}
+
+
+	_TEMPLATE
+	inline typename _CLASS::segment_data_t _CLASS::createSegmentData(const time_t & time, const point_t & p) const {
+		return segment_data_t(_configuration, time, p);
+	}
+
+	_TEMPLATE
+	inline void _CLASS::addKnot(const time_t & time){
+		_segments->insert(typename segment_map_t::value_type(time, createSegmentData(time, getManifold().getDefaultPoint())));
+	}
+
+	_TEMPLATE
+	void _CLASS::addControlVertex(const time_t & time, const point_t & point){
+		SM_ASSERT_TRUE(Exception, getManifold().isInManifold(point), "All control points must lay in the manifold but at least control point "<< point << " does not!");
+		_segments->insert(typename segment_map_t::value_type(time, createSegmentData(time, point)));
+	}
+
+
+	template<typename Iterator>
+	void moveIterator(Iterator & it, const Iterator & limit, int steps)
+	{
+		if(steps == 0)
+			return;
+		if(steps > 0){
+			for (int c = steps; c>0; c--){
+				if(it == limit)
+					break;
+				it++;
+			}
+		}
+		else{
+			for (int c = -steps; c>0; c--){
+				if(it == limit)
+					break;
+				it--;
+			}
+		}
+	}
+
+	_TEMPLATE
+	void _CLASS::init(){
+		SM_ASSERT_GE(Exception, getNumValidTimeSegments(), 1, "There must be at least one segment");
+
+		_firstRelevantSegment = _segments->begin();
+		moveIterator(_begin = _segments->begin(), SegmentIterator(_segments->end()), getSplineOrder() - 1);
+		moveIterator(_end = _segments->end(), SegmentIterator(_segments->begin()), - getSplineOrder());
+
+		initializeBasisMatrices();
+	}
+
+
+	_TEMPLATE
+	void _CLASS::initConstantUniformSpline(const time_t & t_min, const time_t & t_max, int numSegments, const point_t & constant)
+	{
+		SM_ASSERT_GT(Exception, t_max, t_min, "The max time is less than the min time");
+		SM_ASSERT_GE(Exception, numSegments, 1, "There must be at least one segment");
+		SM_ASSERT_GE(Exception, constant.size(), 1, "The constant vector must be of at least length 1");
+
+		int K = KnotArithmetics::getNumKnotsRequired(numSegments, getSplineOrder());
+		UniformTimeCalculator timeCalculator(getSplineOrder(), t_min, t_max, numSegments);
+		for(int i = 0; i < K; i++)
+			addControlVertex(timeCalculator.getTimeByKnotIndex(i), constant);
+
+		static_cast<typename TConfigurationDerived::BSpline *>(this)->init();
+	}
+
+	template<typename Iterator>
+	Iterator getMovedIterator(const Iterator & it, const Iterator & limit, int steps)
+	{
+		Iterator nIt(it);
+		moveIterator(nIt, limit, steps);
+		return nIt;
+	}
+
+	_TEMPLATE
+	inline typename _CLASS::duration_t _CLASS::computeDuration(typename _CLASS::time_t from, typename _CLASS::time_t till){
+		return TTimePolicy::computeDuration(from, till);
+	}
+
+
+	_TEMPLATE
+	inline double _CLASS::divideDurations(duration_t a, duration_t b){
+		return TTimePolicy::divideDurations(a, b);
+	}
+
+
+	_TEMPLATE
+	inline double _CLASS::getDurationAsDouble(duration_t d){
+		return divideDurations(d, TTimePolicy::getOne());
+	}
+
+	_TEMPLATE
+	int _CLASS::minimumKnotsRequired() const
+	{
+		return KnotArithmetics::getNumKnotsRequired(1, getSplineOrder());
+	}
+
+	_TEMPLATE
+	void _CLASS::initializeBasisMatrices()
+	{
+		const int splineOrder = getSplineOrder();
+
+		const SegmentMapIterator end = _segments->end();
+
+		SegmentMapIterator currentKnotIt = _firstRelevantSegment;
+		SegmentMapIterator currentBasisMatrixIt = _begin;
+
+		std::deque<time_t> relevantKnots; //TODO optimize : replace deque with a fixed size (splineOrder * 2 - 1) circular sequence on the stack
+
+		// try to collect the first ISplineOrder * 2 - 1 knots
+		for (int c = 0, n = splineOrder * 2 - 1; c < n; c++){
+			relevantKnots.push_back(currentKnotIt->first);
+			if(c == splineOrder - 1){
+				// start writing basisMatrices from here
+				SM_ASSERT_TRUE(Exception, currentBasisMatrixIt == currentKnotIt, "internal error");
+			}
+			if(currentKnotIt == end){
+				SM_THROW(Exception, "internal failure : there should be spline order -1 many control points behind the slice beginning");
+				return;
+			}
+			currentKnotIt++;
+		}
+
+
+		// collect further knots and build the basis matrices until end
+		for(; currentKnotIt != end && currentBasisMatrixIt != _end; currentKnotIt++)
+		{
+			relevantKnots.push_back(currentKnotIt->first);
+			currentBasisMatrixIt->second.getBasisMatrix() = M(getSplineOrder(), relevantKnots);
+//				std::cout << "RM[" << currentBasisMatrixIt->first << "]:\n" << currentBasisMatrixIt->second.getBasisMatrix() << std::endl;
+
+			currentBasisMatrixIt ++;
+
+			relevantKnots.erase(relevantKnots.begin());
+		}
+//			std::cout << "initialized " << std::endl;
+	}
+
+
+	_TEMPLATE
+	Eigen::MatrixXd _CLASS::M(int k, const std::deque<time_t> & knots)
+	{
+		int i = getSplineOrder() - 1;
+		SM_ASSERT_GE_DBG(Exception, k, 1, "The parameter k must be greater than or equal to 1");
+		// \todo: redo these checks.
+		SM_ASSERT_EQ_DBG(Exception, (int)knots.size(), getSplineOrder() * 2, "The parameter knots must have ISplineOrder many elements");
+		if(k == 1)
+		{
+			// The base-case for recursion.
+			Eigen::MatrixXd M(1,1);
+			M(0,0) = 1;
+			return M;
+		}
+		else
+		{
+			Eigen::MatrixXd M_km1 = M(k-1, knots);
+			// The recursive equation for M
+			// M_k = [ M_km1 ] A  + [  0^T  ] B
+			//       [  0^T  ]      [ M_km1 ]
+			//        -------        -------
+			//         =: M1          =: M2
+			//
+			//     = M1 A + M2 B
+			Eigen::MatrixXd M1 = Eigen::MatrixXd::Zero(M_km1.rows() + 1, M_km1.cols());
+			Eigen::MatrixXd M2 = Eigen::MatrixXd::Zero(M_km1.rows() + 1, M_km1.cols());
+
+			M1.topRightCorner(M_km1.rows(),M_km1.cols()) = M_km1;
+			M2.bottomRightCorner(M_km1.rows(),M_km1.cols()) = M_km1;
+
+			Eigen::MatrixXd A = Eigen::MatrixXd::Zero(k-1, k);
+			for(int idx = 0; idx < A.rows(); idx++)
+			{
+				int j = i - k + 2 + idx;
+				double d0 = d_0(k, i, j, knots);
+				A(idx, idx  ) = 1.0 - d0;
+				A(idx, idx+1) = d0;
+			}
+
+			Eigen::MatrixXd B = Eigen::MatrixXd::Zero(k-1, k);
+			for(int idx = 0; idx < B.rows(); idx++)
+			{
+				int j = i - k + 2 + idx;
+				double d1 = d_1(k, i, j, knots);
+				B(idx, idx  ) = -d1;
+				B(idx, idx+1) = d1;
+			}
+
+
+			Eigen::MatrixXd M_k;
+
+			return M_k = M1 * A + M2 * B;
+		}
+	}
+
+
+	_TEMPLATE
+	double _CLASS::d_0(int k, int i, int j, const std::deque<time_t> & knots)
+	{
+		SM_ASSERT_GE_LT_DBG(Exception,j+k-1,0,(int)knots.size(), "Index out of range with k=" << k << ", i=" << i << ", and j=" << j);
+		SM_ASSERT_GE_LT_DBG(Exception,j,0,(int)knots.size(), "Index out of range with k=" << k << ", i=" << i << ", and j=" << j);
+		SM_ASSERT_GE_LT_DBG(Exception,i,0,(int)knots.size(), "Index out of range with k=" << k << ", i=" << i << ", and j=" << j);
+		duration_t denom = computeDuration(knots[j], knots[j+k-1]);
+		if(denom <= TTimePolicy::getZero())
+			return 0.0;
+
+		duration_t numerator = computeDuration(knots[j], knots[i]);
+
+		return divideDurations(numerator, denom);
+	}
+
+
+	_TEMPLATE
+	double _CLASS::d_1(int k, int i, int j, const std::deque<time_t> & knots)
+	{
+		SM_ASSERT_GE_LT_DBG(Exception,j+k-1,0,(int)knots.size(), "Index out of range with k=" << k << ", i=" << i << ", and j=" << j);
+		SM_ASSERT_GE_LT_DBG(Exception,i+1,0,(int)knots.size(), "Index out of range with k=" << k << ", i=" << i << ", and j=" << j);
+		SM_ASSERT_GE_LT_DBG(Exception,i,0,(int)knots.size(), "Index out of range with k=" << k << ", i=" << i << ", and j=" << j);
+		duration_t denom = computeDuration(knots[j], knots[j+k-1]);
+		if(denom <= TTimePolicy::getZero())
+			return 0.0;
+
+		duration_t numerator = computeDuration(knots[i], knots[i+1]);
+
+		return divideDurations(numerator, denom);
+	}
+
+
+	_TEMPLATE
+	inline typename _CLASS::duration_t _CLASS::computeSegmentLength(SegmentMapConstIterator segmentIt) const {
+		if(segmentIt == _segments->end()){
+			//TODO discuss
+			return TTimePolicy::getZero();
+		}
+		else{
+			return computeDuration(segmentIt->first, getMovedIterator<SegmentMapConstIterator>(segmentIt, _segments->end(), 1)->first);
+		}
+	}
+
+	/**
+	 * dose the same as result = A.transpose() * b;
+	 * but about 20 % faster.
+	 *
+	 * @param A the matrix
+	 * @param b the vector
+	 * @param result = A.transpose() * b
+	 */
+	template<typename Matrix, typename Vector1, typename Vector2>
+	inline void fastMultiplyAtransposedTimesBInto(const Matrix & A, const Vector1 & b, Vector2 & result)
+	{
+		for(int j = result.rows() - 1; j >= 0; j--)
+		{
+			result(j) = b.dot(A.col(j));
+		}
+	}
+
+
+	_TEMPLATE
+	inline int _CLASS::getNumValidTimeSegments() const
+	{
+		return KnotArithmetics::getNumValidTimeSegments(getNumKnots(), getSplineOrder());
+	}
+
+
+	_TEMPLATE
+	inline int _CLASS::getNumControlVertices() const{
+		return KnotArithmetics::getNumControlVerticesRequired(getNumValidTimeSegments(), getSplineOrder());
+	}
+
+
+	_TEMPLATE
+	inline size_t _CLASS::getNumKnots() const
+	{
+		//TODO adapt to slices
+		return _segments->size();
+	}
+
+
+	_TEMPLATE
+	inline typename _CLASS::time_t _CLASS::getMinTime() const
+	{
+		return _begin.getKnot();
+	}
+
+	_TEMPLATE
+	inline typename _CLASS::time_t _CLASS::getMaxTime() const
+	{
+		return _end.getKnot();
+	}
+
+	_TEMPLATE
+	inline typename _CLASS::SegmentConstIterator _CLASS::firstRelevantSegment() const {
+		return _firstRelevantSegment;
+	}
+
+	_TEMPLATE
+	inline typename _CLASS::SegmentIterator _CLASS::firstRelevantSegment() {
+		return _firstRelevantSegment;
+	}
+
+	_TEMPLATE
+	inline typename _CLASS::SegmentConstIterator _CLASS::begin() const {
+		return _begin;
+	}
+
+	_TEMPLATE
+	inline typename _CLASS::SegmentIterator _CLASS::begin() {
+		return _begin;
+	}
+
+	_TEMPLATE
+	inline typename _CLASS::SegmentConstIterator _CLASS::end() const {
+		return _end;
+	}
+
+	_TEMPLATE
+	inline typename _CLASS::SegmentIterator _CLASS::end() {
+		return _end;
+	}
+
+	_TEMPLATE
+	void _CLASS::computeDiiInto(const SegmentConstIterator & segmentIt, SplineOrderSquareMatrix & D) const
+	{
+		SM_ASSERT_LE_DBG(Exception, segmentIt.getKnot(), getMaxTime(), "Out of range");
+		duration_t dt = computeSegmentLength(segmentIt);
+
+		D.setZero();
+		if(dt == TTimePolicy::getZero()){
+			return;
+		}
+		double recip_dt = 0.0;
+		if(dt > 0)
+			recip_dt = TTimePolicy::divideDurations(TTimePolicy::getOne(), dt);
+		for(int i = 0, n = getSplineOrder() - 1; i < n; i++)
+		{
+			D(i,i+1) = (i+1.0) * recip_dt;
+		}
+	}
+
+
+	_TEMPLATE
+	void _CLASS::computeViInto(SegmentConstIterator segmentIt, SplineOrderSquareMatrix & V) const
+	{
+		SM_ASSERT_GE_LT_DBG(Exception, segmentIt.getKnot(), getMinTime(), getMaxTime(), "Out of range");
+//			SM_ASSERT_GE_LT_DBG(Exception, segmentIndex, 0, getNumValidTimeSegments(), "Segment index out of bounds");
+
+		BOOST_AUTO_TPL(twiceSplineOrder, getSplineOrder() * eigenTools::DynamicOrTemplateInt<2>());
+		typedef BOOST_TYPEOF_TPL(twiceSplineOrder) TwiceSplineOrder;
+		Eigen::Matrix<double, TwiceSplineOrder::VALUE, 1> vals(twiceSplineOrder);
+		for (int i = 0, n = vals.rows(); i < n; ++i)
+		{
+			vals[i] = 1.0/(i + 1.0);
+		}
+
+		for(int r = 0, nr = V.rows(), nc = V.cols(); r < nr; r++)
+		{
+			for(int c = 0; c < nc; c++)
+			{
+				V(r,c) = vals[r + c];
+			}
+		}
+
+		V *= computeSegmentLength(segmentIt);
+	}
+
+
+	_TEMPLATE
+	inline typename _CLASS::SegmentIterator _CLASS::getSegmentIterator(const time_t & t)
+	{
+		SegmentMapIterator ub;
+		SM_ASSERT_GE_DBG(Exception, t, getMinTime(), "The time is out of range by " << (computeDuration(getMinTime(), t)));
+		SM_ASSERT_LE_DBG(Exception, t, getMaxTime(), "The time is out of range by " << (computeDuration(t, getMaxTime())));
+		if(t == getMaxTime())
+		{
+			//TODO discuss
+			// This is a special case to allow us to evaluate the spline at the boundary of the
+			// interval. This is not stritcly correct but it will be useful when we start doing
+			// estimation and defining knots at our measurement times.
+			ub = _end;
+		}
+		else
+		{
+			ub = _segments->upper_bound(t);
+		}
+		return --ub;
+	}
+
+
+	_TEMPLATE
+	inline typename _CLASS::SegmentConstIterator _CLASS::getSegmentIterator(const typename _CLASS::time_t & t) const
+	{
+		return const_cast<typename TConfigurationDerived::BSpline *>((const typename TConfigurationDerived::BSpline *)this)->getSegmentIterator(t);
+	}
+
+
+	_TEMPLATE
+	inline typename _CLASS::SegmentConstIterator _CLASS::getFirstRelevantSegmentByLast(const typename _CLASS::SegmentConstIterator & first) const
+	{
+		return getMovedIterator(first, getAbsoluteBegin(), -(getSplineOrder() - 1));
+	}
+
+
+	_TEMPLATE
+	inline typename _CLASS::SegmentIterator _CLASS::getFirstRelevantSegmentByLast(const typename _CLASS::SegmentIterator & first)
+	{
+		return getMovedIterator(first, getAbsoluteBegin(), -(getSplineOrder() - 1));
+	}
+
+
+	_TEMPLATE
+	inline void _CLASS::setLocalCoefficientVector(const time_t & t, const Eigen::VectorXd & coefficients, int pointSize){
+		SegmentIterator it = getSegmentIterator(t);
+		const int D = pointSize;
+		int index = (getSplineOrder()-1) * D;
+		SM_ASSERT_EQ(Exception, coefficients.rows(), index + D, "wrong number of coefficients")
+
+		for(SegmentMapIterator end = _segments->begin(); index >= 0; index -= D){
+			it->getControlVertex() = coefficients.segment(index, D);
+			if(it == end) break;
+			it--;
+		}
+	}
+
+
+	_TEMPLATE
+	inline void _CLASS::getLocalCoefficientVector(const time_t & t, Eigen::VectorXd & coefficients, int pointSize){
+		SegmentIterator it = getSegmentIterator(t);
+		const int D = pointSize;
+		coefficients.resize(D * getSplineOrder());
+		int index = (getSplineOrder()-1) * D;
+		SM_ASSERT_EQ(Exception, coefficients.rows(), index + D, "wrong number of coefficients")
+
+		for(SegmentMapIterator end = _segments->begin(); index >= 0; index -= D){
+			coefficients.segment(index, D) = it->getControlVertex();
+			if(it == end) break;
+			it--;
+		}
+	}
+
+	template <typename SplineT>
+	struct EvalFunctor{
+		inline typename SplineT::point_t eval(const SplineT & spline, typename SplineT::time_t t) const {
+			return spline.template getEvaluatorAt<0>(t).eval();
+		}
+		inline typename SplineT::point_t  getZeroValue(const SplineT & spline) const {
+			return SplineT::point_t::Zero(spline.getPointSize());
+		}
+	};
+
+	_TEMPLATE
+	inline typename _CLASS::point_t _CLASS ::evalIntegralNumerically(const time_t & t1, const time_t & t2, int numberOfPoints) const {
+		return getDerived().template evalFunctorIntegralNumerically<point_t>(t1, t2, EvalFunctor<spline_t>(), numberOfPoints);
+	}
+
+	template <typename SplineT, typename TFunctor, typename TValue>
+	struct IntegrandFunctor {
+		const SplineT & _spline;
+		const TFunctor & _f;
+		IntegrandFunctor(const SplineT & spline, const TFunctor & f): _spline(spline), _f(f){}
+
+		inline TValue operator() (typename SplineT::time_t t) const {
+			return _f.eval(_spline, t);
+		}
+	};
+
+	_TEMPLATE
+	template <typename TValue, typename TFunctor>
+	inline TValue _CLASS ::evalFunctorIntegralNumerically(const time_t & t1, const time_t & t2, const TFunctor & f, int numberOfPoints) const {
+		if(t1 > t2) return -getDerived().template evalFunctorIntegralNumerically<TValue, TFunctor>(t2, t1, f, numberOfPoints);
+		typedef IntegrandFunctor<spline_t, TFunctor, TValue> IFunc;
+		return numeric_integrator::template integrateFunctor<numeric_integrator::SIMPSON, TValue, time_t, const IFunc>(t1, t2, IFunc(this->getDerived(), f), numberOfPoints, f.getZeroValue(this->getDerived()));
+	}
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	_CLASS::Evaluator<IMaximalDerivativeOrder >::Evaluator(const spline_t & spline, const time_t & t) :
+		_tmp(spline.getSplineOrder()),
+		_spline(spline),
+		_t(t),
+		_ti(spline.getSegmentIterator(t)),
+		_firstRelevantControlVertexIt(spline.getFirstRelevantSegmentByLast(_ti)),
+		_end(getMovedIterator(_ti, spline.getAbsoluteEnd(), 1)),
+		_segmentLength(spline.computeSegmentLength(_ti)),
+		_positionInSegment(computeDuration(_ti.getKnot(), t)),
+		_relativePositionInSegment(((duration_t) (_segmentLength) == (duration_t) (TTimePolicy::getZero())) ? 0 : divideDurations(_positionInSegment, _segmentLength))
+	{
+		BOOST_AUTO(splineOrder, _spline.getSplineOrder());
+		//TODO optimize : set cache while calculating the u
+		for(int derivativeOrder = 0; derivativeOrder < NumberOfPreparedDerivatives; derivativeOrder++){
+			SplineOrderVector & lBi = _localBi[derivativeOrder];
+			if(splineOrder.isDynamic())
+				lBi.resize(splineOrder);
+			computeLocalBiIntoT<NeedsCumulativeBasisMatrices>(lBi, derivativeOrder);
+		}
+	}
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline typename _CLASS::SegmentConstIterator
+	_CLASS::Evaluator<IMaximalDerivativeOrder>::getFirstRelevantSegmentIterator() const {
+		return _firstRelevantControlVertexIt;
+	}
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline typename _CLASS::SegmentConstIterator _CLASS::Evaluator<IMaximalDerivativeOrder>::getLastRelevantSegmentIterator() const {
+		return _ti;
+	}
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline typename _CLASS::SegmentConstIterator _CLASS::Evaluator<IMaximalDerivativeOrder>::end() const {
+		return _end;
+	}
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline void _CLASS::Evaluator<IMaximalDerivativeOrder>::computeLocalBiInto(SplineOrderVector & ret, int derivativeOrder) const
+	{
+		SplineOrderVector u(_spline.getSplineOrder());
+		computeUInto(derivativeOrder, u);
+		fastMultiplyAtransposedTimesBInto(_ti->getBasisMatrix(), u, ret);
+	}
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline void _CLASS::Evaluator<IMaximalDerivativeOrder>::computeLocalCumulativeBiInto(SplineOrderVector & ret, int derivativeOrder) const
+	{
+		computeLocalBiInto(ret, derivativeOrder);
+		computeLocalCumulativeBiInto(ret, ret, derivativeOrder, true);
+	}
+
+	//TODO implement cumulative basis matrix
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline void _CLASS::Evaluator<IMaximalDerivativeOrder>::computeLocalCumulativeBiInto(const SplineOrderVector & localBi, SplineOrderVector & ret, int derivativeOrder, bool argumentsAreTheSame) const
+	{
+		//TODO assert derivability at the knots of given derivative order
+		ret[0] = derivativeOrder == 0 ? 1.0 : 0.0; // the sum of splineOrder many successive spline basis functions is always 1
+		int maxIndex = _spline.getSplineOrder() - 1;
+		for(int i = 1; i <= maxIndex; i ++){
+			double sum = 0;
+			for(int j = maxIndex; j > i; j--)
+				sum += localBi[j];
+			if(argumentsAreTheSame)
+				ret[i] += sum;
+			else
+				ret[i] = localBi[i] + sum;
+		}
+	}
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline int _CLASS::Evaluator<IMaximalDerivativeOrder>::dmul(int i, int derivativeOrder) const
+	{
+		if(derivativeOrder == 0)
+			return 1;
+		else if(derivativeOrder == 1)
+			return i;
+		else
+			return i * dmul(i-1,derivativeOrder-1) ;
+	}
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline void _CLASS::Evaluator<IMaximalDerivativeOrder>::computeUInto(int derivativeOrder, SplineOrderVector & u) const
+	{
+		if(_segmentLength > TTimePolicy::getZero()){
+			double multiplier = 1.0/pow(getDurationAsDouble(_segmentLength), derivativeOrder);
+			double uu = 1.0;
+			int i = 0;
+			for(; i < derivativeOrder; i ++){
+				u[i] = 0;
+			}
+			for(int n = _spline.getSplineOrder(); i < n; i++)
+			{
+				u(i) = multiplier * uu * dmul(i, derivativeOrder);
+				uu = uu * _relativePositionInSegment;
+			}
+		} else {
+			u.setZero(_spline.getSplineOrder());
+		}
+	}
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline void _CLASS::Evaluator<IMaximalDerivativeOrder>::computeVInto(SplineOrderVector & v) const
+	{
+		if(_segmentLength > TTimePolicy::getZero()){
+			double du = getRelativePositionInSegment();
+			for(int i = 0, n = _spline.getSplineOrder(); i < n; i++)
+			{
+				v(i) = du/(i + 1.0);
+				du *= getRelativePositionInSegment();
+			}
+		} else {
+			v.setZero(_spline.getSplineOrder());
+		}
+	}
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	template<bool BCumulative>
+	inline void _CLASS::Evaluator<IMaximalDerivativeOrder>::computeLocalBiIntoT(SplineOrderVector & ret, int derivativeOrder) const {
+		if(BCumulative)
+			computeLocalCumulativeBiInto(ret, derivativeOrder);
+		else
+			computeLocalBiInto(ret, derivativeOrder);
+	}
+
+	//TODO optimize enable return by reference here!
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	template<bool BCumulative>
+	inline const typename _CLASS::SplineOrderVector & _CLASS::Evaluator<IMaximalDerivativeOrder>::getLocalBiT(int derivativeOrder) const {
+		SM_ASSERT_GE_DBG(Exception, derivativeOrder, 0, "");
+		BOOST_AUTO(splineOrder, _spline.getSplineOrder());
+
+		if(NeedsCumulativeBasisMatrices == BCumulative && derivativeOrder < NumberOfPreparedDerivatives){
+			return _localBi[derivativeOrder];
+		}
+		else {
+			if(derivativeOrder >= splineOrder) {
+				return _tmp = SplineOrderVector::Zero(splineOrder);
+			}
+			else {
+				computeLocalBiIntoT<BCumulative>(_tmp, derivativeOrder);
+				return _tmp;
+			}
+		}
+	}
+
+
+
+	_TEMPLATE
+	inline void _CLASS::computeLocalViInto(const SplineOrderVector & v, SplineOrderVector & localVi, const SegmentMapConstIterator & ti)
+	{
+		fastMultiplyAtransposedTimesBInto(ti->second.getBasisMatrix(), v, localVi);
+	}
+
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline void _CLASS::Evaluator<IMaximalDerivativeOrder>::computeLocalViInto(SplineOrderVector& localVi) const {
+		SplineOrderVector v(_spline.getSplineOrder());
+		computeVInto(v);
+		spline_t::computeLocalViInto(v, localVi, _ti);
+	}
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline const typename _CLASS::SplineOrderVector & _CLASS::Evaluator<IMaximalDerivativeOrder>::getLocalBi(int derivativeOrder) const {
+		return getLocalBiT<false>(derivativeOrder);
+	}
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline const typename _CLASS::SplineOrderVector & _CLASS::Evaluator<IMaximalDerivativeOrder>::getLocalCumulativeBi(int derivativeOrder) const {
+		return getLocalBiT<true>(derivativeOrder);
+	}
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline typename _CLASS::time_t _CLASS::Evaluator<IMaximalDerivativeOrder>::getKnot() const {
+		return _ti.getKnot();
+	}
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline typename _CLASS::point_t _CLASS::Evaluator<IMaximalDerivativeOrder>::eval() const {
+		return evalGeneric();
+	}
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline typename _CLASS::point_t _CLASS::Evaluator<IMaximalDerivativeOrder>::evalD(int derivativeOrder) const {
+		return evalDGeneric(derivativeOrder);
+	}
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	inline typename _CLASS::point_t _CLASS::Evaluator<IMaximalDerivativeOrder>::
+	evalGeneric() const {
+		const SplineOrderVector & cumulativeBi = getLocalCumulativeBi();
+		SegmentMapConstIterator it = _firstRelevantControlVertexIt;
+		const point_t * lastControlVertex_t = & it->second.getControlVertex();
+		point_t p = *lastControlVertex_t;
+		tangent_vector_t vec;
+
+		for (int i = 1, n = _spline.getSplineOrder(); i < n; i++){
+			it++;
+			const point_t * nextControlVertex_t = & it->second.getControlVertex();
+			_spline._manifold.logInto(*lastControlVertex_t, *nextControlVertex_t, vec);
+			lastControlVertex_t = nextControlVertex_t;
+			double d = cumulativeBi[i];
+			if(d == 0.0)
+				continue;
+			_spline._manifold.scaleVectorInPlace(vec, d);
+			_spline._manifold.expInto(p, vec, p);
+		}
+		return p;
+	}
+
+
+//	_TEMPLATE
+//	template <int IMaximalDerivativeOrder>
+//	inline typename _CLASS::point_t _CLASS::Evaluator<IMaximalDerivativeOrder>::evalDGeneric(int derivativeOrder) const {
+//		SM_ASSERT_GE_LT_DBG(Exception, derivativeOrder, 0, 2, "only derivative of order 0 and 1 are generically supported yet");
+//
+//		if(derivativeOrder == 0){
+//			return evalGeneric();
+//		}
+//
+//		const SplineOrderVector & cumulativeBi = getLocalCumulativeBi(0);
+//		const SplineOrderVector & cumulativeBiD = getLocalCumulativeBi(1);
+//
+//		SegmentMapConstIterator it = _firstRelevantControlVertexIt;
+//		const point_t * lastControlVertex_t = & it->second.getControlVertex();
+//		point_t p = *lastControlVertex_t;
+//		int n = _spline.getSplineOrder();
+//		tangent_vector_t vec, vecD;
+//
+//		//TODO implement generic evalD
+//		return p;
+//	}
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	const typename _CLASS::duration_t _CLASS::Evaluator<IMaximalDerivativeOrder>::getSegmentLength() const {
+		return _segmentLength;
+	}
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	const typename _CLASS::duration_t _CLASS::Evaluator<IMaximalDerivativeOrder>::getPositionInSegment() const {
+		return _positionInSegment;
+	}
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	double _CLASS::Evaluator<IMaximalDerivativeOrder>::getRelativePositionInSegment() const {
+		return _relativePositionInSegment;
+	}
+
+
+	_TEMPLATE
+	template <int IMaximalDerivativeOrder>
+	const typename _CLASS::spline_t & _CLASS::Evaluator<IMaximalDerivativeOrder>::getSpline() const {
+		return _spline;
+	}
+
+
+	_TEMPLATE
+	template<int IMaximalDerivativeOrder>
+	inline _CLASS::Evaluator<IMaximalDerivativeOrder> _CLASS::getEvaluatorAt(const time_t & t) const {
+		return Evaluator<IMaximalDerivativeOrder>(*this, t);
+	}
+
+#undef _TEMPLATE
+#undef _CLASS
+}

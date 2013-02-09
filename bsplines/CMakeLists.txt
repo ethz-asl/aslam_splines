@@ -56,14 +56,14 @@ ENDIF()
 target_link_libraries(${PROJECT_NAME} ${CHOLMOD_LIBRARIES})
 
 
-rosbuild_add_gtest(test/spline_tests 
+rosbuild_add_gtest(${PROJECT_NAME}_tests 
   test/SplineTests.cpp
   test/BSplinePoseTests.cpp
-#  test/DiffManifoldBSplineTests.cpp
+  test/DiffManifoldBSplineTests.cpp
   test/test_main.cpp
   )
 
-target_link_libraries(test/spline_tests ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
 
 #rosbuild_link_boost(test/spline_tests thread )
 

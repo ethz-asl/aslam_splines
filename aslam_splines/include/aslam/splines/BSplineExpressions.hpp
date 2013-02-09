@@ -4,6 +4,7 @@
 
 #include <bsplines/BSplinePose.hpp>
 #include <aslam/backend/TransformationExpression.hpp>
+#include <aslam/backend/backend.hpp>
 #include <aslam/backend/RotationExpression.hpp>
 #include <aslam/backend/EuclideanExpression.hpp>
 #include <aslam/backend/VectorExpression.hpp>

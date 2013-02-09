@@ -70,7 +70,7 @@ namespace bsplines {
 			inline const point_t & getControlVertex() const { return _point; }
 			inline const basis_matrix_t & getBasisMatrix() const { return _basisMatrix; }
 
-			inline SegmentData(const TDiffManifoldBSplineConfiguration & conf, const time_t & t, const point_t & point) : _point(point), _basisMatrix(conf.getSplineOrder(), conf.getSplineOrder()) {}
+			inline SegmentData(const TDiffManifoldBSplineConfiguration & conf, const time_t & t, const point_t & point) : _point(point), _basisMatrix((int)conf.getSplineOrder(), (int)conf.getSplineOrder()) {}
 		};
 
 		template <typename TDiffManifoldBSplineConfiguration>

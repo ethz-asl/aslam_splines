@@ -41,9 +41,8 @@ public:
 
 	template <int IMaxDerivativeOrder>
 	class ExpressionFactory : public parent_t::template ExpressionFactory<IMaxDerivativeOrder> {
-	protected:
-		typedef typename parent_t::template ExpressionFactory<IMaxDerivativeOrder>::eval_ptr_t eval_ptr_t;
 	public:
+		typedef typename parent_t::template ExpressionFactory<IMaxDerivativeOrder>::eval_ptr_t eval_ptr_t;
 		ExpressionFactory(spline_t & spline, const time_t & t) : parent_t::template ExpressionFactory<IMaxDerivativeOrder>(spline, t){}
 
 		/// \brief get an expression

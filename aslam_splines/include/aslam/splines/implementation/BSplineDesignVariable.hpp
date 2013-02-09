@@ -39,7 +39,7 @@ namespace aslam {
         template<int D>
         aslam::backend::DesignVariableMappedVector<D> * BSplineDesignVariable<D>::designVariable(size_t i)
         {
-            SM_ASSERT_LT(aslam::IndexOutOfBoundsException, i, _designVariables.size(), "Index out of bounds");
+            SM_ASSERT_LT(aslam::backend::Exception, i, _designVariables.size(), "Index out of bounds");
             return &_designVariables[i];
         }
 

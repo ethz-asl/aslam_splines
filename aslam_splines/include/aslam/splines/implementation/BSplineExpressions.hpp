@@ -6,7 +6,7 @@ namespace aslam {
     BSplineVectorExpressionNode<D>::BSplineVectorExpressionNode(bsplines::BSpline * spline, int derivativeOrder, const std::vector<aslam::backend::DesignVariable *> & designVariables, double time) :
       _spline(spline), _designVariables(designVariables), _time(time), _derivativeOrder(derivativeOrder)
     {
-      SM_ASSERT_EQ(aslam::Exception, spline->coefficients().rows(), D, "The spline dimension should match the expression dimension");
+      SM_ASSERT_EQ(aslam::backend::Exception, spline->coefficients().rows(), D, "The spline dimension should match the expression dimension");
     }
 
     template<int D>
@@ -38,7 +38,7 @@ namespace aslam {
     template<int D>
     void BSplineVectorExpressionNode<D>::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const
     {
-      SM_ASSERT_EQ_DBG(aslam::InvalidArgumentException, applyChainRule.cols(), D, "The chain rule matrix is the wrong size");
+      SM_ASSERT_EQ_DBG(aslam::backend::Exception, applyChainRule.cols(), D, "The chain rule matrix is the wrong size");
 
       Eigen::MatrixXd J;
       _spline->evalDAndJacobian(_time, _derivativeOrder, &J, NULL);

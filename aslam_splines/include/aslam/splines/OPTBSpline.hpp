@@ -128,9 +128,10 @@ public:
 
 	template <int IMaxDerivativeOrder>
 	class ExpressionFactory {
+    public:
+        typedef typename spline_t::template Evaluator<IMaxDerivativeOrder> eval_t;
+        typedef boost::shared_ptr<const eval_t> eval_ptr_t;
 	protected:
-		typedef typename spline_t::template Evaluator<IMaxDerivativeOrder> eval_t;
-		typedef boost::shared_ptr<const eval_t> eval_ptr_t;
 		eval_ptr_t _evalPtr;
 
 	public:

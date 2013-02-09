@@ -266,7 +266,7 @@ namespace bsplines{
 		typedef BOOST_TYPEOF_TPL(qiSize) QiSize;
 		typedef Eigen::Matrix<double, QiSize::VALUE, QiSize::VALUE> Q_T;
 		int brow = 0;
-		Q_T Q(qiSize, qiSize);
+		Q_T Q((int)qiSize, (int)qiSize);
 
 //		// define rows / cols:
 //		// blocksize:
@@ -317,7 +317,7 @@ namespace bsplines{
 		typedef BOOST_TYPEOF_TPL(splineOrderTimesPointSize) SplineOrderTimesPointSize;
 		typedef Eigen::Matrix<double, SplineOrderTimesPointSize::VALUE, SplineOrderTimesPointSize::VALUE> MType;
 
-		MType WV(splineOrderTimesPointSize, splineOrderTimesPointSize);
+		MType WV((int)splineOrderTimesPointSize, (int)splineOrderTimesPointSize);
 
 		WV.setZero(splineOrderTimesPointSize, splineOrderTimesPointSize);
 
@@ -326,7 +326,7 @@ namespace bsplines{
 			WV.block(splineOrder*d, splineOrder*d, splineOrder, splineOrder) = Wdiag(d) * V;
 		}
 
-		MType M(splineOrderTimesPointSize, splineOrderTimesPointSize);
+		MType M((int)splineOrderTimesPointSize, (int)splineOrderTimesPointSize);
 		computeMiInto(spline, segmentIt, M);
 
 		if(add) toMatrix += M.transpose() * WV * M;

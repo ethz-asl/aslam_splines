@@ -43,7 +43,7 @@ size_t _CLASS::numDesignVariables() {
 _TEMPLATE
 typename _CLASS::dv_t * _CLASS::designVariable(
 		size_t i) {
-	SM_ASSERT_LT(aslam::IndexOutOfBoundsException, i,
+	SM_ASSERT_LT(aslam::backend::Exception, i,
 			_designVariables.size(), "Index out of bounds");
 	return &_designVariables[i];
 }

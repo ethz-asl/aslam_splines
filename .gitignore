@@ -1,0 +1,9 @@
+aslam_spline_design_variables/build/
+aslam_splines/bin/
+aslam_splines/build/
+aslam_splines/lib/
+bsplines/bin/
+bsplines/build/
+bsplines/doc/doxygen.config
+bsplines/doc/html/
+bsplines/lib/

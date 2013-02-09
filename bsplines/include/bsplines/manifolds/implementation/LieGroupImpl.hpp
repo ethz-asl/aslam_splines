@@ -49,7 +49,7 @@ namespace manifolds {
 	inline typename DiffManifold< LieGroupConf<IDimension, IPointSize, TScalar>, TConfigurationDerived>::dmatrix_t DiffManifold< LieGroupConf<IDimension, IPointSize, TScalar>, TConfigurationDerived>::
 	dexpAtId(const tangent_vector_t & vec) const
 	{
-		dmatrix_t result(this->getPointSize(), this->getDimension());
+		dmatrix_t result((int)this->getPointSize(), (int)this->getDimension());
 		((DiffManifold< TConfigurationDerived, TConfigurationDerived> * )this)->dexpAtIdInto(vec, result);
 		return result;
 	}

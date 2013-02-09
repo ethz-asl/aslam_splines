@@ -1,5 +1,5 @@
 #include <aslam/splines/BSplineRSPoseDesignVariable.hpp>
-#include <aslam/Exceptions.hpp>
+#include <aslam/backend/backend.hpp>
 #include <aslam/splines/BSplineRSExpressions.hpp>
 
 #include <aslam/backend/VectorExpression.hpp>
@@ -47,7 +47,7 @@ namespace aslam {
 
     aslam::backend::DesignVariable * BSplineRSPoseDesignVariable::designVariable(size_t i)
     {
-        SM_ASSERT_LT(aslam::IndexOutOfBoundsException, i, numDesignVariables(), "Index out of bounds");
+        SM_ASSERT_LT(aslam::backend::Exception, i, numDesignVariables(), "Index out of bounds");
         
         if ( i == numDesignVariables()-1 ) 
             return _lineDelayDV;

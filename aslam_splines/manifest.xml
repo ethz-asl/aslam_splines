@@ -14,7 +14,6 @@
   <depend package="numpy_eigen"/>
   
   <export>
-    <python path="${prefix}/python"/>
     <cpp cflags="-I${prefix}/include"
 	     lflags="-L${prefix}/lib -laslam_splines" />
   </export>

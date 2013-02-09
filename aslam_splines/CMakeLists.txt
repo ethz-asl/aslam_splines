@@ -45,13 +45,3 @@ rosbuild_add_gtest(${PROJECT_NAME}_test
 
 target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})
 
-# Use this handy cmake function
-rosbuild_find_ros_package(numpy_eigen)
-include(${numpy_eigen_PACKAGE_PATH}/cmake/add_python_export_library.cmake)
-
-# This functions take TARGET_NAME PYTHON_MODULE_DIRECTORY sourceFile1 [sourceFile2 ...]
-add_python_export_library(${PROJECT_NAME}_python python/${PROJECT_NAME}
-  src/python/module.cpp
-)
-
-target_link_libraries(${PROJECT_NAME}_python ${PROJECT_NAME})

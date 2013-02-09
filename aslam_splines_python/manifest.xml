@@ -9,12 +9,12 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/aslam_python</url>
 
-  <depend package="sm_common"/>
+  <depend package="aslam_splines"/>
   <depend package="sm_eigen"/>
   <depend package="sm_kinematics"/>
   <depend package="aslam_cameras"/>
   <depend package="roscpp"/>
-  <depend package="aslam_common"/>
+  <depend package="sm_common"/>
   <depend package="aslam_time"/>
   <depend package="numpy_eigen"/>
   <depend package="aslam_backend"/>
@@ -25,7 +25,6 @@
 
   <export>
     <python path="${prefix}/python"/>
-    <cpp cflags="`pkg-config --cflags eigen3` -I${prefix}/include"/>
   </export>
 
 

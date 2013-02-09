@@ -7,3 +7,8 @@ bsplines/build/
 bsplines/doc/doxygen.config
 bsplines/doc/html/
 bsplines/lib/
+aslam_splines_python/build/
+aslam_splines_python/lib/
+*#
+#*
+.#*

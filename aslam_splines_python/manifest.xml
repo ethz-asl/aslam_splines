@@ -16,12 +16,11 @@
   <depend package="roscpp"/>
   <depend package="sm_common"/>
   <depend package="aslam_time"/>
+  <depend package="aslam_frames"/>
   <depend package="numpy_eigen"/>
   <depend package="aslam_backend"/>
   <depend package="sm_python"/>
   <depend package="aslam_backend_expressions"/>
-  <depend package="aslam_backend_errors"/>
-  <depend package="aslam_backend_design_variables"/>
 
   <export>
     <python path="${prefix}/python"/>

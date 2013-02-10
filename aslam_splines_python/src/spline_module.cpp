@@ -5,12 +5,15 @@
 #include <aslam/splines/BSplinePoseDesignVariable.hpp>
 #include <aslam/splines/BSplineRSPoseDesignVariable.hpp>
 #include <aslam/splines/EuclideanBSplineDesignVariable.hpp>
+#include <aslam/python/ExportCovarianceReprojectionError.hpp>
 #include <sstream>
+#include <aslam/cameras.hpp>
 
 using namespace bsplines;
 using namespace boost::python;
 using namespace aslam::splines;
 using namespace aslam::backend;
+using namespace aslam::cameras;
 
 void exportBSplineMotionError();
 
@@ -78,5 +81,9 @@ BOOST_PYTHON_MODULE(libaslam_splines_python)
         ;
 
     exportBSplineMotionError();
+
+    aslam::python::exportCovarianceReprojectionError<PinholeRsCameraGeometry>("PinholeRs");
+    aslam::python::exportCovarianceReprojectionError<DistortedPinholeRsCameraGeometry>("DistortedPinholeRs");
+
 
 }

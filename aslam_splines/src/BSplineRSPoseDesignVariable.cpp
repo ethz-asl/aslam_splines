@@ -47,7 +47,7 @@ namespace aslam {
 
     aslam::backend::DesignVariable * BSplineRSPoseDesignVariable::designVariable(size_t i)
     {
-        SM_ASSERT_LT(aslam::backend::Exception, i, numDesignVariables(), "Index out of bounds");
+        SM_ASSERT_LT(aslam::Exception, i, numDesignVariables(), "Index out of bounds");
         
         if ( i == numDesignVariables()-1 ) 
             return _lineDelayDV;

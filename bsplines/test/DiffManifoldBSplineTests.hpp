@@ -464,13 +464,13 @@ struct AngularDerivativeJacobianEvaluator : public BSplineJacobianEvaluator<TSpl
 	typedef Eigen::Matrix<double, multiplyEigenSize(TSpline::Dimension, TSpline::SplineOrder), 1> input_t;
 
 	inline void eval(const input_t & input, typename Eigen::Vector3d & result) {
-		updateSpline(input);
+		this->updateSpline(input);
 		typename TSpline::template Evaluator<IDerivativeOrder> eval = this->spline.template getEvaluatorAt<IDerivativeOrder>(this->_t);
 		result = eval.template evalAngularDerivative<IDerivativeOrder>();
 	}
 
 	inline void evalJac(const input_t & input, Eigen::Matrix<double, TSpline::Dimension , multiplyEigenSize(TSpline::Dimension, TSpline::SplineOrder)> & result) {
-		updateSpline(input);
+		this->updateSpline(input);
 		typename TSpline::template Evaluator<IDerivativeOrder> eval = this->spline.template getEvaluatorAt<IDerivativeOrder>(this->_t);
 		eval.template evalAngularDerivativeJacobian<IDerivativeOrder>(result);
 	}

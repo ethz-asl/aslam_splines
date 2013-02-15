@@ -57,7 +57,7 @@ namespace bsplines {
 
 		// LHS remainder.
 		SplineOrderVector v(splineOrder);
-		double segmentLength = getDurationAsDouble(eval1.getSegmentLength());
+		double segmentLength = this->getDurationAsDouble(eval1.getSegmentLength());
 		if(segmentLength > 1e-16 && eval1.getRelativePositionInSegment() > 1e-16){
 			eval1.computeLocalViInto(v);
 			computeControlVertexSequenceLinearCombinationInto<IteratorPosition_first, AddOrSet_add>(eval1.getFirstRelevantSegmentIterator(), (-segmentLength) * v, integral);
@@ -73,12 +73,12 @@ namespace bsplines {
 		SplineOrderVector localVi(splineOrder);
 		for(; it != end; it++)
 		{
-			computeLocalViInto(v, localVi, it);
-			computeControlVertexSequenceLinearCombinationInto<IteratorPosition_last, AddOrSet_add>(it, computeSegmentLength(it) * localVi, integral);
+			this->computeLocalViInto(v, localVi, it);
+			computeControlVertexSequenceLinearCombinationInto<IteratorPosition_last, AddOrSet_add>(it, this->computeSegmentLength(it) * localVi, integral);
 		}
 
 		// RHS remainder.
-		segmentLength = getDurationAsDouble(eval2.getSegmentLength());
+		segmentLength = this->getDurationAsDouble(eval2.getSegmentLength());
 		if(segmentLength > 1e-16 && eval2.getRelativePositionInSegment() > 1e-16){
 			eval2.computeLocalViInto(v);
 			computeControlVertexSequenceLinearCombinationInto<IteratorPosition_first, AddOrSet_add>(eval2.getFirstRelevantSegmentIterator(), segmentLength * v, integral);

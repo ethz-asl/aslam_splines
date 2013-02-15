@@ -395,7 +395,7 @@ namespace aslam {
         
         Eigen::Matrix4d TransformationTimeOffsetExpressionNode::toTransformationMatrixImplementation()
         {
-        	SM_ASSERT_GE_LT(aslam::backend::Exception, _time.toScalar(), _bufferTmin, _bufferTmax, "Spline Coefficient Buffer Exceeded. Set larger buffer margins!");
+        	SM_ASSERT_GE_LT(aslam::Exception, _time.toScalar(), _bufferTmin, _bufferTmax, "Spline Coefficient Buffer Exceeded. Set larger buffer margins!");
             return _spline->spline().transformation(_time.toScalar());
         }
       
@@ -408,7 +408,7 @@ namespace aslam {
           
             double observationTime = _time.toScalar();
 
-            SM_ASSERT_GE_LT(aslam::backend::Exception, observationTime, _bufferTmin, _bufferTmax, "Spline Coefficient Buffer Exceeded. Set larger buffer margins!");
+            SM_ASSERT_GE_LT(aslam::Exception, observationTime, _bufferTmin, _bufferTmax, "Spline Coefficient Buffer Exceeded. Set larger buffer margins!");
 
             // the active indices
             Eigen::VectorXi dvidxs = _spline->spline().localVvCoefficientVectorIndices(observationTime);
@@ -420,7 +420,7 @@ namespace aslam {
             p = _spline->spline().evalDAndJacobian(observationTime,0,&JS, NULL);
            
           
-            Eigen::Matrix4d T = _spline->spline().curveValueToTransformationAndJacobian( p, &JT );    
+            /*Eigen::Matrix4d T =*/ _spline->spline().curveValueToTransformationAndJacobian( p, &JT );    
             J = JT * JS;
 
             int minIdx = dvidxs(0);
@@ -451,7 +451,7 @@ namespace aslam {
           
           
             double observationTime = _time.toScalar();
-            SM_ASSERT_GE_LT(aslam::backend::Exception, observationTime, _bufferTmin, _bufferTmax, "Spline Coefficient Buffer Exceeded. Set larger buffer margins!");
+            SM_ASSERT_GE_LT(aslam::Exception, observationTime, _bufferTmin, _bufferTmax, "Spline Coefficient Buffer Exceeded. Set larger buffer margins!");
 
 
             Eigen::VectorXi dvidxs = _spline->spline().localVvCoefficientVectorIndices(observationTime);
@@ -462,7 +462,7 @@ namespace aslam {
             p = _spline->spline().evalDAndJacobian(observationTime,0,&JS, NULL);
            
           
-            Eigen::Matrix4d T = _spline->spline().curveValueToTransformationAndJacobian( p, &JT );    
+            /*Eigen::Matrix4d T =*/ _spline->spline().curveValueToTransformationAndJacobian( p, &JT );    
             J = JT * JS;  
           
             int minIdx = dvidxs(0);
@@ -585,8 +585,8 @@ void BSplineAngularAccelerationBodyFrameExpressionNode::evaluateJacobiansImpleme
 {
 Eigen::MatrixXd J;
 _spline->angularAccelerationBodyFrameAndJacobian(_time, &J, NULL);
-SM_ASSERT_EQ_DBG(aslam::backend::Exception, J.rows(), 3, "Bad");
-SM_ASSERT_EQ_DBG(aslam::backend::Exception, J.cols(), 6 * (int)_designVariables.size(), "Bad");
+SM_ASSERT_EQ_DBG(aslam::Exception, J.rows(), 3, "Bad");
+SM_ASSERT_EQ_DBG(aslam::Exception, J.cols(), 6 * (int)_designVariables.size(), "Bad");
 
 for(size_t i = 0; i < _designVariables.size(); ++i)
 {
@@ -596,12 +596,12 @@ outJacobians.add(_designVariables[i], J.block<3,6>(0,i*6) );
 
 void BSplineAngularAccelerationBodyFrameExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const
 {
-SM_ASSERT_EQ_DBG(aslam::backend::Exception, applyChainRule.cols(), 3, "The chain rule matrix is the wrong size");
+SM_ASSERT_EQ_DBG(aslam::Exception, applyChainRule.cols(), 3, "The chain rule matrix is the wrong size");
 
 Eigen::MatrixXd J;
 _spline->angularAccelerationBodyFrameAndJacobian(_time, &J, NULL);
-SM_ASSERT_EQ_DBG(aslam::backend::Exception, J.rows(), 3, "Bad");
-SM_ASSERT_EQ_DBG(aslam::backend::Exception, J.cols(), 6 * (int)_designVariables.size(), "Bad"); 
+SM_ASSERT_EQ_DBG(aslam::Exception, J.rows(), 3, "Bad");
+SM_ASSERT_EQ_DBG(aslam::Exception, J.cols(), 6 * (int)_designVariables.size(), "Bad"); 
 
 for(size_t i = 0; i < _designVariables.size(); ++i)
 {

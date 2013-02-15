@@ -36,7 +36,7 @@ namespace aslam {
 
         aslam::backend::DesignVariableMappedVector<6> * BSplinePoseDesignVariable::designVariable(size_t i)
         {
-            SM_ASSERT_LT(aslam::backend::Exception, i, _designVariables.size(), "Index out of bounds");
+            SM_ASSERT_LT(aslam::Exception, i, _designVariables.size(), "Index out of bounds");
             return &_designVariables[i];
         }
 

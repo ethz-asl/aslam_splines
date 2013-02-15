@@ -138,7 +138,7 @@ namespace manifolds {
 	_TEMPLATE
 	inline void _CLASS::dexpInto(const point_t & point, const tangent_vector_t & vec, dmatrix_t & result) const
 	{
-		result = quatPlus(point) * dexpAtId(vec);
+		result = quatPlus(point) * this->dexpAtId(vec);
 	}
 
 	_TEMPLATE

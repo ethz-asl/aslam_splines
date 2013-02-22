@@ -16,8 +16,8 @@ namespace aslam {
     {
       SM_ASSERT_TRUE(Exception, frame != NULL, "The frame must not be null");
       // if a spline is given, estimate the covariance in each iteration
-      if(!spline)
-          parent_t::_invR = _frame->keypoint(_keypointIndex).invR();
+      //if(!spline)
+      //    parent_t::_invR = _frame->keypoint(_keypointIndex).invR();
       JacobianContainer::set_t dvs;
       point.getDesignVariables(dvs);	// point dv's
       camera.getDesignVariables(dvs);	// camera dv's
@@ -92,21 +92,21 @@ namespace aslam {
       Eigen::Matrix<double, 2,4> outJp;
 	  cam.homogeneousToKeypoint(p, hat_y, outJp);
 
-      parent_t::_error = k.y() - hat_y;
+      parent_t::setError(k.y() - hat_y);
 
       if(_spline) {
 
     	  Eigen::MatrixXd A = covarianceMatrix();
     	  //std::cout << A << std::endl;
 
-          parent_t::_invR = ((A*_frame->keypoint(_keypointIndex).invR().inverse()*A.transpose()).inverse()); // invert
+          parent_t::setInvR ( ((A*_frame->keypoint(_keypointIndex).invR().inverse()*A.transpose()).inverse())); // invert
     	  // setInvR(A*_frame->keypoint(_keypointIndex).invR()*A.transpose());
 
     	  // std::cout << "A: " << std::endl << A << std::endl ;
     	  //std::cout << "ARAT: " << std::endl << A*_frame->keypoint(_keypointIndex).invR()*A.transpose() << std::endl << std::endl;
       }
 
-      return parent_t::_error.dot(parent_t::_invR * parent_t::_error);
+      return parent_t::error().dot(parent_t::invR() * parent_t::error());
     }
 
     template<typename F>

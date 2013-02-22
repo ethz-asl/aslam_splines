@@ -38,7 +38,7 @@ namespace aslam {
     template<int D>
     void BSplineVectorExpressionNode<D>::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const
     {
-      SM_ASSERT_EQ_DBG(aslam::Exyception, applyChainRule.cols(), D, "The chain rule matrix is the wrong size");
+      SM_ASSERT_EQ_DBG(aslam::Exception, applyChainRule.cols(), D, "The chain rule matrix is the wrong size");
 
       Eigen::MatrixXd J;
       _spline->evalDAndJacobian(_time, _derivativeOrder, &J, NULL);

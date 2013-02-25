@@ -82,7 +82,9 @@ namespace bsplines {
       void initPoseSpline2(const Eigen::VectorXd & times, const Eigen::Matrix<double, 6, Eigen::Dynamic> & poses, int numSegments, double lambda);
       void initPoseSpline3(const Eigen::VectorXd & times, const Eigen::Matrix<double, 6, Eigen::Dynamic> & poses, int numSegments, double lambda);
       void initPoseSplineSparse(const Eigen::VectorXd & times, const Eigen::Matrix<double,6,Eigen::Dynamic> & poses, int numSegments, double lambda);
+      void initPoseSplineSparseKnots(const Eigen::VectorXd &times, const Eigen::MatrixXd &interpolationPoints, const Eigen::VectorXd knots, double lambda);
 
+        
       void addPoseSegment(double tk, const Eigen::Matrix4d & T_n_tk);      
       void addPoseSegment2(double tk, const Eigen::Matrix4d & T_n_tk, double lambda);      
 

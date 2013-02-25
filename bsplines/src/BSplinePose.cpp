@@ -367,6 +367,11 @@ namespace bsplines {
       initSplineSparse(times, poses, numSegments, lambda);
     }
     
+    void BSplinePose::initPoseSplineSparseKnots(const Eigen::VectorXd &times, const Eigen::MatrixXd &interpolationPoints, const Eigen::VectorXd knots, double lambda)
+    {
+    	initSplineSparseKnots(times, interpolationPoints, knots, lambda);
+    }
+    
     RotationalKinematics::Ptr BSplinePose::rotation() const
     {
       return rotation_;

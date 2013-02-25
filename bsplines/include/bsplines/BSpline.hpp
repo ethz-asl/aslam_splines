@@ -445,6 +445,10 @@ namespace bsplines {
       void initSpline3(const Eigen::VectorXd & times, const Eigen::MatrixXd & interpolationPoints, int numSegments, double lambda);
         
       void initSplineSparse(const Eigen::VectorXd & times, const Eigen::MatrixXd & interpolationPoints, int numSegments, double lambda);
+    
+      void initSplineSparseKnots(const Eigen::VectorXd &times, const Eigen::MatrixXd &interpolationPoints, const Eigen::VectorXd knots, double lambda);
+
+        
         
       /** 
        * Add a curve segment that interpolates the point p, ending at time t.

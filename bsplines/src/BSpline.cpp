@@ -824,6 +824,118 @@ namespace bsplines {
       setCoefficientVector(c);
     }
 
+    
+    void BSpline::initSplineSparseKnots(const Eigen::VectorXd &times, const Eigen::MatrixXd &interpolationPoints, const Eigen::VectorXd knots, double lambda)
+    {
+        
+    	SM_ASSERT_EQ(Exception,times.size(), interpolationPoints.cols(), "The number of times and the number of interpolation points must be equal");
+    	SM_ASSERT_GE(Exception,times.size(),2, "There must be at least two times");
+    	for(int i = 1; i < times.size(); i++)
+    	{
+    		SM_ASSERT_LE(Exception, times[i-1], times[i],
+                         "The time sequence must be nondecreasing. time " << i
+                         << " was not greater than or equal to time " << (i-1));
+    	}
+        
+    	int K = knots.size();
+    	// How many coefficients are required for one time segment?
+    	int C = numCoefficientsRequired(knots.size() - 2*(splineOrder_ - 1)-1);
+    	// What is the vector coefficient dimension
+    	int D = interpolationPoints.rows();
+        
+    	// Set the knots and zero the coefficients
+    	std::vector<double> knotsVector(K);
+    	for(int i = 0; i < K; i++)
+    	{
+    		knotsVector[i] = knots(i);
+    	}
+    	setKnotsAndCoefficients(knotsVector, Eigen::MatrixXd::Zero(D,C));
+        
+    	// define the structure:
+    	std::vector<int> rows;
+    	std::vector<int> cols;
+        
+    	for (int i = 1; i <= interpolationPoints.cols(); i++)
+    		rows.push_back(i*D);
+    	for(int i = 1; i <= C; i++)
+    		cols.push_back(i*D);
+        
+    	std::vector<int> bcols(1);
+    	bcols[0] = 1;
+        
+    	sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> A(rows,cols, true);
+    	sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> b(rows,bcols, true);
+        
+    	int brow = 0;
+    	// try to fill the matrix:
+    	for(int i = 0; i < interpolationPoints.cols(); i++) {
+    		Eigen::VectorXi coeffIndices = localCoefficientVectorIndices(times[i]);
+            
+    		const bool allocateBlock = true;
+            
+    		// get Phi
+    		Eigen::MatrixXd P = Phi(times[i],0); // Dx(n*D)
+            
+    		// the n'th order spline needs n column blocks (n*D columns)
+    		for(int j = 0; j < splineOrder_; j++) {
+    			Eigen::MatrixXd & Ai = *A.block(brow/D,coeffIndices[0]/D+j,allocateBlock );
+    			Ai= P.block(0,j*D,D,D);
+    		}
+            
+    		Eigen::MatrixXd & bi = *b.block(brow/D,0,allocateBlock );
+    		bi = interpolationPoints.col(i);
+            
+    		brow += D;
+    	}
+        
+    	//Eigen::MatrixXd Ad = A.toDense();
+        
+    	sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> At(cols,rows, true);
+    	sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> * Atp = &At;
+    	A.transpose(Atp);
+        
+    	// A'b
+    	sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> Ab(cols,bcols, true);
+    	sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> * Abp = &Ab;
+    	Atp->multiply(Abp, &b);
+        
+    	// A'A
+    	sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> AtA(cols,cols, true);
+    	sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> * AtAp = &AtA;
+    	Atp->multiply(AtAp, &A);
+        
+    	// Add the motion constraint.
+    	Eigen::VectorXd W = Eigen::VectorXd::Constant(D,lambda);
+        
+    	sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> Q = curveQuadraticIntegralDiagSparse(W, 2);
+        
+    	// A'A + Q
+    	Q.add(AtAp);
+        
+    	// solve:
+    	sparse_block_matrix::LinearSolverCholmod<Eigen::MatrixXd> solver;
+    	solver.init();
+        
+    	Eigen::VectorXd c(AtAp->rows());
+    	c.setZero();
+    	Eigen::VectorXd b_dense = Abp->toDense();
+        
+    	bool result = solver.solve(*AtAp,&c[0],&b_dense[0]);
+    	if(!result) {
+    		c.setZero();
+    		// fallback => use nonsparse solver:
+    		std::cout << "Fallback to Dense Solver" << std::endl;
+    		Eigen::MatrixXd Adense = AtAp->toDense();
+    		c = Adense.ldlt().solve(b_dense);
+    	}
+        
+    	//      std::cout << "b\nA=" << A << "\n b=" << b << "\n";
+        
+    	// Solve for the coefficient vector.
+    	//   Eigen::VectorXd c = A.ldlt().solve(b);
+    	setCoefficientVector(c);
+    }
+    
 
     void BSpline::initSplineSparse(const Eigen::VectorXd & times, const Eigen::MatrixXd & interpolationPoints, int numSegments, double lambda)
     {

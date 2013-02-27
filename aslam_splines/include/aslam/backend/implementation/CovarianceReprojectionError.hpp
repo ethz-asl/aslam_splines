@@ -11,7 +11,7 @@ namespace aslam {
 
     template<typename F>
     CovarianceReprojectionError<F>::CovarianceReprojectionError(const frame_t * frame, int keypointIndex,
-					    HomogeneousExpression point, CameraDesignVariable<camera_geometry_t> camera, spline_t* spline = NULL, Scalar* lineDelayDv = NULL) :
+					    HomogeneousExpression point, CameraDesignVariable<camera_geometry_t> camera, spline_t* spline, Scalar* lineDelayDv) :
       _frame(frame), _keypointIndex(keypointIndex), _point(point), _camera(camera), _spline(spline), _lineDelayDv(lineDelayDv)
     {
       SM_ASSERT_TRUE(Exception, frame != NULL, "The frame must not be null");
@@ -73,8 +73,10 @@ namespace aslam {
         
         // make sure, the variance of v remains positive and set to 0 if it is negative
         
-        if (A(1,1) < 0)
-            A(1,1) = 0;
+       // if (A(1,1) < 0) {
+       //     std::cout << "set one of them to zero..." << std::endl;
+       //     A(1,1) = 0; ======> THIS IS BAD!
+       // }
         
     	return A;
 

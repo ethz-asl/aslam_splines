@@ -26,7 +26,6 @@ namespace aslam {
       typedef sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> sbm_t;
         
         
-        
       // BSplineMotionError(ScalarDesignVariable * x_k, ScalarDesignVariable * w, double y, double sigma2_n);
       BSplineMotionError(spline_t * splineDV, Eigen::MatrixXd W);
       BSplineMotionError(spline_t * splineDV, Eigen::MatrixXd W, unsigned int errorTermOrder);
@@ -48,7 +47,7 @@ namespace aslam {
       /// \brief evaluate the jacobian
       virtual void evaluateJacobiansImplementation();
         
-        virtual void buildHessianImplementation(SparseBlockMatrix & outHessian, Eigen::VectorXd & outRhs);
+        virtual void buildHessianImplementation(SparseBlockMatrix & outHessian, Eigen::VectorXd & outRhs,bool useMEstimator);
       
       virtual const JacobianContainer & getJacobiansImplementation() const;
         

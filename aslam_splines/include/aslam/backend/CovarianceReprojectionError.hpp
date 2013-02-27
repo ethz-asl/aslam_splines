@@ -40,7 +40,7 @@ namespace aslam {
       // implemented. This should be removed at some point, to only keep the camera
       // design variable.
       // if the lineDelayDv is initialised to NULL, the camera design variable will be used.
-      CovarianceReprojectionError(const frame_t * frame, int keypointIndex, HomogeneousExpression point, CameraDesignVariable<camera_geometry_t> camera, spline_t* spline, Scalar * lineDelayDv);
+      CovarianceReprojectionError(const frame_t * frame, int keypointIndex, HomogeneousExpression point, CameraDesignVariable<camera_geometry_t> camera, spline_t* spline = NULL, Scalar * lineDelayDv = NULL);
       virtual ~CovarianceReprojectionError();
 
       double observationTime();

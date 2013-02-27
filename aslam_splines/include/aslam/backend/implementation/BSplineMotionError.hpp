@@ -87,7 +87,7 @@ namespace aslam {
           
           
         template<class SPLINE_T>
-        void BSplineMotionError<SPLINE_T>::buildHessianImplementation(SparseBlockMatrix & outHessian, Eigen::VectorXd & outRhs) {
+        void BSplineMotionError<SPLINE_T>::buildHessianImplementation(SparseBlockMatrix & outHessian, Eigen::VectorXd & outRhs, bool useMEstimator) {
             
             
             // get the coefficients:
@@ -153,7 +153,7 @@ namespace aslam {
             }
             
             
-          //  std::cout << outHessian.toDense();
+            //std::cout << "OutHessian" << outHessian.toDense() << std::endl;
             
             // show outRhs:
           //  for (int i = 0;  i < outRhs.rows(); i++)

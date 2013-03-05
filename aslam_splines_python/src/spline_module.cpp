@@ -16,6 +16,7 @@ using namespace aslam::backend;
 using namespace aslam::cameras;
 
 void exportBSplineMotionError();
+void exportSimpleSplineError();
 
 template<int D>
 void exportBsd()
@@ -81,6 +82,7 @@ BOOST_PYTHON_MODULE(libaslam_splines_python)
         ;
 
     exportBSplineMotionError();
+    exportSimpleSplineError();
 
     aslam::python::exportCovarianceReprojectionError<PinholeRsCameraGeometry>("PinholeRs");
     aslam::python::exportCovarianceReprojectionError<DistortedPinholeRsCameraGeometry>("DistortedPinholeRs");

@@ -51,5 +51,6 @@ include(${numpy_eigen_PACKAGE_PATH}/cmake/add_python_export_library.cmake)
 add_python_export_library(${PROJECT_NAME} python/aslam_splines
   src/spline_module.cpp
   src/BSplineMotionError.cpp
+  src/SimpleSplineError.cpp
 )
 

@@ -8,7 +8,8 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
 #set(ROS_BUILD_TYPE RelWithDebInfo)
-
+#set(ROS_BUILD_TYPE Debug)
+set(ROS_BUILD_TYPE Release)
 rosbuild_init()
 
 #set the default path for built executables to the "bin" directory
@@ -41,6 +42,7 @@ rosbuild_add_gtest(${PROJECT_NAME}_test
   test/test_main.cpp
   test/TestBSplineExpressions.cpp
   test/TestOPTBSpline.cpp
+  test/TestErrors.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})

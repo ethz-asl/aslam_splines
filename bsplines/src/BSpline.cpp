@@ -907,7 +907,13 @@ namespace bsplines {
     	// Add the motion constraint.
     	Eigen::VectorXd W = Eigen::VectorXd::Constant(D,lambda);
         
-    	sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> Q = curveQuadraticIntegralDiagSparse(W, 2);
+        // make this conditional on the order of the spline:
+        sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> Q(cols,cols,true);
+        if (splineOrder_ == 2)
+            curveQuadraticIntegralDiagSparse(W, 1).cloneInto(Q);
+        else
+            curveQuadraticIntegralDiagSparse(W, 2).cloneInto(Q);
+
         
     	// A'A + Q
     	Q.add(AtAp);
@@ -1024,8 +1030,13 @@ namespace bsplines {
         // Add the motion constraint.
         Eigen::VectorXd W = Eigen::VectorXd::Constant(D,lambda);
         
-        sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> Q = curveQuadraticIntegralDiagSparse(W, 2);
-
+        // make this conditional on the order of the spline:
+        sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> Q(cols,cols,true);
+        if (splineOrder_ == 2)
+            curveQuadraticIntegralDiagSparse(W, 1).cloneInto(Q);
+        else
+            curveQuadraticIntegralDiagSparse(W, 2).cloneInto(Q);
+  
         // A'A + Q
         Q.add(AtAp);
         
@@ -1120,9 +1131,13 @@ namespace bsplines {
 
       // Add the motion constraint.
       Eigen::VectorXd W = Eigen::VectorXd::Constant(D,lambda);
+    
+      // make this conditional on the order of the spline:
+      if (splineOrder_ == 2)
+          A += curveQuadraticIntegralDiag(W, 1);
+      else
+          A += curveQuadraticIntegralDiag(W, 2);
         
-      A += curveQuadraticIntegralDiag(W, 2);
-
       Eigen::VectorXd c = A.ldlt().solve(b);
       setCoefficientVector(c);
 

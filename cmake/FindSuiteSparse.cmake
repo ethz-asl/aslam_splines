@@ -9,70 +9,79 @@ FIND_PATH(CHOLMOD_INCLUDE_DIR NAMES cholmod.h amd.h camd.h
     NO_DEFAULT_PATH
   )
 
-FIND_LIBRARY(CHOLMOD_LIBRARY NAMES cholmod
-     PATHS
-     /usr/lib
-     /usr/local/lib
-     /opt/local/lib
-     /sw/lib
-     NO_DEFAULT_PATH
-   )
+SET(SEARCH_PATHS /usr/local/lib;/usr/lib;/opt/local/lib;/sw/lib)
+
+
 
 FIND_LIBRARY(AMD_LIBRARY NAMES SHARED NAMES amd
   PATHS
-  /usr/lib
-  /usr/local/lib
-  /opt/local/lib
-  /sw/lib
+  ${SEARCH_PATHS}
   NO_DEFAULT_PATH
   )
 
+FIND_LIBRARY(CHOLMOD_LIBRARY NAMES cholmod
+     PATHS
+     ${SEARCH_PATHS}
+     NO_DEFAULT_PATH
+   )
+
 FIND_LIBRARY(CAMD_LIBRARY NAMES camd
   PATHS
-  /usr/lib
-  /usr/local/lib
-  /opt/local/lib
-  /sw/lib
+  ${SEARCH_PATHS}
   NO_DEFAULT_PATH
   )
- 
+
+  FIND_LIBRARY(COLAMD_LIBRARY NAMES colamd
+    PATHS
+    ${SEARCH_PATHS}
+    NO_DEFAULT_PATH
+    )
+
+  FIND_LIBRARY(CCOLAMD_LIBRARY NAMES ccolamd
+    PATHS
+    ${SEARCH_PATHS}
+    NO_DEFAULT_PATH
+    )
+
+  FIND_LIBRARY(METIS_LIBRARY NAMES metis
+    PATHS
+    ${SEARCH_PATHS}
+    NO_DEFAULT_PATH
+    )
 # this one only exists as of suitesparse4
 FIND_LIBRARY(SUITESPARSECONFIG_LIBRARY NAMES suitesparseconfig
     PATHS
-    /usr/lib
-    /usr/local/lib
-    /opt/local/lib
-    /sw/lib
+    ${SEARCH_PATHS}
     NO_DEFAULT_PATH
     )
 FIND_LIBRARY(TBB_LIBRARY NAMES tbb
     PATHS
-    /usr/lib
-    /usr/local/lib
-    /opt/local/lib
-    /sw/lib
+    ${SEARCH_PATHS}
     NO_DEFAULT_PATH
     )
 FIND_LIBRARY(SPQR_LIBRARY NAMES spqr
     PATHS
-    /usr/lib
-    /usr/local/lib
-    /opt/local/lib
-    /sw/lib
+    ${SEARCH_PATHS}
     NO_DEFAULT_PATH
     )
+
+FIND_LIBRARY(BLAS_LIBRARY NAMES blas
+    PATHS
+    ${SEARCH_PATHS}
+    NO_DEFAULT_PATH
+    )
+FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack
+    PATHS
+    ${SEARCH_PATHS}
+    NO_DEFAULT_PATH
+    )
+
+
 
 # Different platforms seemingly require linking against different sets of libraries
 IF(CYGWIN)
   FIND_PACKAGE(PkgConfig)
-  FIND_LIBRARY(COLAMD_LIBRARY NAMES colamd
-    PATHS
-    /usr/lib
-    /usr/local/lib
-    /opt/local/lib
-    /sw/lib
-    NO_DEFAULT_PATH
-    )
+
   PKG_CHECK_MODULES(LAPACK lapack REQUIRED)
 
   SET(CHOLMOD_LIBRARIES ${SUITESPARSECONFIG_LIBRARY} ${TBB_LIBRARY} ${SPQR_LIBRARY} ${CHOLMOD_LIBRARY} ${AMD_LIBRARY} ${CAMD_LIBRARY} ${COLAMD_LIBRARY} ${CCOLAMD_LIBRARY} ${LAPACK_LIBRARIES})
@@ -81,37 +90,22 @@ IF(CYGWIN)
 
 ELSEIF(APPLE)
 
-  FIND_LIBRARY(COLAMD_LIBRARY NAMES colamd
-    PATHS
-    /usr/lib
-    /usr/local/lib
-    /opt/local/lib
-    /sw/lib
-    NO_DEFAULT_PATH
-    )
-
-  FIND_LIBRARY(CCOLAMD_LIBRARY NAMES ccolamd
-    PATHS
-    /usr/lib
-    /usr/local/lib
-    /opt/local/lib
-    /sw/lib
-    NO_DEFAULT_PATH
-    )
-
-  FIND_LIBRARY(METIS_LIBRARY NAMES metis
-    PATHS
-    /usr/lib
-    /usr/local/lib
-    /opt/local/lib
-    /sw/lib
-    NO_DEFAULT_PATH
-    )
-
-
-  SET(CHOLMOD_LIBRARIES ${SUITESPARSECONFIG_LIBRARY} ${TBB_LIBRARY} ${SPQR_LIBRARY} ${CHOLMOD_LIBRARY} ${AMD_LIBRARY} ${CAMD_LIBRARY} ${COLAMD_LIBRARY} ${CCOLAMD_LIBRARY} ${METIS_LIBRARY} "-framework Accelerate")
+  SET(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARY} ${SUITESPARSECONFIG_LIBRARY} ${TBB_LIBRARY} ${SPQR_LIBRARY}  ${AMD_LIBRARY} ${CAMD_LIBRARY} ${COLAMD_LIBRARY} ${CCOLAMD_LIBRARY} ${METIS_LIBRARY} "-framework Accelerate")
 ELSEIF(SUITESPARSECONFIG_LIBRARY)
-  SET(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARY} ${AMD_LIBRARY} ${SUITESPARSECONFIG_LIBRARY} ${TBB_LIBRARY} ${SPQR_LIBRARY})
+  # On Ubuntu 12.04
+  SET(CHOLMOD_LIBRARIES 
+    ${SPQR_LIBRARY} 
+    ${CHOLMOD_LIBRARY} 
+    ${SUITESPARSECONFIG_LIBRARY}  
+    ${AMD_LIBRARY} 
+    ${CAMD_LIBRARY} 
+    ${COLAMD_LIBRARY} 
+    ${CCOLAMD_LIBRARY} 
+    ${TBB_LIBRARY}  
+    ${METIS_LIBRARY} 
+    ${BLAS_LIBRARY} 
+    ${LAPACK_LIBRARY}
+    rt)
 ELSE(SUITESPARSECONFIG_LIBRARY)
   SET(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARY} ${AMD_LIBRARY} ${TBB_LIBRARY} ${SPQR_LIBRARY})
 ENDIF(CYGWIN)

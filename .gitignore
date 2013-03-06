@@ -1,3 +1,4 @@
+*.so
 aslam_spline_design_variables/build/
 aslam_splines/bin/
 aslam_splines/build/

@@ -160,7 +160,12 @@ namespace bsplines {
       return evalD(tk,1).head<3>();
     }
 
-
+    Eigen::Vector3d BSplinePose::linearVelocityBodyFrame(double tk) const
+    {
+      Eigen::VectorXd r = evalD(tk, 0);
+      Eigen::Matrix3d C_wb = rotation_->parametersToRotationMatrix(r.tail<3>());
+      return C_wb.transpose() * evalD(tk, 1).head<3>();
+    }
 
     Eigen::Vector3d BSplinePose::linearAcceleration(double tk) const
     {
@@ -188,7 +193,7 @@ namespace bsplines {
       Eigen::VectorXd v = evalD(tk,1);
 
       // \omega = S(\bar \theta) \dot \theta
-      omega = rotation_->parametersToSMatrix(r.tail<3>()) * v.tail<3>();
+      omega = -rotation_->parametersToSMatrix(r.tail<3>()) * v.tail<3>();
       return omega;
     }
 

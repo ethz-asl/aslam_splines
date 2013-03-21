@@ -39,6 +39,19 @@ rosbuild_add_boost_directories()
 #rosbuild_add_executable(example examples/example.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
 
+# For building the CHOLMOD / CSPARSE solvers 
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/../cmake)
+FIND_PACKAGE(SuiteSparse REQUIRED)
+include_directories(${CHOLMOD_INCLUDE_DIR})
+
+message(${CHOLMOD_INCLUDE_DIR})
+
+IF(NOT CHOLMOD_FOUND)
+   message( FATAL_ERROR "Cholmod was not found")
+ENDIF()
+
+target_link_libraries(${PROJECT_NAME} ${CHOLMOD_LIBRARIES})
+
 rosbuild_add_gtest(${PROJECT_NAME}_tests 
   test/SplineTests.cpp
   test/BSplinePoseTests.cpp

@@ -77,7 +77,7 @@ namespace aslam {
           p = _spline->spline().evalDAndJacobian(observationTime,0,&JS, NULL);
            
           
-          Eigen::Matrix4d T = _spline->spline().curveValueToTransformationAndJacobian( p, &JT );    
+          _spline->spline().curveValueToTransformationAndJacobian( p, &JT );
           J = JT * JS;  
           
           for(int i = 0; i < dvidxs.size(); ++i)

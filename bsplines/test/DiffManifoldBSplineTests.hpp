@@ -285,7 +285,7 @@ struct SplineEvalRiDTester : public JacobianTester<Eigen::Matrix<double, 1, 1>, 
 	int vectorPos;
 	typename TSpline::tangent_vector_t vec;
 
-	SplineEvalRiDTester(){
+	SplineEvalRiDTester() : vectorPos(0){
 		initMinimalSpline(spline);
 	}
 
@@ -330,14 +330,13 @@ struct SplineEvalRiDJacobianTester : public JacobianTester<typename TSpline::tan
 	typename TSpline::SegmentIterator _controlVertexIt;
 	typename TSpline::point_t toBeDisturbedPoint;
 
-	SplineEvalRiDJacobianTester(){
+	SplineEvalRiDJacobianTester() : vectorPos(0), controlVertexPos(0), _t(0) {
 		initMinimalSpline(spline);
 	}
 
 	inline void updateControlVertex(const input_t & vec) const
 	{
 		disturbePointInto(spline.getManifold(), vec, toBeDisturbedPoint, _controlVertexIt->getControlVertex());
-//			std::cout << "v = \n"<< vec << " ret = \n" << qplus(spline.getManifold().expAtId(vec), disturbedPoint) << std::endl;
 	}
 
 	inline void eval(const input_t & vec, typename TSpline::point_t & result) {

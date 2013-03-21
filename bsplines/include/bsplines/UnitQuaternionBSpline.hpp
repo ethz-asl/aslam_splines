@@ -13,7 +13,7 @@
 #include "DiffManifoldBSpline.hpp"
 
 namespace bsplines {
-	template <typename TDiffManifoldConfiguration = manifolds::UnitQuaternionManifoldConf<double>, int ISplineOrder = Eigen::Dynamic, typename TTimePolicy = DefaultTimePolicy>
+	template <typename TDiffManifoldConfiguration = manifolds::UnitQuaternionManifoldConf<>, int ISplineOrder = Eigen::Dynamic, typename TTimePolicy = DefaultTimePolicy>
 	struct UnitQuaternionBSplineConfiguration : public DiffManifoldBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy> {
 	public:
 		typedef DiffManifoldBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy> ParentConf;
@@ -21,7 +21,8 @@ namespace bsplines {
 		typedef TDiffManifoldConfiguration ManifoldConf;
 		typedef DiffManifoldBSpline<Conf> BSpline;
 
-		UnitQuaternionBSplineConfiguration(TDiffManifoldConfiguration manifoldConfiguration, int splineOrder = ISplineOrder) : ParentConf(manifoldConfiguration, splineOrder) {}
+		UnitQuaternionBSplineConfiguration(TDiffManifoldConfiguration manifoldConfiguration = TDiffManifoldConfiguration(), int splineOrder = ISplineOrder) : ParentConf(manifoldConfiguration, splineOrder) {}
+		UnitQuaternionBSplineConfiguration(int splineOrder) : ParentConf(TDiffManifoldConfiguration(), splineOrder) {}
 	};
 
 	namespace internal {
@@ -46,7 +47,7 @@ namespace bsplines {
 		typedef typename parent_t::full_jacobian_t full_jacobian_t;
 		typedef typename parent_t::SplineOrderVector SplineOrderVector;
 		typedef typename parent_t::SegmentMapConstIterator SegmentMapConstIterator;
-		typedef Eigen::Matrix<double, spline_t::Dimension, multiplyEigenSize(spline_t::Dimension, ISplineOrder) > angular_jacobian_t;
+		typedef Eigen::Matrix<double, configuration_t::Dimension::VALUE, multiplyEigenSize(configuration_t::Dimension::VALUE, ISplineOrder) > angular_jacobian_t;
 
 		SM_DEFINE_EXCEPTION(Exception, std::runtime_error);
 

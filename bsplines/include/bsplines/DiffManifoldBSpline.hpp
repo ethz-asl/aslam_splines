@@ -225,7 +225,7 @@ namespace bsplines {
 		TValue evalFunctorIntegralNumerically(const time_t & t1, const time_t & t2, const TFunctor & f, int numberOfPoints = 100) const;
 
 		template <typename TValue, typename TFunctor>
-		inline TValue evalFunctorIntegral(const time_t & t1, const time_t & t2, const TFunctor & f) const { return evalFunctorIntegralNumerically(t1, t2, f); }
+		inline TValue evalFunctorIntegral(const time_t & t1, const time_t & t2, const TFunctor & f) const { return evalFunctorIntegralNumerically<TValue, TFunctor>(t1, t2, f); }
 
 		point_t evalIntegralNumerically(const time_t & t1, const time_t & t2, int numberOfPoints = 100) const;
 		inline point_t evalIntegral(const time_t & t1, const time_t & t2) const { return evalIntegralNumerically(t1, t2); }

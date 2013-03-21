@@ -118,6 +118,7 @@ namespace numeric_integrator {
 	inline TValue integrateFunction(TArgScalar a, TArgScalar b, TValue (& integrand)(const TArgScalar & t), int numberOfPoints, TValue zero = TValue(0)){
 		return integrateFunctor(a, b, createIntegrand(integrand), numberOfPoints, zero);
 	}
+
 	template <typename TValue, typename TArgScalar>
 	inline TValue integrateFunction(TArgScalar a, TArgScalar b, TValue (& integrand)(const TArgScalar & t), int numberOfPoints, TValue zero = TValue(0)){
 		return integrateFunction<DEFAULT>(a, b, integrand, numberOfPoints, zero);

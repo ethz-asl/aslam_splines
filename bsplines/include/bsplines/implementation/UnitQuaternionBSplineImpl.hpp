@@ -452,7 +452,7 @@ namespace bsplines{
 	_TEMPLATE
 	template<int IMaximalDerivativeOrder>
 	inline _CLASS::Evaluator<IMaximalDerivativeOrder> _CLASS::getEvaluatorAt(const time_t & t) const{
-		return typename _CLASS::template Evaluator<IMaximalDerivativeOrder>(*this, t);
+		return typename _CLASS::template Evaluator<IMaximalDerivativeOrder>(this->getDerived(), t);
 	}
 	_TEMPLATE
 	inline _CLASS::Evaluator<0> _CLASS::getEvaluatorAt(const time_t & t) const{

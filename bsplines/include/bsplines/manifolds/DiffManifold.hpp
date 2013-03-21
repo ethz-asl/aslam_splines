@@ -24,6 +24,7 @@ namespace manifolds {
 	template <int IDimension, int IPointSize, typename TScalar>
 	struct DiffManifoldConfiguration : public DiffManifoldConfigurationBase {
 		typedef DiffManifoldConfigurationBase ParentConf;
+		typedef DiffManifoldConfiguration Conf;
 
 		typedef eigenTools::DynamicOrTemplateInt<IDimension> Dimension;
 		typedef eigenTools::DynamicOrTemplateInt<IPointSize> PointSize;
@@ -31,9 +32,8 @@ namespace manifolds {
 		Dimension getDimension() const;
 		PointSize getPointSize() const;
 
-		typedef DiffManifold<DiffManifoldConfiguration, DiffManifoldConfiguration> Manifold;
+		typedef DiffManifold<Conf> Manifold;
 		typedef TScalar scalar_t;
-
 	};
 
 	namespace internal {
@@ -69,6 +69,7 @@ namespace manifolds {
 	class DiffManifold<DiffManifoldConfigurationBase, TConfigurationDerived> {
 	private:
 		const TConfigurationDerived _configuration;
+		typedef DiffManifold<TConfigurationDerived, TConfigurationDerived> DERIVED;
 	public:
 		typedef internal::DiffManifoldConfigurationTypeTrait<TConfigurationDerived> Types;
 		enum { Dimension = Types::Dimension, PointSize = Types::PointSize};
@@ -93,6 +94,7 @@ namespace manifolds {
 		bool isInManifold(const point_t & pt) const { return true; }
 		void projectIntoManifold(point_t & pt) const { }
 		void randomizePoint(point_t & pt) const { pt = point_t::random(getPointSize()); }
+		point_t getRandomPoint() const { point_t p(getPointSize());  DERIVED::randomizePoint(p); return p; }
 	};
 }
 

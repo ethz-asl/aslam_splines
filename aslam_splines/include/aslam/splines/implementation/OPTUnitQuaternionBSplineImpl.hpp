@@ -13,20 +13,19 @@
 
 using namespace aslam::backend;
 
-namespace aslam {
-namespace splines {
+namespace bsplines {
 
-#define _TEMPLATE template <typename TDiffManifoldConfiguration, int ISplineOrder, typename TTimePolicy, typename TDerivedConf>
-#define _CLASS OPTBSpline< ::bsplines::UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>, TDerivedConf >
+#define _TEMPLATE template <typename TDiffManifoldConfiguration, int ISplineOrder, typename TTimePolicy, typename TModifiedDerivedConf>
+#define _CLASS DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>, TModifiedDerivedConf>, aslam::splines::DesignVariableSegmentBSplineConf<TModifiedDerivedConf> >
 
 _TEMPLATE
 template <int IMaxDerivativeOrder>
-typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<IMaxDerivativeOrder>::getAngularVelocityExpression() {
+typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<IMaxDerivativeOrder>::getAngularVelocityExpression() const {
 	typedef aslam::backend::VectorExpressionNode<3> node_t;
 
 	class ExpressionNode : public node_t {
 	public:
-		ExpressionNode(eval_ptr_t & evalPtr) : _evalPtr(evalPtr){}
+		ExpressionNode(const eval_ptr_t & evalPtr) : _evalPtr(evalPtr){}
 	private:
 		typedef typename node_t::vector_t vector_t;
 		const eval_ptr_t _evalPtr;
@@ -68,15 +67,17 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<IMaxD
 
 _TEMPLATE
 template <int IMaxDerivativeOrder>
-typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<IMaxDerivativeOrder>::getAngularAccelerationExpression() {
+typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<IMaxDerivativeOrder>::getAngularAccelerationExpression() const {
 	typedef aslam::backend::VectorExpressionNode<3> node_t;
 
 	class ExpressionNode : public node_t {
-	public:
-		ExpressionNode(eval_ptr_t & evalPtr) : _evalPtr(evalPtr){}
 	private:
 		typedef typename node_t::vector_t vector_t;
-		const eval_ptr_t _evalPtr;
+		eval_ptr_t _evalPtr;
+	public:
+		ExpressionNode(const eval_ptr_t & evalPtr) : _evalPtr(evalPtr){}
+		virtual ~ExpressionNode(){};
+	private:
 		inline void evaluateJacobiansImplementation(JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule) const {
 			const int dimension=_evalPtr->getSpline().getDimension(), pointSize = dimension, splineOrder = _evalPtr->getSpline().getSplineOrder();
 			typename _CLASS::angular_jacobian_t J(pointSize, dimension * splineOrder);
@@ -116,7 +117,6 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<IMaxD
 #undef _CLASS
 #undef _TEMPLATE
 
-} // namespace splines
-} // namespace aslam
+} // namespace bsplines
 
 #endif /* OPTUNITQUATERNIONBSPLINEIMPL_HPP_ */

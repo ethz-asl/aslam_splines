@@ -44,14 +44,14 @@ template <typename TConf, int ISplineOrder, int IDim> inline TConf createConf(){
 template <typename TSplineMap, int ISplineOrder, int IDim>
 struct OPTSplineSpecializationTester
 {
-	typedef OPTBSpline<typename TSplineMap::CONF> TestBSpline;
+	typedef typename OPTBSpline<typename TSplineMap::CONF>::BSpline TestBSpline;
 	static void test(TestBSpline & spline, double t){}
 };
 
 
 template <typename TSplineMap, int ISplineOrder, int IDim>
 struct OPTSplineTester{
-	typedef OPTBSpline<typename TSplineMap::CONF> TestBSpline;
+	typedef typename OPTBSpline<typename TSplineMap::CONF>::BSpline TestBSpline;
 	typedef typename TestBSpline::point_t point_t;
 	typedef typename TestBSpline::tangent_vector_t tangent_vector_t;
 
@@ -94,7 +94,7 @@ struct OPTSplineTester{
 			double t = tmin + ((double) rand() / RAND_MAX) * (tmax - tmin);
 			typename TestBSpline::template ExpressionFactory<1> fact = bspline.template getExpressionFactoryAt < 1 > (t);
 
-			BOOST_AUTO(expression, fact.toExpression(1));
+			BOOST_AUTO(expression, fact.getValueExpression(1));
 
 			sm::eigen::assertEqual(fact.getEvaluator().evalD(1), expression.evaluate(), SM_SOURCE_FILE_POS);
 
@@ -137,7 +137,7 @@ struct OPTSplineTester{
 template <int IEigenSplineOrder, int ISplineOrder, int IDim>
 struct OPTSplineSpecializationTester<UnitQuaternionBSpline<IEigenSplineOrder>, ISplineOrder, IDim>
 {
-	typedef OPTBSpline<typename UnitQuaternionBSpline<IEigenSplineOrder>::CONF> TestBSpline;
+	typedef typename OPTBSpline<typename UnitQuaternionBSpline<IEigenSplineOrder>::CONF>::BSpline TestBSpline;
 
 	static void test(TestBSpline & bspline, double t){
 		typename TestBSpline::template ExpressionFactory<2> fact = bspline.template getExpressionFactoryAt < 2 > (t);

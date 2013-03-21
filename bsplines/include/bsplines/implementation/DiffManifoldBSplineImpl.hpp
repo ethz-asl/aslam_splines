@@ -9,7 +9,6 @@
 
 namespace bsplines {
 
-
 #define _TEMPLATE template <class TDiffManifoldConfiguration, int ISplineOrder, typename TTimePolicy, typename TConfigurationDerived>
 #define _CLASS DiffManifoldBSpline<DiffManifoldBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>, TConfigurationDerived>
 

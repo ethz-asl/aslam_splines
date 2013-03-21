@@ -10,14 +10,14 @@
 
 #include "aslam/backend/JacobianContainer.hpp"
 #include "boost/typeof/typeof.hpp"
+#include "bsplines/DiffManifoldBSpline.hpp"
 
 using namespace aslam::backend;
 
-namespace aslam {
-namespace splines {
+namespace bsplines {
 
-#define _TEMPLATE template<typename TBSplineConf, typename TDerivedConf>
-#define _CLASS OPTBSpline<TBSplineConf, TDerivedConf>
+#define _TEMPLATE template<typename TModifiedConf, typename TModifiedDerivedConf>
+#define _CLASS DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModifiedConf, TModifiedDerivedConf>, aslam::splines::DesignVariableSegmentBSplineConf<TModifiedDerivedConf> >
 
 //_TEMPLATE
 //_CLASS::~OPTBSpline() {
@@ -45,12 +45,12 @@ typename _CLASS::dv_t * _CLASS::designVariable(
 		size_t i) {
 	SM_ASSERT_LT(aslam::Exception, i,
 			_designVariables.size(), "Index out of bounds");
-	return &_designVariables[i];
+	return _designVariables[i];
 }
 
 _TEMPLATE
 template <int IMaxDerivativeOrder>
-_CLASS::ExpressionFactory<IMaxDerivativeOrder>::ExpressionFactory(spline_t & spline, const time_t & t) : _evalPtr(new eval_t(spline, t)) {
+_CLASS::ExpressionFactory<IMaxDerivativeOrder>::ExpressionFactory(const spline_t & spline, const time_t & t) : _evalPtr(new eval_t(spline, t)) {
 }
 
 namespace internal {
@@ -82,16 +82,16 @@ namespace internal {
 
 _TEMPLATE
 template <int IMaxDerivativeOrder>
-typename _CLASS::expression_t _CLASS::ExpressionFactory<IMaxDerivativeOrder>::toExpression(const int derivativeOrder) {
+typename _CLASS::expression_t _CLASS::ExpressionFactory<IMaxDerivativeOrder>::getValueExpression(const int derivativeOrder) const {
 	typedef aslam::backend::VectorExpressionNode<PointSize> node_t;
 
 	class ExpressionNode : public node_t {
 		typedef typename node_t::vector_t vector_t;
-		const eval_ptr_t _evalPtr;
+		eval_ptr_t _evalPtr;
 		const int _derivativeOrder;
 	public:
-		ExpressionNode(eval_ptr_t & evalPtr, int derivativeOrder) : _evalPtr(evalPtr), _derivativeOrder(derivativeOrder){}
-
+		ExpressionNode(const eval_ptr_t & evalPtr, int derivativeOrder) : _evalPtr(evalPtr), _derivativeOrder(derivativeOrder){}
+		virtual ~ExpressionNode(){}
 	protected:
 		inline void evaluateJacobiansImplementation(JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule) const {
 			const int dimension=_evalPtr->getSpline().getDimension(), pointSize = _evalPtr->getSpline().getPointSize(), splineOrder = _evalPtr->getSpline().getSplineOrder();
@@ -182,7 +182,6 @@ void _CLASS::removeSegment() {
 #undef _CLASS
 #undef _TEMPLATE
 
-} // namespace splines
-} // namespace aslam
+} // namespace bsplines
 
 #endif /* OPTBSPLINEIMPL_HPP_ */

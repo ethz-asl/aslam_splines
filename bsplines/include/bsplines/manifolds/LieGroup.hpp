@@ -16,8 +16,6 @@ namespace manifolds {
 	struct LieGroupConf : public DiffManifoldConfiguration<IDimension, IPointSize, TScalar> {
 		typedef LieGroupConf<IDimension, IPointSize, TScalar> Conf;
 		typedef DiffManifoldConfiguration<IDimension, IPointSize, TScalar> ParentConf;
-
-//		typedef TScalar scalar_t;
 		typedef DiffManifold<Conf> Manifold;
 	};
 

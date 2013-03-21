@@ -11,16 +11,16 @@
 #include "OPTBSpline.hpp"
 #include "bsplines/UnitQuaternionBSpline.hpp"
 
-namespace aslam {
-namespace splines {
+namespace bsplines {
 
-template <typename TDiffManifoldConfiguration, int ISplineOrder, typename TTimePolicy, typename TDerivedConf>
-class OPTBSpline< ::bsplines::UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy >, TDerivedConf > : public OPTBSpline< typename ::bsplines::UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>::ParentConf, TDerivedConf > {
+template <typename TDiffManifoldConfiguration, int ISplineOrder, typename TTimePolicy, typename TModifiedDerivedConf>
+class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>, TModifiedDerivedConf>, aslam::splines::DesignVariableSegmentBSplineConf<TModifiedDerivedConf> >
+	: public DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<typename UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>::ParentConf, TModifiedDerivedConf>, aslam::splines::DesignVariableSegmentBSplineConf<TModifiedDerivedConf> >{
 protected:
+	typedef DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<typename UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>::ParentConf, TModifiedDerivedConf>, aslam::splines::DesignVariableSegmentBSplineConf<TModifiedDerivedConf> > parent_t;
+	typedef aslam::splines::DesignVariableSegmentBSplineConf<TModifiedDerivedConf> CONF;
+private:
 	typedef typename ::bsplines::UnitQuaternionBSpline<ISplineOrder>::TYPE TBSpline;
-	typedef OPTBSpline< typename ::bsplines::UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>::ParentConf, TDerivedConf > parent_t;
-	typedef typename parent_t::configuration_t configuration_t;
-	typedef typename parent_t::CONF CONF;
 public:
 	typedef typename parent_t::spline_t spline_t;
 	typedef typename parent_t::TimePolicy TimePolicy;
@@ -28,7 +28,7 @@ public:
 	typedef typename parent_t::point_t point_t;
 	typedef typename parent_t::SegmentIterator SegmentIterator;
 	typedef typename parent_t::SegmentConstIterator SegmentConstIterator;
-	typedef typename CONF::BSpline::angular_jacobian_t angular_jacobian_t;
+	typedef typename parent_t::angular_jacobian_t angular_jacobian_t;
 
 	enum {
 		PointSize = TBSpline::PointSize,
@@ -37,24 +37,24 @@ public:
 
 	typedef aslam::backend::VectorExpression<3> angular_derivative_expression_t;
 
-	OPTBSpline(const CONF & config) : parent_t(configuration_t(config)){}
+	DiffManifoldBSpline(const CONF & config = CONF()) : parent_t(config){}
 
 	template <int IMaxDerivativeOrder>
 	class ExpressionFactory : public parent_t::template ExpressionFactory<IMaxDerivativeOrder> {
 	public:
-		typedef typename parent_t::template ExpressionFactory<IMaxDerivativeOrder>::eval_ptr_t eval_ptr_t;
-		ExpressionFactory(spline_t & spline, const time_t & t) : parent_t::template ExpressionFactory<IMaxDerivativeOrder>(spline, t){}
+		typedef typename parent_t::template ExpressionFactory<IMaxDerivativeOrder> ParentExpressionFactory;
+		typedef typename ParentExpressionFactory::eval_ptr_t  eval_ptr_t;
+		ExpressionFactory(const spline_t & spline, const time_t & t) : ParentExpressionFactory(spline, t){}
 
 		/// \brief get an expression
-		angular_derivative_expression_t getAngularVelocityExpression();
-		angular_derivative_expression_t getAngularAccelerationExpression();
+		angular_derivative_expression_t getAngularVelocityExpression() const;
+		angular_derivative_expression_t getAngularAccelerationExpression() const;
 	};
 
-	template <int IMaxDerivativeOrder> inline ExpressionFactory<IMaxDerivativeOrder> getExpressionFactoryAt(const time_t & t){ return ExpressionFactory<IMaxDerivativeOrder>(*this, t); }
+	template <int IMaxDerivativeOrder> inline ExpressionFactory<IMaxDerivativeOrder> getExpressionFactoryAt(const time_t & t) const { return ExpressionFactory<IMaxDerivativeOrder>(*this, t); }
 };
 
-} // namespace splines
-} // namespace aslam
+} // namespace bsplines
 
 #include "implementation/OPTUnitQuaternionBSplineImpl.hpp"
 

@@ -10,12 +10,13 @@ namespace aslam {
         _splineDV(splineDV), _splineExpression(splineExpression), _y(y), _t(t)
         {
             
-            // Add the design variables to the error term:        
-            std::vector<aslam::backend::DesignVariable*> dvV;
-        	for ( unsigned int i = 0; i < _splineDV->numDesignVariables(); i++) {
-        		dvV.push_back(_splineDV->designVariable(i));
-        	}
-        	setDesignVariables(dvV);
+            // Add the design variables to the error term:       
+            DesignVariable::set_t dvV;
+        	//for ( unsigned int i = 0; i < _splineExpression->numDesignVariables(); i++) {
+                //	dvV.push_back(_splineExpression->designVariable(i));
+                //}
+        	_splineExpression->getDesignVariables(dvV);
+            setDesignVariablesIterator(dvV.begin(), dvV.end());
             
         }
 
@@ -33,7 +34,7 @@ namespace aslam {
         template<class SPLINE_T>
         double SimpleSplineError<SPLINE_T>::evaluateErrorImplementation()
         {
-            Eigen::VectorXd error = (_splineDV->spline().eval(_t) - _y);
+            Eigen::VectorXd error = (_splineExpression->toValue() - _y);
             parent_t::setError(error);
             return error.transpose()*error;
             

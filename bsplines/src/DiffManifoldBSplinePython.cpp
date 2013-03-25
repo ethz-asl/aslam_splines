@@ -49,16 +49,16 @@ struct BSplineImporter {
 	}
 
 	// Function wrappers turn std::pairs into tuples.
-	static tuple timeInterval1(const TSpline * bsp)
+	static boost::python::tuple timeInterval1(const TSpline * bsp)
 	{
 		std::pair<double,double> ti = bsp->getTimeInterval();
-		return make_tuple(ti.first,ti.second);
+		return boost::python::make_tuple(ti.first,ti.second);
 	}
 
-	static tuple timeInterval2(const TSpline * bsp, int i)
+	static boost::python::tuple timeInterval2(const TSpline * bsp, int i)
 	{
 		std::pair<double,double> ti = bsp->timeInterval(i);
-		return make_tuple(ti.first,ti.second);
+		return boost::python::make_tuple(ti.first,ti.second);
 	}
 
 

@@ -6,16 +6,16 @@ using namespace bsplines;
 using namespace boost::python;
 
   // Function wrappers turn std::pairs into tuples.
-tuple timeInterval1(const bsplines::BSpline * bs)
+boost::python::tuple timeInterval1(const bsplines::BSpline * bs)
 {
   std::pair<double,double> ti = bs->timeInterval();
-  return make_tuple(ti.first,ti.second);
+  return boost::python::make_tuple(ti.first,ti.second);
 }
 
-tuple timeInterval2(const bsplines::BSpline * bs, int i)
+boost::python::tuple timeInterval2(const bsplines::BSpline * bs, int i)
 {
   std::pair<double,double> ti = bs->timeInterval(i);
-  return make_tuple(ti.first,ti.second);
+  return boost::python::make_tuple(ti.first,ti.second);
 }
 
 template <class T> class BiFunction {

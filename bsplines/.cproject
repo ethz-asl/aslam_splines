@@ -27,7 +27,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ROS_WORKSPACE}/schweizer_messer/sm_kinematics/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ROS_WORKSPACE}/schweizer_messer/sm_eigen/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ROS_WORKSPACE}/schweizer_messer/sm_common/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ROS_WORKSPACE}/aslam/sparse_block_matrix/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ROS_WORKSPACE}/aslam_optimizer/sparse_block_matrix/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/bsplines/include}&quot;"/>
 									<listOptionValue builtIn="false" value="/usr/include/python2.7"/>
 									<listOptionValue builtIn="false" value="/usr/include/eigen3"/>
@@ -79,7 +79,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ROS_WORKSPACE}/schweizer_messer/sm_timing/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ROS_WORKSPACE}/schweizer_messer/numpy_eigen/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ROS_WORKSPACE}/schweizer_messer/sm_kinematics/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ROS_WORKSPACE}/aslam/sparse_block_matrix/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ROS_WORKSPACE}/aslam_optimizer/sparse_block_matrix/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ROS_WORKSPACE}/schweizer_messer/sm_eigen/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ROS_WORKSPACE}/schweizer_messer/sm_common/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/bsplines/include}&quot;"/>

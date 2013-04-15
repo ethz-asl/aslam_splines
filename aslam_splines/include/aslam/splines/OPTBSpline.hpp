@@ -74,6 +74,17 @@ namespace internal {
 		/// \brief Revert the last state update.
 		virtual void revertUpdateImplementation() { this->getControlVertex() = _p_v ; }
 
+    /// Returns the content of the design variable
+    virtual void getParametersImplementation(Eigen::MatrixXd& value) const {
+      value = this->getControlVertex();
+    }
+
+    /// Sets the content of the design variable
+    virtual void setParametersImplementation(const Eigen::MatrixXd& value) {
+      _p_v = this->getControlVertex();
+      this->getControlVertex() = value;
+    }
+
 		inline aslam::backend::DesignVariable & getDesignVariable(){ return *this; }
 		inline const aslam::backend::DesignVariable & getDesignVariable() const { return *this; }
 	};

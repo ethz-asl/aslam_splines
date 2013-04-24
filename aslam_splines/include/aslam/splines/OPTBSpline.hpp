@@ -74,16 +74,16 @@ namespace internal {
 		/// \brief Revert the last state update.
 		virtual void revertUpdateImplementation() { this->getControlVertex() = _p_v ; }
 
-    /// Returns the content of the design variable
-    virtual void getParametersImplementation(Eigen::MatrixXd& value) const {
-      value = this->getControlVertex();
-    }
+		/// Returns the content of the design variable
+		virtual void getParametersImplementation(Eigen::MatrixXd& value) const {
+			value = this->getControlVertex();
+		}
 
-    /// Sets the content of the design variable
-    virtual void setParametersImplementation(const Eigen::MatrixXd& value) {
-      _p_v = this->getControlVertex();
-      this->getControlVertex() = value;
-    }
+		/// Sets the content of the design variable
+		virtual void setParametersImplementation(const Eigen::MatrixXd& value) {
+			_p_v = this->getControlVertex();
+			this->getControlVertex() = value;
+		}
 
 		inline aslam::backend::DesignVariable & getDesignVariable(){ return *this; }
 		inline const aslam::backend::DesignVariable & getDesignVariable() const { return *this; }
@@ -131,9 +131,9 @@ public:
 
 	template <int IMaxDerivativeOrder>
 	class ExpressionFactory {
-    public:
-        typedef typename spline_t::template Evaluator<IMaxDerivativeOrder> eval_t;
-        typedef boost::shared_ptr<const eval_t> eval_ptr_t;
+public:
+	typedef typename spline_t::template Evaluator<IMaxDerivativeOrder> eval_t;
+	typedef boost::shared_ptr<const eval_t> eval_ptr_t;
 	protected:
 		eval_ptr_t _evalPtr;
 
@@ -143,7 +143,7 @@ public:
 		const eval_t & getEvaluator() const { return *_evalPtr; };
 
 		/// \brief get an value expression
-		expression_t getValueExpression(int derivativeOrder) const;
+		expression_t getValueExpression(int derivativeOrder = 0) const;
 	};
 
 	template <int IMaxDerivativeOrder> inline ExpressionFactory<IMaxDerivativeOrder> getExpressionFactoryAt(const time_t & t) const { return ExpressionFactory<IMaxDerivativeOrder>(*this, t); }

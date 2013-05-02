@@ -172,6 +172,12 @@ namespace bsplines {
       return evalD(tk,2).head<3>();
     }
 
+    Eigen::Vector3d BSplinePose::linearAccelerationBodyFrame(double tk) const
+    {
+      Eigen::VectorXd r = evalD(tk, 0);
+      Eigen::Matrix3d C_wb = rotation_->parametersToRotationMatrix(r.tail<3>());
+      return C_wb.transpose() * evalD(tk, 2).head<3>();
+    }
 
     Eigen::Vector3d BSplinePose::linearAccelerationAndJacobian(double tk, Eigen::MatrixXd * J, Eigen::VectorXi * coefficientIndices) const
     {

@@ -68,6 +68,7 @@ namespace bsplines {
       Eigen::Vector3d linearVelocityBodyFrame(double tk) const;
 
       Eigen::Vector3d linearAcceleration(double tk) const;
+      Eigen::Vector3d linearAccelerationBodyFrame(double tk) const;
       Eigen::Vector3d linearAccelerationAndJacobian(double tk, Eigen::MatrixXd * J, Eigen::VectorXi * coefficientIndices) const;      
 
       Eigen::Vector3d angularVelocity(double tk) const;

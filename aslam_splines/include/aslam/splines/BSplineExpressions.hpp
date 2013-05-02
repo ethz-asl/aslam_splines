@@ -117,6 +117,29 @@ namespace aslam {
 
         };
 
+    class BSplineAccelerationBodyFrameExpressionNode :
+      public aslam::backend::EuclideanExpressionNode {
+    public:
+        BSplineAccelerationBodyFrameExpressionNode(bsplines::BSplinePose*
+          spline, const std::vector<aslam::backend::DesignVariable*>&
+          designVariables, double time);
+        virtual ~BSplineAccelerationBodyFrameExpressionNode();
+
+    protected:
+        virtual Eigen::Vector3d toEuclideanImplementation();
+        virtual void evaluateJacobiansImplementation(
+          aslam::backend::JacobianContainer& outJacobians) const;
+        virtual void evaluateJacobiansImplementation(
+          aslam::backend::JacobianContainer& outJacobians,
+          const Eigen::MatrixXd& applyChainRule) const;
+        virtual void getDesignVariablesImplementation(
+          aslam::backend::DesignVariable::set_t& designVariables) const;
+
+        bsplines::BSplinePose* _spline;
+        std::vector<aslam::backend::DesignVariable*> _designVariables;
+        double _time;
+
+    };
 
         class BSplineAngularVelocityBodyFrameExpressionNode : public aslam::backend::EuclideanExpressionNode
         {

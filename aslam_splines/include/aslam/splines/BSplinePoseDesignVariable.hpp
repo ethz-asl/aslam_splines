@@ -46,6 +46,8 @@ namespace aslam {
             // Fabio:
             //aslam::backend::EuclideanExpression angularAccelerationBodyFrame(double tk);
 
+      aslam::backend::EuclideanExpression linearAccelerationBodyFrame(double tk);
+
             size_t numDesignVariables();
             aslam::backend::DesignVariableMappedVector<6> * designVariable(size_t i);
 

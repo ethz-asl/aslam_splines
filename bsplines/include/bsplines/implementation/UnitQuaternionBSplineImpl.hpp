@@ -19,7 +19,7 @@ namespace bsplines{
 	using namespace eigenTools;
 	using namespace manifolds;
 
-	int factorial(int i){
+	inline int factorial(int i){
 		SM_ASSERT_LT_DBG(std::runtime_error, i ,  13, "factorial is only supported up to 12");
 		if(i == 0) return 1;
 		long ret = 1;
@@ -453,10 +453,6 @@ namespace bsplines{
 	template<int IMaximalDerivativeOrder>
 	inline _CLASS::Evaluator<IMaximalDerivativeOrder> _CLASS::getEvaluatorAt(const time_t & t) const{
 		return typename _CLASS::template Evaluator<IMaximalDerivativeOrder>(this->getDerived(), t);
-	}
-	_TEMPLATE
-	inline _CLASS::Evaluator<0> _CLASS::getEvaluatorAt(const time_t & t) const{
-		return getEvaluatorAt<0>(t);
 	}
 
 	#undef _CLASS

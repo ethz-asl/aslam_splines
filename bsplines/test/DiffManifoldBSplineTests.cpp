@@ -74,8 +74,6 @@ TEST(DiffManifoldBSplineTestSuite, testInitialization)
 
 	TestSpline::SegmentConstIterator i = rbspline.getAbsoluteBegin(), end = rbspline.getAbsoluteEnd();
 
-	Eigen::MatrixXd zeroM = Eigen::MatrixXd::Zero(splineOrder, splineOrder);
-
 	int c = 0;
 	double lastKnot = minTime;
 
@@ -84,7 +82,7 @@ TEST(DiffManifoldBSplineTestSuite, testInitialization)
 	std::vector<double> knots = bspline.knots();
 
 	for(; i != end; i++){
-		assert(i->getControlVertex() == x);
+		sm::eigen::assertEqual(i->getControlVertex(), x, SM_SOURCE_FILE_POS);
 
 		double tKnot = i.getKnot();
 
@@ -92,20 +90,110 @@ TEST(DiffManifoldBSplineTestSuite, testInitialization)
 
 		if(!(c < splineOrder - 1|| c >= numberOfSegments + splineOrder - 1)){
 			if(tKnot != maxTime){
-				SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt(tKnot).getKnot(), tKnot, "");
-				SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt(tKnot + 1e-13).getKnot(), rbspline.getEvaluatorAt(tKnot).getKnot(), "");
+				SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt<0>(tKnot).getKnot(), tKnot, "");
+				SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt<0>(tKnot + 1e-13).getKnot(), rbspline.getEvaluatorAt<0>(tKnot).getKnot(), "");
 			}
 			else{
-				SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt(tKnot).getKnot(), lastKnot, "");
+				SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt<0>(tKnot).getKnot(), lastKnot, "");
 			}
 			if(tKnot != minTime)
-				SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt(tKnot - 1e-13).getKnot(), lastKnot, "");
+				SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt<0>(tKnot - 1e-13).getKnot(), lastKnot, "");
 
-			lastKnot = rbspline.getEvaluatorAt(tKnot).getKnot();
+			lastKnot = rbspline.getEvaluatorAt<0>(tKnot).getKnot();
 		}
 		c++;
 	}
 }
+
+TEST(DiffManifoldBSplineTestSuite, testAddingSegments)
+{
+	TestSpline rbspline;
+	typedef TestSpline::point_t point_t;
+
+	unsigned int numberOfSegments = 1;
+	double minTime = 0, maxTime = 1, delta = maxTime - minTime;
+
+	struct PointSource {
+		int i;
+		bool random;
+
+		TestSpline::point_t getNext(){
+			return random ? point_t(point_t::Random(rows)) : point_t(point_t::Ones(rows) * (double)(i++));
+		}
+
+		PointSource(bool random) : i(0), random(random){}
+	} pointSource(false);
+
+	rbspline.initConstantUniformSpline(minTime, maxTime, numberOfSegments, ones * -1);
+	vector<TestSpline::point_t> vertices;
+	for(int i = rbspline.getNumControlVertices(); i != 0; i --){
+		vertices.push_back(pointSource.getNext());
+	}
+	setControlVerticesFromContainer(rbspline, vertices);
+
+	for(unsigned int i = 0; i < 10 ; i ++){
+		SM_ASSERT_EQ(std::runtime_error, rbspline.getAbsoluteNumberOfSegments(), numberOfSegments + splineOrder * 2 - 1, "");
+		SM_ASSERT_EQ(std::runtime_error, maxTime, rbspline.getMaxTime(), "");
+
+		SM_ASSERT_EQ(std::runtime_error, rbspline.firstRelevantSegment().getKnot(), rbspline.getEvaluatorAt<0>(minTime)._firstRelevantControlVertexIt.getKnot(),"");
+
+		SM_ASSERT_EQ(std::runtime_error, minTime, rbspline.getEvaluatorAt<0>(minTime).getKnot(),"");
+		SM_ASSERT_EQ(std::runtime_error, minTime, rbspline.getEvaluatorAt<0>(minTime + 0.01).getKnot(), "");
+		SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt<0>(maxTime - 0.01).getKnot(), rbspline.getEvaluatorAt<0>(maxTime).getKnot(), ""); //TODO remove this irregularity
+		SM_ASSERT_GT(std::runtime_error, maxTime, rbspline.getEvaluatorAt<0>(maxTime - 0.01).getKnot(), "");
+
+		TestSpline rbsplineToCompare;
+		rbsplineToCompare.initConstantUniformSpline(minTime, maxTime, numberOfSegments, ones * -1);
+		setControlVerticesFromContainer(rbsplineToCompare, vertices);
+
+
+		double lastKnot = minTime;
+		unsigned int c = 0;
+		for(TestSpline::SegmentConstIterator it = rbspline.getAbsoluteBegin(), end = rbspline.getAbsoluteEnd(), itToCompare = rbsplineToCompare.getAbsoluteBegin(); it != end; it++){
+			if(c < vertices.size()){
+				SM_ASSERT_EQ(std::runtime_error, it->getControlVertex(), itToCompare->getControlVertex(), "control vertices should match at segment data " << c);
+				if(c > splineOrder - 1)
+					SM_ASSERT_EQ(std::runtime_error, it->getBasisMatrix(), itToCompare->getBasisMatrix(), "basis matrices should match at segment data " << c);
+			}
+
+			const double tKnot = it.getKnot();
+
+			SM_ASSERT_EQ(std::runtime_error, itToCompare.getKnot(), tKnot, " c = " << c);
+
+			if(!(c < splineOrder - 1|| c >= numberOfSegments + splineOrder - 1)){
+				if(tKnot != maxTime){
+					SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt<0>(tKnot).getKnot(), tKnot, "");
+					SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt<0>(tKnot + 1e-13).getKnot(), rbspline.getEvaluatorAt<0>(tKnot).getKnot(), "");
+				}
+				else{
+					SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt<0>(tKnot).getKnot(), lastKnot, "");
+				}
+				if(tKnot != minTime)
+					SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt<0>(tKnot - 1e-13).getKnot(), lastKnot, "");
+
+				lastKnot = rbspline.getEvaluatorAt<0>(tKnot).getKnot();
+			}
+			itToCompare++;
+			c++;
+		}
+		SM_ASSERT_EQ(std::runtime_error, c, numberOfSegments + 2 * splineOrder - 1, "too few segments found");
+
+		for(unsigned int i = 0; i <= numberOfTimeSteps; i ++) {
+			double t = minTime + (maxTime - minTime) * ((double) i / numberOfTimeSteps);
+			TestSpline::point_t rval = rbspline.getEvaluatorAt<0>(t).eval();
+			TestSpline::point_t rvalToCompare = rbsplineToCompare.getEvaluatorAt<0>(t).eval();
+			sm::eigen::assertNear(rval, rvalToCompare, 1E-9, SM_SOURCE_FILE_POS, "");
+		}
+
+		unsigned int segmentsInc = i > 5 ? 1 : 2;
+		maxTime += delta * segmentsInc;
+		TestSpline::point_t x = pointSource.getNext();
+		for(int j = segmentsInc; j != 0 ; j--) vertices.push_back(x);
+		rbspline.appendSegmentsUniformly(segmentsInc, &x);
+		numberOfSegments += segmentsInc;
+	}
+}
+
 
 TEST(DiffManifoldBSplineTestSuite, testGetBi)
 {
@@ -123,7 +211,7 @@ TEST(DiffManifoldBSplineTestSuite, testGetBi)
 
 	for(int i = 0; i <= numTimeSteps; i ++) {
 		double t = minTime + duration * ((double) i / numTimeSteps);
-		TestSpline::Evaluator<0> evaluator = rbspline.getEvaluatorAt(t);
+		TestSpline::Evaluator<0> evaluator = rbspline.getEvaluatorAt<0>(t);
 		Eigen::VectorXd localBiVector = evaluator.getLocalBi();
 		SM_ASSERT_EQ(std::runtime_error, localBiVector.rows(), splineOrder, "");
 		SM_ASSERT_NEAR(std::runtime_error, localBiVector.sum(), 1.0, 1e-10, "the bis at a given time should always sum up to 1")
@@ -137,11 +225,11 @@ TEST(DiffManifoldBSplineTestSuite, testGetBi)
 
 		SM_ASSERT_NEAR(std::runtime_error, (double)localCumulativeBiVector[0], 1.0, 1e-10, "");
 
-		sm::eigen::assertNear(bspline.getLocalBiVector(t), rbspline.getEvaluatorAt(t).getLocalBi(), 1E-9, SM_SOURCE_FILE_POS);
-		sm::eigen::assertNear(bspline.getLocalBiVector(t), rbsplineDS.getEvaluatorAt(t).getLocalBi(), 1E-9, SM_SOURCE_FILE_POS);
-		sm::eigen::assertNear(bspline.getLocalCumulativeBiVector(t), rbspline.getEvaluatorAt(t).getLocalCumulativeBi(), 1E-9, SM_SOURCE_FILE_POS);
-		sm::eigen::assertNear(bspline.getLocalCumulativeBiVector(t), rbsplineDS.getEvaluatorAt(t).getLocalCumulativeBi(), 1E-9, SM_SOURCE_FILE_POS);
-		sm::eigen::assertNear(bspline.eval(t), rbspline.getEvaluatorAt(t).eval(), 1e-9, SM_SOURCE_FILE_POS);
+		sm::eigen::assertNear(bspline.getLocalBiVector(t), rbspline.getEvaluatorAt<0>(t).getLocalBi(), 1E-9, SM_SOURCE_FILE_POS);
+		sm::eigen::assertNear(bspline.getLocalBiVector(t), rbsplineDS.getEvaluatorAt<0>(t).getLocalBi(), 1E-9, SM_SOURCE_FILE_POS);
+		sm::eigen::assertNear(bspline.getLocalCumulativeBiVector(t), rbspline.getEvaluatorAt<0>(t).getLocalCumulativeBi(), 1E-9, SM_SOURCE_FILE_POS);
+		sm::eigen::assertNear(bspline.getLocalCumulativeBiVector(t), rbsplineDS.getEvaluatorAt<0>(t).getLocalCumulativeBi(), 1E-9, SM_SOURCE_FILE_POS);
+		sm::eigen::assertNear(bspline.eval(t), rbspline.getEvaluatorAt<0>(t).eval(), 1e-9, SM_SOURCE_FILE_POS);
 
 		for(int j = 0, n = splineOrder; j < n; j++){
 			if(j > 0){
@@ -158,7 +246,7 @@ TEST(DiffManifoldBSplineTestSuite, testLongTimeBSplineCompilation)
 	TestSplineLongTime::point_t p = zero;
 	p[0] = 1.0;
 	rbspline.initConstantUniformSpline(minTimeLong, maxTimeLong, numberOfSegments, p);
-	sm::eigen::assertEqual(rbspline.getEvaluatorAt(maxTimeLong).eval(), p, SM_SOURCE_FILE_POS);
+	sm::eigen::assertEqual(rbspline.getEvaluatorAt<0>(maxTimeLong).eval(), p, SM_SOURCE_FILE_POS);
 }
 
 } //namespace bsplines

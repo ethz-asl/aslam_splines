@@ -29,6 +29,7 @@ void _CLASS::init() {
 	parent_t::init();
 	// Create all of the design variables as maps into the vector of spline coefficients.
 
+	_designVariables.clear();
 	for(SegmentIterator i = this->firstRelevantSegment(), end = this->end(); i != end; i++)
 	{
 		_designVariables.push_back((dv_t* )& i->getDesignVariable());
@@ -149,10 +150,6 @@ void _CLASS::addSegment(time_t t, const point_t & p) {
 //					_bspline.fixedSizeVvCoefficientVector<D>(
 //							_bspline.numVvCoefficients()
 //									- 1)));
-//	for (int i = 0; i < _bspline.numVvCoefficients() - 1; i++) {
-//		_designVariables[i].updateMap(
-//				_bspline.fixedSizeVvCoefficientVector<D>(i).data());
-//	}
 }
 
 _TEMPLATE
@@ -163,20 +160,12 @@ void _CLASS::addSegment2(time_t t, const point_t & p, double lambda) {
 //					_bspline.fixedSizeVvCoefficientVector<D>(
 //							_bspline.numVvCoefficients()
 //									- 1)));
-//	for (int i = 0; i < _bspline.numVvCoefficients() - 1; i++) {
-//		_designVariables[i].updateMap(
-//				_bspline.fixedSizeVvCoefficientVector<D>(i).data());
-//	}
 }
 
 _TEMPLATE
 void _CLASS::removeSegment() {
-//TODo	_bspline.removeCurveSegment();
+//TODO	_bspline.removeCurveSegment();
 //	_designVariables.erase(_designVariables.begin());
-//	for (int i = 0; i < _bspline.numVvCoefficients(); i++) {
-//		_designVariables[i].updateMap(
-//				_bspline.fixedSizeVvCoefficientVector<D>(i).data());
-//	}
 }
 
 #undef _CLASS

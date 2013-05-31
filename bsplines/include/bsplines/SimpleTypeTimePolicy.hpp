@@ -26,7 +26,7 @@ namespace bsplines {
 
 		inline static time_t linearlyInterpolate(time_t from, time_t till, int segments, int pos)
 		{
-			return (till - from) / segments * pos;
+			return from + computeDuration(from, till) / segments * pos;
 		}
 
 		inline static int getSegmentNumber(time_t from, time_t till, int segments, time_t t)

@@ -511,10 +511,19 @@ template<typename TSpline> void copyKnots(TSpline & src, BSpline & dest){
 }
 
 template <typename TSpline>
-void setControlVertices(TSpline & spline, Eigen::MatrixXd coefficients){
+void setControlVertices(TSpline & spline, Eigen::MatrixXd controlVertices){
 	typename TSpline::SegmentIterator it = spline.getAbsoluteBegin();
-	for(int c = 0, n = coefficients.cols(); c < n ; c++){
-		it->getControlVertex() = coefficients.col(c);
+	for(int c = 0, n = controlVertices.cols(); c < n ; c++){
+		it->getControlVertex() = controlVertices.col(c);
+		it++;
+	}
+}
+
+template <typename TSpline, typename Container>
+void setControlVerticesFromContainer(TSpline & spline, const Container & controlVertices){
+	typename TSpline::SegmentIterator it = spline.getAbsoluteBegin();
+	for(typename TSpline::point_t p : controlVertices){
+		it->getControlVertex() = p;
 		it++;
 	}
 }

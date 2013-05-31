@@ -72,9 +72,8 @@ namespace bsplines {
 		_segments->insert(typename segment_map_t::value_type(time, createSegmentData(time, point)));
 	}
 
-
 	template<typename Iterator>
-	void moveIterator(Iterator & it, const Iterator & limit, int steps)
+	inline void moveIterator(Iterator & it, const Iterator & limit, int steps)
 	{
 		if(steps == 0)
 			return;
@@ -94,8 +93,30 @@ namespace bsplines {
 		}
 	}
 
+	template<typename Iterator>
+	inline Iterator getMovedIterator(const Iterator & it, const Iterator & limit, int steps)
+	{
+		Iterator nIt(it);
+		moveIterator(nIt, limit, steps);
+		return nIt;
+	}
+
+	_TEMPLATE
+	inline
+	void _CLASS::assertEvaluable() const {
+		SM_ASSERT_EQ(Exception, internal::state::EVALUABLE, getState(), "This spline is currently not evaluable. Did you call init() after initialization or last knot manipulations?");
+	}
+
+	_TEMPLATE
+	inline
+	void _CLASS::assertConstructing() const {
+		SM_ASSERT_EQ(Exception, internal::state::CONSTRUCTING, getState(), "This spline is currently in constructing state. Did you call init() twice without intermediate knot manipulations?");
+	}
+
 	_TEMPLATE
 	void _CLASS::init(){
+		assertConstructing();
+
 		SM_ASSERT_GE(Exception, getNumValidTimeSegments(), 1, "There must be at least one segment");
 
 		_firstRelevantSegment = _segments->begin();
@@ -103,6 +124,8 @@ namespace bsplines {
 		moveIterator(_end = _segments->end(), SegmentIterator(_segments->begin()), - getSplineOrder());
 
 		initializeBasisMatrices();
+
+		getDerived().setState(internal::state::EVALUABLE);
 	}
 
 
@@ -118,15 +141,39 @@ namespace bsplines {
 		for(int i = 0; i < K; i++)
 			addControlVertex(timeCalculator.getTimeByKnotIndex(i), constant);
 
-		static_cast<typename TConfigurationDerived::BSpline *>(this)->init();
+		getDerived().init();
 	}
 
-	template<typename Iterator>
-	Iterator getMovedIterator(const Iterator & it, const Iterator & limit, int steps)
-	{
-		Iterator nIt(it);
-		moveIterator(nIt, limit, steps);
-		return nIt;
+	_TEMPLATE
+	typename _CLASS::time_t _CLASS::appendSegmentsUniformly(int numSegments = 1, const point_t * value = NULL) {
+		SegmentIterator it = getAbsoluteEnd(), aBegin = getAbsoluteBegin();
+		moveIterator(it, aBegin, -1);
+
+		time_t aEndKnot = it.getKnot();
+
+		moveIterator(it, aBegin, -1);
+		time_t beforeAEndKnot = it.getKnot();
+
+		moveIterator(it, aBegin, -(getSplineOrder() - 2));
+		SM_ASSERT_TRUE(Exception, _end == it, "Append may only be called on a tail slice.");
+
+		for(int j = 0; j < numSegments; j++){
+			time_t newKnot = TTimePolicy::linearlyInterpolate(beforeAEndKnot, aEndKnot, 1, 2 + j);
+			addKnot(newKnot);
+			if(value != NULL) {
+				it->setControlVertex(*value);
+				it++;
+			}
+		}
+
+		SegmentIterator formerLast = getMovedIterator(_end, aBegin, -1);
+
+		moveIterator(_end, getAbsoluteEnd(), numSegments);
+
+		if(getState() == internal::state::EVALUABLE){
+			initializeBasisMatrices(getMovedIterator(formerLast, aBegin, -(getSplineOrder() - 1)), formerLast);
+		}
+		return getMaxTime();
 	}
 
 	_TEMPLATE
@@ -153,22 +200,22 @@ namespace bsplines {
 	}
 
 	_TEMPLATE
-	void _CLASS::initializeBasisMatrices()
+	void _CLASS::initializeBasisMatrices(){
+		initializeBasisMatrices(_firstRelevantSegment,  _begin);
+	}
+
+	_TEMPLATE
+	void _CLASS::initializeBasisMatrices(SegmentMapIterator currentKnotIt, SegmentMapIterator currentBasisMatrixIt)
 	{
 		const int splineOrder = getSplineOrder();
-
 		const SegmentMapIterator end = _segments->end();
-
-		SegmentMapIterator currentKnotIt = _firstRelevantSegment;
-		SegmentMapIterator currentBasisMatrixIt = _begin;
 
 		std::deque<time_t> relevantKnots; //TODO optimize : replace deque with a fixed size (splineOrder * 2 - 1) circular sequence on the stack
 
-		// try to collect the first ISplineOrder * 2 - 1 knots
+		// try to collect the first splineOrder * 2 - 1 knots
 		for (int c = 0, n = splineOrder * 2 - 1; c < n; c++){
 			relevantKnots.push_back(currentKnotIt->first);
 			if(c == splineOrder - 1){
-				// start writing basisMatrices from here
 				SM_ASSERT_TRUE(Exception, currentBasisMatrixIt == currentKnotIt, "internal error");
 			}
 			if(currentKnotIt == end){
@@ -178,19 +225,14 @@ namespace bsplines {
 			currentKnotIt++;
 		}
 
-
 		// collect further knots and build the basis matrices until end
 		for(; currentKnotIt != end && currentBasisMatrixIt != _end; currentKnotIt++)
 		{
 			relevantKnots.push_back(currentKnotIt->first);
 			currentBasisMatrixIt->second.getBasisMatrix() = M(getSplineOrder(), relevantKnots);
-//				std::cout << "RM[" << currentBasisMatrixIt->first << "]:\n" << currentBasisMatrixIt->second.getBasisMatrix() << std::endl;
-
 			currentBasisMatrixIt ++;
-
 			relevantKnots.erase(relevantKnots.begin());
 		}
-//			std::cout << "initialized " << std::endl;
 	}
 
 
@@ -320,6 +362,7 @@ namespace bsplines {
 
 	_TEMPLATE
 	inline int _CLASS::getNumControlVertices() const{
+		assertEvaluable();
 		return KnotArithmetics::getNumControlVerticesRequired(getNumValidTimeSegments(), getSplineOrder());
 	}
 
@@ -820,11 +863,11 @@ namespace bsplines {
 		return _spline;
 	}
 
-
 	_TEMPLATE
 	template<int IMaximalDerivativeOrder>
 	inline _CLASS::Evaluator<IMaximalDerivativeOrder> _CLASS::getEvaluatorAt(const time_t & t) const {
-		return Evaluator<IMaximalDerivativeOrder>(*this, t);
+		assertEvaluable();
+		return Evaluator<IMaximalDerivativeOrder>(this->getDerived(), t);
 	}
 
 #undef _TEMPLATE

@@ -7,7 +7,7 @@ TEST(DiffManifoldBSplineTestSuite, testQuaternionBSplineCompilation)
 	UnitQuaternionBSpline<splineOrder>::TYPE rbspline;
 	const UnitQuaternionBSpline<splineOrder>::TYPE::point_t p = UnitQuaternionBSpline<splineOrder>::TYPE::point_t(1, 0, 0, 0);
 	rbspline.initConstantUniformSpline(minTime, maxTime, numberOfSegments, p);
-	sm::eigen::assertEqual(rbspline.getEvaluatorAt(minTime).eval(), p, SM_SOURCE_FILE_POS);
+	sm::eigen::assertEqual(rbspline.getEvaluatorAt<0>(minTime).eval(), p, SM_SOURCE_FILE_POS);
 }
 
 TEST(UnitQuaternionBSplineTestSuite, differentEvalMethodsEvalTheSame)
@@ -31,7 +31,7 @@ TEST(UnitQuaternionBSplineTestSuite, differentEvalMethodsEvalTheSame)
 		sm::eigen::assertNear(eval.evalDRecursive(0), eval.evalGeneric(), 1E-9, SM_SOURCE_FILE_POS);
 		sm::eigen::assertNear(eval.evalDRecursive(1), eval.evalD1Special(), 1E-9, SM_SOURCE_FILE_POS);
 
-		//compare generic recursive computation of Jacobian with the optimized one.
+		//compare generic recursive computation of Jacobian with the optimized one.s
 		eval.evalJacobianDRecursive(0, jac1);
 		eval.evalJacobian(jac2);
 		sm::eigen::assertNear(jac1, jac2, 1E-9, SM_SOURCE_FILE_POS);

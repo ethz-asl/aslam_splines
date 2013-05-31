@@ -43,13 +43,13 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 	for(int i = 0; i <= numberOfTimeSteps; i ++) {
 		double t = minTime + duration * ((double) i / numberOfTimeSteps);
 		TestSpline::point_t val = bspline.eval(t);
-		TestSpline::point_t rval = rbspline.getEvaluatorAt(t).eval();
-		TestSpline::point_t rvalDS = rbsplineDS.getEvaluatorAt(t).eval();
-		TestSpline::point_t rvalSD = rbsplineSD.getEvaluatorAt(t).eval();
-		TestSpline::point_t rvalDD = rbsplineDD.getEvaluatorAt(t).eval();
-		TestSpline::point_t rvalG = rbspline.getEvaluatorAt(t).evalGeneric();
-		TestSpline::point_t rvalDG = rbsplineDS.getEvaluatorAt(t).evalGeneric();
-		TestSpline::point_t rvalDDG = rbsplineDD.getEvaluatorAt(t).evalGeneric();
+		TestSpline::point_t rval = rbspline.getEvaluatorAt<0>(t).eval();
+		TestSpline::point_t rvalDS = rbsplineDS.getEvaluatorAt<0>(t).eval();
+		TestSpline::point_t rvalSD = rbsplineSD.getEvaluatorAt<0>(t).eval();
+		TestSpline::point_t rvalDD = rbsplineDD.getEvaluatorAt<0>(t).eval();
+		TestSpline::point_t rvalG = rbspline.getEvaluatorAt<0>(t).evalGeneric();
+		TestSpline::point_t rvalDG = rbsplineDS.getEvaluatorAt<0>(t).evalGeneric();
+		TestSpline::point_t rvalDDG = rbsplineDD.getEvaluatorAt<0>(t).evalGeneric();
 		sm::eigen::assertNear(rval, rvalDS, 1E-9, SM_SOURCE_FILE_POS, "");
 		sm::eigen::assertNear(rval, rvalSD, 1E-9, SM_SOURCE_FILE_POS, "");
 		sm::eigen::assertNear(rval, rvalDD, 1E-9, SM_SOURCE_FILE_POS, "");
@@ -146,7 +146,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 			double w3 = 0;
 			sm::timing::Timer timer("getLocalBi Evaluator");
 			for(double t = minTime; t <= maxTime; t += duration / steps){
-				w3 += rbspline.getEvaluatorAt(t).getLocalBi()[0];
+				w3 += rbspline.getEvaluatorAt<0>(t).getLocalBi()[0];
 			}
 			timer.stop();
 		}
@@ -154,7 +154,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 			double w4 = 0;
 			sm::timing::Timer timer("getLocalBi Evaluator dynamic static");
 			for(double t = minTime; t <= maxTime; t += duration / steps){
-				w4 += rbsplineDS.getEvaluatorAt(t).getLocalBi()[0];
+				w4 += rbsplineDS.getEvaluatorAt<0>(t).getLocalBi()[0];
 			}
 			timer.stop();
 		}
@@ -162,7 +162,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 			double w4 = 0;
 			sm::timing::Timer timer("getLocalBi Evaluator static dynamic");
 			for(double t = minTime; t <= maxTime; t += duration / steps){
-				w4 += rbsplineSD.getEvaluatorAt(t).getLocalBi()[0];
+				w4 += rbsplineSD.getEvaluatorAt<0>(t).getLocalBi()[0];
 			}
 			timer.stop();
 		}
@@ -175,43 +175,43 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 		{
 			sm::timing::Timer timer("eval rbspline");
 			for(double t = minTime; t <= maxTime; t += duration / steps)
-				rbspline.getEvaluatorAt(t).eval();
+				rbspline.getEvaluatorAt<0>(t).eval();
 			timer.stop();
 		}
 		{
 			sm::timing::Timer timer("eval rbspline dynamic static");
 			for(double t = minTime; t <= maxTime; t += duration / steps)
-				rbsplineDS.getEvaluatorAt(t).eval();
+				rbsplineDS.getEvaluatorAt<0>(t).eval();
 			timer.stop();
 		}
 		{
 			sm::timing::Timer timer("eval rbspline static dynamic");
 			for(double t = minTime; t <= maxTime; t += duration / steps)
-				rbsplineSD.getEvaluatorAt(t).eval();
+				rbsplineSD.getEvaluatorAt<0>(t).eval();
 			timer.stop();
 		}
 		{
 			sm::timing::Timer timer("eval rbspline dynamic dynamic");
 			for(double t = minTime; t <= maxTime; t += duration / steps)
-				rbsplineDD.getEvaluatorAt(t).eval();
+				rbsplineDD.getEvaluatorAt<0>(t).eval();
 			timer.stop();
 		}
 		{
 			sm::timing::Timer timer("eval rbspline generic");
 			for(double t = minTime; t <= maxTime; t += duration / steps)
-				rbspline.getEvaluatorAt(t).evalGeneric();
+				rbspline.getEvaluatorAt<0>(t).evalGeneric();
 			timer.stop();
 		}
 		{
 			sm::timing::Timer timer("eval rbspline dynamic generic");
 			for(double t = minTime; t <= maxTime; t += duration / steps)
-				rbsplineDS.getEvaluatorAt(t).evalGeneric();
+				rbsplineDS.getEvaluatorAt<0>(t).evalGeneric();
 			timer.stop();
 		}
 		{
 			sm::timing::Timer timer("eval rbspline dynamic dynamic generic");
 			for(double t = minTime; t <= maxTime; t += duration / steps)
-				rbsplineDD.getEvaluatorAt(t).evalGeneric();
+				rbsplineDD.getEvaluatorAt<0>(t).evalGeneric();
 			timer.stop();
 		}
 		{
@@ -225,7 +225,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 		{
 			sm::timing::Timer timer("evalTwice rbspline");
 			for(double t = minTime; t <= maxTime; t += duration / steps){
-				TestSpline::Evaluator<0> evaluator = rbspline.getEvaluatorAt(t);
+				TestSpline::Evaluator<0> evaluator = rbspline.getEvaluatorAt<0>(t);
 				evaluator.eval();
 				evaluator.eval();
 			}
@@ -234,7 +234,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 		{
 			sm::timing::Timer timer("evalTwice rbspline dynamic static");
 			for(double t = minTime; t <= maxTime; t += duration / steps){
-				TestSplineDS::Evaluator<0> evaluator = rbsplineDS.getEvaluatorAt(t);
+				TestSplineDS::Evaluator<0> evaluator = rbsplineDS.getEvaluatorAt<0>(t);
 				evaluator.eval();
 				evaluator.eval();
 			}
@@ -243,7 +243,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 		{
 			sm::timing::Timer timer("evalTwice rbspline static dynamic");
 			for(double t = minTime; t <= maxTime; t += duration / steps){
-				TestSplineSD::Evaluator<0> evaluator = rbsplineSD.getEvaluatorAt(t);
+				TestSplineSD::Evaluator<0> evaluator = rbsplineSD.getEvaluatorAt<0>(t);
 				evaluator.eval();
 				evaluator.eval();
 			}
@@ -252,7 +252,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 		{
 			sm::timing::Timer timer("evalTwice rbspline dynamic dynamic");
 			for(double t = minTime; t <= maxTime; t += duration / steps){
-				TestSplineDD::Evaluator<0> evaluator = rbsplineDD.getEvaluatorAt(t);
+				TestSplineDD::Evaluator<0> evaluator = rbsplineDD.getEvaluatorAt<0>(t);
 				evaluator.eval();
 				evaluator.eval();
 			}
@@ -261,7 +261,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 		{
 			sm::timing::Timer timer("evalTwice rbspline generic");
 			for(double t = minTime; t <= maxTime; t += duration / steps){
-				TestSpline::Evaluator<0> evaluator = rbspline.getEvaluatorAt(t);
+				TestSpline::Evaluator<0> evaluator = rbspline.getEvaluatorAt<0>(t);
 				evaluator.evalGeneric();
 				evaluator.evalGeneric();
 			}
@@ -270,7 +270,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 		{
 			sm::timing::Timer timer("evalTwice rbspline dynamic static generic");
 			for(double t = minTime; t <= maxTime; t += duration / steps){
-				TestSplineDS::Evaluator<0> evaluator = rbsplineDS.getEvaluatorAt(t);
+				TestSplineDS::Evaluator<0> evaluator = rbsplineDS.getEvaluatorAt<0>(t);
 				evaluator.evalGeneric();
 				evaluator.evalGeneric();
 			}
@@ -279,7 +279,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 		{
 			sm::timing::Timer timer("evalTwice rbspline static dynamic generic");
 			for(double t = minTime; t <= maxTime; t += duration / steps){
-				TestSplineSD::Evaluator<0> evaluator = rbsplineSD.getEvaluatorAt(t);
+				TestSplineSD::Evaluator<0> evaluator = rbsplineSD.getEvaluatorAt<0>(t);
 				evaluator.evalGeneric();
 				evaluator.evalGeneric();
 			}
@@ -288,7 +288,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 		{
 			sm::timing::Timer timer("evalTwice rbspline dynamic dynamic generic");
 			for(double t = minTime; t <= maxTime; t += duration / steps){
-				TestSplineDD::Evaluator<0> evaluator = rbsplineDD.getEvaluatorAt(t);
+				TestSplineDD::Evaluator<0> evaluator = rbsplineDD.getEvaluatorAt<0>(t);
 				evaluator.evalGeneric();
 				evaluator.evalGeneric();
 			}
@@ -366,10 +366,10 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineFitting)
 	for(int i = 0; i <= numberOfTimeSteps; i ++) {
 		double t = minTime + duration * ((double) i / numberOfTimeSteps);
 		Eigen::VectorXd val = bspline.eval(t);
-		Eigen::VectorXd rval = rbspline.getEvaluatorAt(t).eval();
-		Eigen::VectorXd rvalDS = rbsplineDS.getEvaluatorAt(t).eval();
-		Eigen::VectorXd rvalSD = rbsplineSD.getEvaluatorAt(t).eval();
-		Eigen::VectorXd rvalDD = rbsplineDD.getEvaluatorAt(t).eval();
+		Eigen::VectorXd rval = rbspline.getEvaluatorAt<0>(t).eval();
+		Eigen::VectorXd rvalDS = rbsplineDS.getEvaluatorAt<0>(t).eval();
+		Eigen::VectorXd rvalSD = rbsplineSD.getEvaluatorAt<0>(t).eval();
+		Eigen::VectorXd rvalDD = rbsplineDD.getEvaluatorAt<0>(t).eval();
 		sm::eigen::assertNear(rvalSD, rvalDS, 1E-9, SM_SOURCE_FILE_POS, "");
 		sm::eigen::assertNear(rvalSD, rvalDD, 1E-9, SM_SOURCE_FILE_POS, "");
 		sm::eigen::assertNear(rval, rvalDD, 1E-9, SM_SOURCE_FILE_POS, "");
@@ -487,11 +487,11 @@ void testBSplineJacobiansSO(){
 	{
 		TestSplineDD bs(ISplineOrder, dim);
 		for(int i = 0; i < nk; i++) bs.addKnot(i);
+		bs.init();
 
 		int nc = bs.getNumControlVertices();
 		Eigen::MatrixXd C = Eigen::MatrixXd::Random(dim,nc);
 		setControlVertices(bs, C);
-		bs.init();//TODO add assertions : assert initialization in all public functions
 
 		Eigen::MatrixXd J(dim, dim * ISplineOrder);
 		Eigen::VectorXd coefficients(dim * ISplineOrder);

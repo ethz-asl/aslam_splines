@@ -44,6 +44,10 @@ namespace bsplines {
 
 
 	namespace internal {
+		namespace state {
+			enum SplineState { CONSTRUCTING, EVALUABLE };
+		}
+
 		template <typename TDiffManifoldBSplineConfiguration>
 		struct DiffManifoldBSplineTraits {
 			enum { NeedsCumulativeBasisMatrices = false };
@@ -57,20 +61,22 @@ namespace bsplines {
 			typedef typename TDiffManifoldBSplineConfiguration::TimePolicy::time_t time_t;
 			typedef Eigen::Matrix<typename Manifold::scalar_t, TDiffManifoldBSplineConfiguration::SplineOrder::VALUE, TDiffManifoldBSplineConfiguration::SplineOrder::VALUE> basis_matrix_t;
 
-		protected:
-			point_t _point;
-			basis_matrix_t _basisMatrix;
 		public:
 			inline point_t & getControlVertex() { return _point; }
 			inline basis_matrix_t & getBasisMatrix() { return _basisMatrix; }
 
-			inline void invalidateCache();
-			inline void setControlVertex(const point_t & point) { _point = point; invalidateCache(); }
+			inline void setControlVertex(const point_t & point) { _point = point; }
 
 			inline const point_t & getControlVertex() const { return _point; }
 			inline const basis_matrix_t & getBasisMatrix() const { return _basisMatrix; }
+			inline time_t getKnot() const { return _t; }
+			inline time_t getTime() const { return getKnot(); }
 
-			inline SegmentData(const TDiffManifoldBSplineConfiguration & conf, const time_t & t, const point_t & point) : _point(point), _basisMatrix((int)conf.getSplineOrder(), (int)conf.getSplineOrder()) {}
+			inline SegmentData(const TDiffManifoldBSplineConfiguration & conf, const time_t & t, const point_t & point) : _point(point), _basisMatrix((int)conf.getSplineOrder(), (int)conf.getSplineOrder()), _t(t) {}
+		protected:
+			point_t _point;
+			basis_matrix_t _basisMatrix;
+			time_t _t;
 		};
 
 		template <typename TDiffManifoldBSplineConfiguration>
@@ -150,7 +156,7 @@ namespace bsplines {
 		typedef typename segment_map_t::SegmentConstIterator SegmentConstIterator;
 
 
-		DiffManifoldBSpline(const configuration_t & configuration) : _configuration(configuration), _manifold(configuration), _segments(new segment_map_t()){}
+		DiffManifoldBSpline(const configuration_t & configuration) : _configuration(configuration), _state(internal::state::CONSTRUCTING), _manifold(configuration), _segments(new segment_map_t()) {}
 
 		inline typename configuration_t::SplineOrder getSplineOrder() const { return _configuration.getSplineOrder(); }
 		inline typename configuration_t::Dimension getDimension() const { return _configuration.getDimension(); }
@@ -179,8 +185,30 @@ namespace bsplines {
 
 		void initConstantUniformSpline(const time_t & t_min, const time_t & t_max, int numSegments, const point_t & constant);
 
+		/**
+		 * Appends numSegments knots to the spline, such that after that the last 2 + numSegments knots in the spline are uniformly spaced.
+		 * These knots are all in the future (i.e. greater or equal to getMaxTime() result before the knot was appended.
+		 * The new value of getMaxTime() will be the knot position numSegmetns after the one with the former getMaxTime value.
+		 *
+		 * This is only allowed on slices up to the splines end. Then it extends the slice as well.
+		 *
+		 * @param the number of segments to be added
+		 * @param value the value for the newly relevant control vertices.
+		 * @return returns the new maximal time.
+		 */
+		time_t appendSegmentsUniformly(int numSegments, const point_t * value);
+
+		/**
+		 * Get the number of valid time segments in the slice. Valid is a time segment, in whose interior spline order many basis functions are nonzero.
+		 * This requires at least spline order -1 many knots before its left hand knot and after its right hand knot.
+		 * @return the number of valid time segments
+		 */
 		inline int getNumValidTimeSegments() const;
 
+		/**
+		 * Get the number of relevant control vertices for this slice. Relevant is a control vertex if its value affects the splines value in the valid time segments of the slice.
+		 * @return the number relevant control vertices
+		 */
 		inline int getNumControlVertices() const;
 
 		/**
@@ -292,6 +320,7 @@ namespace bsplines {
 			template<typename TSpline> friend class BSplineFitter;
 			FRIEND_TEST(DiffManifoldBSplineTestSuite, testGetBi);
 			FRIEND_TEST(DiffManifoldBSplineTestSuite, testInitialization);
+			FRIEND_TEST(DiffManifoldBSplineTestSuite, testAddingSegments);
 			FRIEND_TEST(UnitQuaternionBSplineTestSuite, evalAngularVelocityAndAcceleration);
 		};
 
@@ -302,6 +331,7 @@ namespace bsplines {
 		typedef typename KnotArithmetics::UniformTimeCalculator<TimePolicy> UniformTimeCalculator;
 
 		const TConfigurationDerived _configuration;
+		enum internal::state::SplineState _state;
 		const manifold_t _manifold;
 		const boost::shared_ptr<segment_map_t> _segments;
 		SegmentIterator _begin, _end, _firstRelevantSegment;
@@ -311,6 +341,12 @@ namespace bsplines {
 
 		inline segment_map_t & getSegmentMap();
 		inline const segment_map_t & getSegmentMap() const;
+
+		inline internal::state::SplineState getState() const { return _state; }
+		inline void setState(internal::state::SplineState state) { _state = state; }
+
+		inline void assertEvaluable() const;
+		inline void assertConstructing() const;
 
 		/**
 		 * compute duration
@@ -331,6 +367,7 @@ namespace bsplines {
 		inline static double getDurationAsDouble(duration_t d);
 
 		void initializeBasisMatrices();
+		void initializeBasisMatrices(SegmentMapIterator startKnotIt, SegmentMapIterator startBasisMatrixIt);
 
 		segment_data_t createSegmentData(const time_t & time, const point_t & point) const;
 

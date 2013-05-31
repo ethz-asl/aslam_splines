@@ -124,7 +124,7 @@ public:
 
 	std::vector<dv_t *> getDesignVariables(time_t time);
 
-	// add one Segment at the end of the PoseSpline
+	// add one Segment at the end of the Spline
 	void addSegment(time_t t, const point_t & p);
 	void addSegment2(time_t t, const point_t & p, double lambda);
 	void removeSegment();

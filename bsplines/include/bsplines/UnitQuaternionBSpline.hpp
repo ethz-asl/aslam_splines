@@ -112,7 +112,6 @@ namespace bsplines {
 
 		template<int IMaximalDerivativeOrder>
 		inline Evaluator<IMaximalDerivativeOrder> getEvaluatorAt(const time_t & t) const;
-		inline Evaluator<0> getEvaluatorAt(const time_t & t) const;
 	};
 
 

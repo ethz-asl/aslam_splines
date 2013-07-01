@@ -196,7 +196,7 @@ namespace bsplines {
 		 * @param value the value for the newly relevant control vertices.
 		 * @return returns the new maximal time.
 		 */
-		time_t appendSegmentsUniformly(int numSegments, const point_t * value);
+		time_t appendSegmentsUniformly(unsigned int numSegments, const point_t * value);
 
 		/**
 		 * Get the number of valid time segments in the slice. Valid is a time segment, in whose interior spline order many basis functions are nonzero.

@@ -74,7 +74,7 @@ TEST(DiffManifoldBSplineTestSuite, testInitialization)
 
 	TestSpline::SegmentConstIterator i = rbspline.getAbsoluteBegin(), end = rbspline.getAbsoluteEnd();
 
-	int c = 0;
+	unsigned c = 0;
 	double lastKnot = minTime;
 
 	BSpline bspline = BSpline(splineOrder);

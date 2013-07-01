@@ -26,14 +26,14 @@
 namespace bsplines
 {
 
-const int splineOrder = 4;
-const int rows = 4;
+const unsigned int splineOrder = 4;
+const unsigned int rows = 4;
 const double minTime = 0;
 const double maxTime = 1;
 const double duration = maxTime - minTime;
 
-const int numberOfSegments = 20;
-const int numberOfTimeSteps = 30;
+const unsigned int numberOfSegments = 20;
+const unsigned int numberOfTimeSteps = 30;
 
 
 typedef EuclideanBSpline<>::TYPE TestSplineDD;

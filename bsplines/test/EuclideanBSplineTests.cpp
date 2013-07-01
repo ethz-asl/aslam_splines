@@ -40,7 +40,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 	setControlVertices(rbsplineSD, coefficients);
 	setControlVertices(rbsplineDD, coefficients);
 
-	for(int i = 0; i <= numberOfTimeSteps; i ++) {
+	for(unsigned int i = 0; i <= numberOfTimeSteps; i ++) {
 		double t = minTime + duration * ((double) i / numberOfTimeSteps);
 		TestSpline::point_t val = bspline.eval(t);
 		TestSpline::point_t rval = rbspline.getEvaluatorAt<0>(t).eval();
@@ -58,7 +58,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 		sm::eigen::assertNear(rval, rvalDDG, 1E-9, SM_SOURCE_FILE_POS, "");
 		sm::eigen::assertNear(rval, val, 1E-9, SM_SOURCE_FILE_POS, "");
 
-		for(int derivativeOrder = 0; derivativeOrder <= splineOrder + 1; derivativeOrder++){
+		for(unsigned int derivativeOrder = 0; derivativeOrder <= splineOrder + 1; derivativeOrder++){
 			std::stringstream atS;
 			atS << "t=" << t<< ", derivativeOrder=" << derivativeOrder;
 			std::string at = atS.str();
@@ -102,7 +102,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 			sm::eigen::assertNear(rjac, jac, 1E-9, SM_SOURCE_FILE_POS, at);
 		}
 
-		for(int j = 0; j <= numberOfTimeSteps; j ++) {
+		for(unsigned int j = 0; j <= numberOfTimeSteps; j ++) {
 			double t2 = minTime + duration * ((double) j / numberOfTimeSteps);
 			Eigen::VectorXd val = bspline.evalIntegral(t, t2);
 			Eigen::VectorXd rval = rbspline.evalIntegral(t, t2);
@@ -363,7 +363,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineFitting)
 	SM_ASSERT_EQ(std::runtime_error, maxTime, rbspline.getMaxTime(), "");
 	SM_ASSERT_EQ(std::runtime_error, minTime, rbspline.getMinTime(), "");
 
-	for(int i = 0; i <= numberOfTimeSteps; i ++) {
+	for(unsigned int i = 0; i <= numberOfTimeSteps; i ++) {
 		double t = minTime + duration * ((double) i / numberOfTimeSteps);
 		Eigen::VectorXd val = bspline.eval(t);
 		Eigen::VectorXd rval = rbspline.getEvaluatorAt<0>(t).eval();

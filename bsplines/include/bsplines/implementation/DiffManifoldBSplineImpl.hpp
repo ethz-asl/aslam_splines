@@ -145,7 +145,7 @@ namespace bsplines {
 	}
 
 	_TEMPLATE
-	typename _CLASS::time_t _CLASS::appendSegmentsUniformly(int numSegments = 1, const point_t * value = NULL) {
+	typename _CLASS::time_t _CLASS::appendSegmentsUniformly(unsigned int numSegments = 1, const point_t * value = NULL) {
 		SegmentIterator it = getAbsoluteEnd(), aBegin = getAbsoluteBegin();
 		moveIterator(it, aBegin, -1);
 
@@ -157,7 +157,7 @@ namespace bsplines {
 		moveIterator(it, aBegin, -(getSplineOrder() - 2));
 		SM_ASSERT_TRUE(Exception, _end == it, "Append may only be called on a tail slice.");
 
-		for(int j = 0; j < numSegments; j++){
+		for(unsigned int j = 0; j < numSegments; j++) {
 			time_t newKnot = TTimePolicy::linearlyInterpolate(beforeAEndKnot, aEndKnot, 1, 2 + j);
 			addKnot(newKnot);
 			if(value != NULL) {

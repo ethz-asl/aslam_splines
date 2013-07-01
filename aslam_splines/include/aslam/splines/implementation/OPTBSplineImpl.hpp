@@ -135,7 +135,7 @@ std::vector<typename _CLASS::dv_t *> _CLASS::getDesignVariables(time_t tk) {
 	using namespace std;
 
 	int j = 0;
-	for (SegmentIterator back = this->getSegmentIterator(tk), i = getFirstRelevantSegmentByLast(back), end=++back; i != end; ++i) {
+	for (SegmentIterator back = this->getSegmentIterator(tk), i = this->getFirstRelevantSegmentByLast(back), end=++back; i != end; ++i) {
 		dvs[j++] = &i->getDesignVariable();
 	}
 	return dvs;

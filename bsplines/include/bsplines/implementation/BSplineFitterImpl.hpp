@@ -274,7 +274,7 @@ namespace bsplines{
 		int s = 0;
 		for(typename TSpline::SegmentConstIterator sIt = spline.begin(), end = spline.end(); sIt != end; sIt++)
 		{
-			addOrSetSegmentQuadraticIntegralDiag(spline, Wdiag, sIt, derivativeOrder, Q, false);
+			addOrSetSegmentQuadraticIntegralDiag<Q_T &>(spline, Wdiag, sIt, derivativeOrder, Q, false);
 			brow += spline.getPointSize();
 			// place the DxD blocks in the blocksInBlock x blocksInBlock blocks:
 			for(int i = 0; i < blocksInBlock; i++) {

@@ -253,7 +253,6 @@ namespace bsplines{
 			addOrSetSegmentQuadraticIntegralDiag(spline, Wdiag, sIt, derivativeOrder, toMatrix.block(brow, brow, qiSize, qiSize), true);
 			brow += spline.getPointSize();
 		}
-
 	}
 
 	// sparse curveQuaddraticIntegral:
@@ -268,8 +267,6 @@ namespace bsplines{
 		int brow = 0;
 		Q_T Q((int)qiSize, (int)qiSize);
 
-//		// define rows / cols:
-//		// blocksize:
 		int D = spline.getPointSize();
 		int blocksInBlock = spline.getSplineOrder();
 //

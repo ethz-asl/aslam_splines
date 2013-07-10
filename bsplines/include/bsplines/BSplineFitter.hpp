@@ -29,8 +29,8 @@ private:
 
 	template<typename M_T>
 	static void addOrSetSegmentQuadraticIntegralDiag(const TSpline & spline, const point_t & Wdiag, typename TSpline::SegmentConstIterator segmentIt, int derivativeOrder, M_T toMatrix, bool add);
-	template <typename M_T>
 
+	template <typename M_T>
 	static void computeBijInto(const TSpline & spline, const typename TSpline::SegmentConstIterator & segmentIndex, int columnIndex, M_T B);
 
 	template <typename M_T>

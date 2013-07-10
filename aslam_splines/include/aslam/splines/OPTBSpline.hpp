@@ -64,8 +64,9 @@ namespace internal {
 
 		/// \brief Update the design variable.
 		virtual void updateImplementation(const double * dp, int size){
-			if(!TDiffManifoldBSplineConfiguration::Dimension::IS_DYNAMIC)
+			if(!TDiffManifoldBSplineConfiguration::Dimension::IS_DYNAMIC){
 				SM_ASSERT_EQ_DBG(std::runtime_error, Dimension, size, "");
+			}
 			_p_v = this->getControlVertex();
 			Eigen::Map<const tangent_vector_t> dpV(dp, size);
 			manifolds::internal::DiffManifoldPointUpdateTraits<typename TDiffManifoldBSplineConfiguration::ManifoldConf>::update(this->getControlVertex(), dpV);

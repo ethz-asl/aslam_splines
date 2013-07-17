@@ -50,6 +50,11 @@ typename _CLASS::dv_t * _CLASS::designVariable(
 }
 
 _TEMPLATE
+const std::vector<typename _CLASS::dv_t *> & _CLASS::getDesignVariables() {
+  return _designVariables;
+}
+
+_TEMPLATE
 template <int IMaxDerivativeOrder>
 _CLASS::ExpressionFactory<IMaxDerivativeOrder>::ExpressionFactory(const spline_t & spline, const time_t & t) : _evalPtr(new eval_t(spline, t)) {
 }

@@ -123,6 +123,7 @@ public:
 
 	void init();
 
+	const std::vector<dv_t *> & getDesignVariables();
 	std::vector<dv_t *> getDesignVariables(time_t time);
 
 	// add one Segment at the end of the Spline

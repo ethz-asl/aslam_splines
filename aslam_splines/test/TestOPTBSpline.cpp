@@ -5,13 +5,21 @@
  *      Author: hannes
  */
 
-
 #include <sm/eigen/gtest.hpp>
 #include <sm/eigen/NumericalDiff.hpp>
+#include <sm/kinematics/Transformation.hpp>
 #include <aslam/splines/OPTBSpline.hpp>
 #include <aslam/splines/OPTUnitQuaternionBSpline.hpp>
 #include <bsplines/EuclideanBSpline.hpp>
 #include <bsplines/UnitQuaternionBSpline.hpp>
+#include <aslam/backend/TransformationBasic.hpp>
+#include <aslam/backend/EuclideanPoint.hpp>
+#include <aslam/backend/TransformationExpression.hpp>
+#include <aslam/backend/Vector2RotationQuaternionExpressionAdapter.hpp>
+#include <aslam/backend/ErrorTermTransformation.hpp>
+#include <aslam/backend/test/ErrorTermTestHarness.hpp>
+#include <aslam/backend/test/ExpressionTests.hpp>
+#include <aslam/backend/test/RotationExpressionTests.hpp>
 
 using namespace aslam::backend;
 using namespace sm::kinematics;
@@ -19,9 +27,10 @@ using namespace aslam::splines;
 using namespace bsplines;
 using namespace std;
 
-const int numSegments = 10, numberOfTimesToProbe = 10;
+const int numSegments = 3, numberOfTimesToProbe = 10;
 const double tmin = 0;
-const double tmax = numSegments;
+const double tmax = numSegments / 2.0;
+const bool randomizeControlVertices = true;
 
 template <typename TConf, int ISplineOrder, int IDim, bool BDimRequired> struct ConfCreator {
 	static inline TConf create(){
@@ -49,6 +58,12 @@ struct OPTSplineSpecializationTester
 };
 
 
+template <typename TSplineMap, int ISplineOrder>
+struct MaxDerivative {
+	enum { VALUE = ISplineOrder };
+};
+
+
 template <typename TSplineMap, int ISplineOrder, int IDim>
 struct OPTSplineTester{
 	typedef typename OPTBSpline<typename TSplineMap::CONF>::BSpline TestBSpline;
@@ -62,21 +77,21 @@ struct OPTSplineTester{
 
 		const int pointSize = bspline.getPointSize();
 
-		typename TestBSpline::point_t initPoint(pointSize);
+		SM_ASSERT_EQ(std::runtime_error, ISplineOrder, bspline.getSplineOrder(), "");
+		SM_ASSERT_EQ(std::runtime_error, IDim, bspline.getDimension(), "");
 
-		bspline.getManifold().randomizePoint(initPoint);
-		bspline.initConstantUniformSpline(tmin, tmax, numSegments, initPoint);
+		bspline.initConstantUniformSpline(tmin, tmax, numSegments, bspline.getManifold().getDefaultPoint());
 		double update[IDim];
 		update[0] = 1;
-		for (typename TestBSpline::SegmentIterator i = bspline.begin(), end =
-				bspline.end(); i != end; i++) {
+		for (typename TestBSpline::SegmentIterator i = bspline.begin(), end = bspline.end(); i != end; i++) {
 			point_t & p = i->getControlVertex();
-			bspline.getManifold().randomizePoint(p);
+			if(randomizeControlVertices){
+				bspline.getManifold().randomizePoint(p);
+			}
 			point_t op = p;
 
 			typename TestBSpline::dv_t & dv = *bspline.getDesignVariables(i.getKnot())[ISplineOrder - 1];
-			SM_ASSERT_EQ(std::runtime_error, &dv, &i->getDesignVariable(),
-					"");
+			SM_ASSERT_EQ(std::runtime_error, &dv, &i->getDesignVariable(), "");
 
 			dv.update(update, IDim);
 
@@ -91,48 +106,60 @@ struct OPTSplineTester{
 
 
 		for(int k = 0; k < numberOfTimesToProbe; k++){
-			double t = tmin + ((double) rand() / RAND_MAX) * (tmax - tmin);
-			typename TestBSpline::template ExpressionFactory<1> fact = bspline.template getExpressionFactoryAt < 1 > (t);
+			double t = tmin + ((k % 2 == 0) ? ((double) (k / 2) / ((numberOfTimesToProbe - 1)/ 2)) : ((double) rand() / RAND_MAX)) * (tmax - tmin);
+			const int maxDerivativeOrder = MaxDerivative<TSplineMap, ISplineOrder>::VALUE;
+			typename TestBSpline::template ExpressionFactory<maxDerivativeOrder> fact = bspline.template getExpressionFactoryAt <maxDerivativeOrder> (t);
+			typename TestBSpline::template Evaluator<maxDerivativeOrder> eval = bspline.template getEvaluatorAt <maxDerivativeOrder > (t);
+//			std::cout << "t=" << t << std::endl; // XXX: debug output of t
+			for(int derivativeOrder = 0; derivativeOrder <= maxDerivativeOrder; derivativeOrder++){
+//				std::cout << "derivativeOrder=" << derivativeOrder << std::endl; // XXX: debug output of derivativeOrder
+				BOOST_AUTO(expression, fact.getValueExpression(derivativeOrder));
 
-			BOOST_AUTO(expression, fact.getValueExpression(1));
+				sm::eigen::assertEqual(fact.getEvaluator().evalD(derivativeOrder), expression.evaluate(), SM_SOURCE_FILE_POS);
+				sm::eigen::assertEqual(eval.evalD(derivativeOrder), expression.evaluate(), SM_SOURCE_FILE_POS);
 
-			sm::eigen::assertEqual(fact.getEvaluator().evalD(1), expression.evaluate(), SM_SOURCE_FILE_POS);
+				JacobianContainer jac(pointSize);
+				DesignVariable::set_t set;
+				expression.getDesignVariables(set);
 
+				std::vector<DesignVariable *> varVec = bspline.getDesignVariables(t);
+				SM_ASSERT_EQ(std::runtime_error, set.size(), varVec.size(), "");
 
-			typename TestBSpline::template Evaluator<1> eval = bspline.template getEvaluatorAt < 1 > (t);
-			sm::eigen::assertEqual(eval.evalD(1), expression.evaluate(), SM_SOURCE_FILE_POS);
+				int c = 0;
+				for(std::vector<DesignVariable *>::iterator i = varVec.begin(), end = varVec.end(); i != end; i++){
+					(*i)->setActive(true);
+					(*i)->setBlockIndex(c++);
+					SM_ASSERT_EQ(std::runtime_error, set.count(*i), 1, "");
+				}
 
-			JacobianContainer jac(pointSize);
-			DesignVariable::set_t set;
-			expression.getDesignVariables(set);
+				expression.evaluateJacobians(jac);
 
-			std::vector<DesignVariable *> varVec = bspline.getDesignVariables(t);
-			SM_ASSERT_EQ(std::runtime_error, set.size(), varVec.size(), "");
+				typename TestBSpline::full_jacobian_t J;
+				eval.evalJacobian(derivativeOrder, J);
+				sm::eigen::assertEqual(J, jac.asDenseMatrix(), SM_SOURCE_FILE_POS);
+				fact.getEvaluator().evalJacobian(derivativeOrder, J);
+				sm::eigen::assertEqual(J, jac.asDenseMatrix(), SM_SOURCE_FILE_POS);
 
-			int c = 0;
-			for(std::vector<DesignVariable *>::iterator i = varVec.begin(), end = varVec.end(); i != end; i++){
-				(*i)->setActive(true);
-				(*i)->setBlockIndex(c++);
-				SM_ASSERT_EQ(std::runtime_error, set.count(*i), 1, "");
-			}
+				{
+					SCOPED_TRACE("");
+					testJacobian(expression, false, 1E-3, 1E-6);
+				}
 
-			expression.evaluateJacobians(jac);
+				OPTSplineSpecializationTester<TSplineMap, ISplineOrder, IDim>::test(bspline, t);
 
-			typename TestBSpline::full_jacobian_t J;
-			eval.evalJacobian(1, J);
-			sm::eigen::assertEqual(J, jac.asDenseMatrix(), SM_SOURCE_FILE_POS);
-
-			OPTSplineSpecializationTester<TSplineMap, ISplineOrder, IDim>::test(bspline, t);
-
-			for(std::vector<DesignVariable *>::iterator i = varVec.begin(), end = varVec.end(); i != end; i++){
-				(*i)->setActive(false);
-				(*i)->setBlockIndex(-1);
+				for(std::vector<DesignVariable *>::iterator i = varVec.begin(), end = varVec.end(); i != end; i++){
+					(*i)->setActive(false);
+					(*i)->setBlockIndex(-1);
+				}
 			}
 		}
 	}
 };
 
-
+template <int IEigenSplineOrder, int ISplineOrder>
+struct MaxDerivative<UnitQuaternionBSpline<IEigenSplineOrder>, ISplineOrder> {
+	enum { LIMIT=UnitQuaternionBSpline<IEigenSplineOrder>::TYPE::MaxSupportedDerivativeOrderJacobian, VALUE = LIMIT < ISplineOrder ? LIMIT : ISplineOrder };
+};
 
 template <int IEigenSplineOrder, int ISplineOrder, int IDim>
 struct OPTSplineSpecializationTester<UnitQuaternionBSpline<IEigenSplineOrder>, ISplineOrder, IDim>
@@ -159,14 +186,130 @@ struct OPTSplineSpecializationTester<UnitQuaternionBSpline<IEigenSplineOrder>, I
 		aaexpression.evaluateJacobians(jac);
 		eval.evalAngularAccelerationJacobian(J);
 		sm::eigen::assertEqual(J, jac.asDenseMatrix(), SM_SOURCE_FILE_POS);
+
+		{
+			SCOPED_TRACE("");
+			testJacobian(avexpression, false, 1E-3, 1E-6);
+		}
+		{
+			SCOPED_TRACE("");
+			testJacobian(aaexpression, false, 1E-3, 1E-6);
+		}
 	}
 };
 
-TEST(OPTBSplineTestSuite, testCompilationAndExpressions)
+TEST(OPTBSplineTestSuite, testCompilationAndExpressionsEuclidean)
 {
 	OPTSplineTester<EuclideanBSpline<2, Eigen::Dynamic>, 2, 3>::testCompilationAndExpressions();
 	OPTSplineTester<EuclideanBSpline<3, 2>, 3, 2>::testCompilationAndExpressions();
 	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 3, 2>::testCompilationAndExpressions();
+	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 4, 2>::testCompilationAndExpressions();
+	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 5, 2>::testCompilationAndExpressions();
+	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 6, 2>::testCompilationAndExpressions();
+}
+
+TEST(OPTBSplineTestSuite, testCompilationAndExpressionsUnitQuaternionStaticOrder2)
+{
 	OPTSplineTester<UnitQuaternionBSpline<2>, 2, 3>::testCompilationAndExpressions();
+}
+
+TEST(OPTBSplineTestSuite, testCompilationAndExpressionsUnitQuaternionDynamicOrder2)
+{
+	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 2, 3>::testCompilationAndExpressions();
+}
+
+TEST(OPTBSplineTestSuite, testCompilationAndExpressionsUnitQuaternionDynamicOrder3)
+{
+	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 3, 3>::testCompilationAndExpressions();
+}
+
+TEST(OPTBSplineTestSuite, testCompilationAndExpressionsUnitQuaternionDynamicOrder4)
+{
 	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 4, 3>::testCompilationAndExpressions();
 }
+
+TEST(OPTBSplineTestSuite, testCompilationAndExpressionsUnitQuaternionDynamicOrder5)
+{
+	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 5, 3>::testCompilationAndExpressions();
+}
+
+TEST(OPTBSplineTestSuite, testPoseErrorWithOPTSplines)
+{
+	try {
+		using namespace aslam::backend;
+		sm::kinematics::Transformation T_random;
+		T_random.setRandom(0.05, 0.01);
+		sm::kinematics::Transformation T_prior;
+
+		OPTBSpline<typename UnitQuaternionBSpline<2>::CONF>::BSpline testSpline;
+
+		testSpline.initConstantUniformSpline(0, 10, 2, quatRandom());
+
+		double t = 5;
+		int blockIndex = 0;
+		for(DesignVariable * pDV : testSpline.getDesignVariables()){
+			pDV->setActive(true);
+			pDV->setBlockIndex(blockIndex++);
+		}
+		auto valueExpression = testSpline.getExpressionFactoryAt<0>(t).getValueExpression();
+		{
+			SCOPED_TRACE("");
+			testJacobian(valueExpression);
+		}
+
+		RotationExpression rexp(Vector2RotationQuaternionExpressionAdapter::adapt(VectorExpression<4>(valueExpression)));
+		for(int i = 0 ; i < 3 ; i++)
+		{
+			SCOPED_TRACE("");
+			Eigen::Vector3d v;
+			v.setZero();
+			v(i) = 1;
+			testJacobian(rexp * EuclideanExpression(v));
+		}
+
+		{
+			SCOPED_TRACE("");
+			testJacobian(rexp);
+		}
+
+		EuclideanPoint ep(T_prior.t());
+		ep.setActive(true);
+		ep.setBlockIndex(blockIndex++);
+
+		EuclideanExpression eexp(&ep);
+
+
+		TransformationBasic Tb(rexp, eexp);
+		TransformationExpression T(&Tb);
+
+		HomogeneousExpression he(Eigen::Vector4d::Random().eval());
+		{
+			SCOPED_TRACE("");
+			testJacobian(T * he);
+		}
+
+		Eigen::MatrixXd N = Eigen::MatrixXd::Zero(6,6);
+		N(0,0) = 1e-3;
+		N(1,1) = 1e-3;
+		N(2,2) = 1e-3;
+		N(3,3) = 1e0;
+		N(4,4) = 1e0;
+		N(5,5) = 1e0;
+
+		// Create the ErrorTerm
+		ErrorTermTransformation ett(T, T_random, N);
+		// Create the test harness
+		aslam::backend::ErrorTermTestHarness<6> harness(&ett);
+
+		// Run the unit tests.
+		{
+			SCOPED_TRACE("");
+			harness.testAll(1e-5);
+		}
+	}
+	catch(const std::exception & e)
+	{
+		FAIL() << e.what();
+	}
+}
+

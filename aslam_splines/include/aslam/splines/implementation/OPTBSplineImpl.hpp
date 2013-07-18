@@ -178,4 +178,65 @@ void _CLASS::removeSegment() {
 
 } // namespace bsplines
 
+#ifdef USE_EXTERN_TEMPLATES
+#ifndef USE_EXTERN_TEMPLATES_INSTANCIATION_FILE
+#define OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD extern
+#else
+#define OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD
+#endif
+#include <bsplines/EuclideanBSpline.hpp>
+#include <bsplines/UnitQuaternionBSpline.hpp>
+#include <aslam/splines/OPTUnitQuaternionBSpline.hpp>
+
+#ifdef USE_EXTERN_TEMPLATES_INSTANCIATION_FILE
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::bsplines::DiffManifoldBSpline< ::bsplines::EuclideanBSplineConfiguration< ::manifolds::EuclideanSpaceConf<> > >;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline< ::bsplines::EuclideanBSplineConfiguration< ::manifolds::EuclideanSpaceConf<> > >;
+
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::bsplines::DiffManifoldBSpline< ::bsplines::EuclideanBSplineConfiguration< ::manifolds::EuclideanSpaceConf<>, 1> >;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline< ::bsplines::EuclideanBSplineConfiguration< ::manifolds::EuclideanSpaceConf<>, 1> >;
+
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::bsplines::DiffManifoldBSpline< ::bsplines::EuclideanBSplineConfiguration< ::manifolds::EuclideanSpaceConf<>, 2> >;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline< ::bsplines::EuclideanBSplineConfiguration< ::manifolds::EuclideanSpaceConf<>, 2> >;
+
+
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::bsplines::DiffManifoldBSpline< ::bsplines::UnitQuaternionBSplineConfiguration<  > >;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::DesignVariableSegmentBSplineConf< ::bsplines::UnitQuaternionBSplineConfiguration< > >;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline< ::bsplines::UnitQuaternionBSplineConfiguration< > >;
+
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::bsplines::DiffManifoldBSpline< ::bsplines::UnitQuaternionBSplineConfiguration< ::manifolds::UnitQuaternionManifoldConf<>, 1> >;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::DesignVariableSegmentBSplineConf< ::bsplines::UnitQuaternionBSplineConfiguration< ::manifolds::UnitQuaternionManifoldConf<>, 1> >;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline< ::bsplines::UnitQuaternionBSplineConfiguration< ::manifolds::UnitQuaternionManifoldConf<>, 1> >;
+
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::bsplines::DiffManifoldBSpline< ::bsplines::UnitQuaternionBSplineConfiguration< ::manifolds::UnitQuaternionManifoldConf<>, 2> >;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::DesignVariableSegmentBSplineConf< ::bsplines::UnitQuaternionBSplineConfiguration< ::manifolds::UnitQuaternionManifoldConf<>, 2> >;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline< ::bsplines::UnitQuaternionBSplineConfiguration< ::manifolds::UnitQuaternionManifoldConf<>, 2> >;
+
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::bsplines::DiffManifoldBSpline< ::bsplines::UnitQuaternionBSplineConfiguration< ::manifolds::UnitQuaternionManifoldConf<>, 3> >;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::DesignVariableSegmentBSplineConf< ::bsplines::UnitQuaternionBSplineConfiguration< ::manifolds::UnitQuaternionManifoldConf<>, 3> >;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline< ::bsplines::UnitQuaternionBSplineConfiguration< ::manifolds::UnitQuaternionManifoldConf<>, 3> >;
+
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::bsplines::DiffManifoldBSpline< ::bsplines::UnitQuaternionBSplineConfiguration< ::manifolds::UnitQuaternionManifoldConf<>, 4> >;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::DesignVariableSegmentBSplineConf< ::bsplines::UnitQuaternionBSplineConfiguration< ::manifolds::UnitQuaternionManifoldConf<>, 4> >;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline< ::bsplines::UnitQuaternionBSplineConfiguration< ::manifolds::UnitQuaternionManifoldConf<>, 4> >;
+
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline<typename ::bsplines::EuclideanBSpline<3>::CONF>;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline<typename ::bsplines::EuclideanBSpline<4>::CONF>;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline<typename ::bsplines::EuclideanBSpline<Eigen::Dynamic, 1>::CONF>;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline<typename ::bsplines::EuclideanBSpline<2, 1>::CONF>;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline<typename ::bsplines::EuclideanBSpline<3, 1>::CONF>;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline<typename ::bsplines::EuclideanBSpline<4, 1>::CONF>;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline<typename ::bsplines::EuclideanBSpline<Eigen::Dynamic, 2>::CONF>;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline<typename ::bsplines::EuclideanBSpline<2, 2>::CONF>;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline<typename ::bsplines::EuclideanBSpline<3, 2>::CONF>;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline<typename ::bsplines::EuclideanBSpline<4, 2>::CONF>;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline<typename ::bsplines::EuclideanBSpline<Eigen::Dynamic, 3>::CONF>;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline<typename ::bsplines::EuclideanBSpline<2, 3>::CONF>;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline<typename ::bsplines::EuclideanBSpline<3, 3>::CONF>;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline<typename ::bsplines::EuclideanBSpline<4, 3>::CONF>;
+#endif
+
+#undef OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD
+
+#endif
+
 #endif /* OPTBSPLINEIMPL_HPP_ */

@@ -36,7 +36,6 @@ namespace bsplines {
 	class DiffManifoldBSpline<UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>, TConfigurationDerived> : public DiffManifoldBSpline<typename UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>::ParentConf, TConfigurationDerived> {
 		typedef DiffManifoldBSpline<typename UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>::ParentConf, TConfigurationDerived> parent_t;
 	public:
-
 		typedef typename parent_t::configuration_t configuration_t;
 		typedef typename parent_t::spline_t spline_t;
 		typedef typename parent_t::manifold_t manifold_t;
@@ -50,6 +49,11 @@ namespace bsplines {
 		typedef Eigen::Matrix<double, configuration_t::Dimension::VALUE, multiplyEigenSize(configuration_t::Dimension::VALUE, ISplineOrder) > angular_jacobian_t;
 
 		SM_DEFINE_EXCEPTION(Exception, std::runtime_error);
+
+		enum {
+			MaxSupportedDerivativeOrderEvaluation = 3,
+			MaxSupportedDerivativeOrderJacobian = 2
+		};
 
 		DiffManifoldBSpline(int splineOrder = parent_t::SplineOrder) : parent_t(configuration_t (typename configuration_t::ManifoldConf(), splineOrder)){}
 		DiffManifoldBSpline(configuration_t conf) : parent_t(conf){}

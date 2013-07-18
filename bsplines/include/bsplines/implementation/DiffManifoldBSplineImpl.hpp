@@ -130,6 +130,71 @@ namespace bsplines {
 
 
 	_TEMPLATE
+	void _CLASS::addKnots(const Eigen::VectorXd & knotTimes)
+	{
+		assertConstructing();
+
+		for(int i = 0, n = knotTimes.rows(); i < n; i++){
+			addKnot(knotTimes[i]);
+		}
+	}
+
+	_TEMPLATE
+	void _CLASS::addKnotsAndControlVertices(const Eigen::VectorXd & knotTimes, const Eigen::MatrixXd & controlVertices)
+	{
+		assertConstructing();
+		SM_ASSERT_EQ(Exception, controlVertices.cols(), knotTimes.size(), "There must be as many knot times as controlVertices!");
+
+		for(int i = 0, n = controlVertices.cols(); i < n; i++){
+			addControlVertex(knotTimes[i], controlVertices.col(i));
+		}
+	}
+
+	_TEMPLATE
+	void _CLASS::initWithKnotsAndControlVertices(const Eigen::VectorXd & knotTimes, const Eigen::MatrixXd & controlVertices)
+	{
+		assertConstructing();
+		const int numKnots = knotTimes.size();
+		const int numVertices = controlVertices.cols();
+		SM_ASSERT_EQ(Exception, controlVertices.cols() + getSplineOrder(), numKnots, "There must be as many knots as controlVertices + splineOrder!");
+
+		int i;
+		for(i = 0; i < numVertices; i++){
+			addControlVertex(knotTimes[i], controlVertices.col(i));
+		}
+		for(; i < numKnots; i++){
+			addKnot(knotTimes[i]);
+		}
+		init();
+	}
+
+	_TEMPLATE
+	void _CLASS::initWithKnots(const Eigen::VectorXd & knotTimes)
+	{
+		assertConstructing();
+		const int numKnots = knotTimes.size();
+		SM_ASSERT_GE(Exception, numKnots, getMinimumKnotsRequired(), "Too view knots for this spline order!");
+
+		for(int i = 0; i < numKnots; i++){
+			addKnot(knotTimes[i]);
+		}
+		init();
+	}
+
+	_TEMPLATE
+	void _CLASS::setControlVertices(const Eigen::MatrixXd & controlVertices)
+	{
+		SM_ASSERT_EQ(Exception, controlVertices.cols(), getNumControlVertices(), "There must be getNumControlVertices() many controlVertices!");
+
+		int i = 0;
+		for(SegmentIterator it = getAbsoluteBegin(), end = getAbsoluteEnd(); it != end && i < controlVertices.cols(); it ++){
+			it->getControlVertex() = controlVertices.col(i);
+			i++;
+		}
+	}
+
+
+	_TEMPLATE
 	void _CLASS::initConstantUniformSpline(const time_t & t_min, const time_t & t_max, int numSegments, const point_t & constant)
 	{
 		SM_ASSERT_GT(Exception, t_max, t_min, "The max time is less than the min time");
@@ -194,9 +259,15 @@ namespace bsplines {
 	}
 
 	_TEMPLATE
-	int _CLASS::minimumKnotsRequired() const
+	int _CLASS::getNumKnotsRequired(int validSegments) const
 	{
-		return KnotArithmetics::getNumKnotsRequired(1, getSplineOrder());
+		return KnotArithmetics::getNumKnotsRequired(validSegments, getSplineOrder());
+	}
+
+	_TEMPLATE
+	int _CLASS::getNumControlVerticesRequired(int validSegments) const
+	{
+		return KnotArithmetics::getNumControlVerticesRequired(validSegments, getSplineOrder());
 	}
 
 	_TEMPLATE

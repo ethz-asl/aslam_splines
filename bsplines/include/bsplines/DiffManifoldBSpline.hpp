@@ -173,7 +173,9 @@ namespace bsplines {
 
 		inline const SegmentIterator getAbsoluteEnd();
 
-		int minimumKnotsRequired() const;
+		int getNumKnotsRequired(int validSegments) const;
+		int getMinimumKnotsRequired() const { return getNumKnotsRequired(1); };
+		int getNumControlVerticesRequired(int validSegments) const;
 
 		inline size_t getAbsoluteNumberOfSegments() const;
 
@@ -182,6 +184,14 @@ namespace bsplines {
 		void addControlVertex(const time_t & time, const point_t & point);
 
 		void init();
+
+		void addKnots(const Eigen::VectorXd & knotTimes);
+		void addKnotsAndControlVertices(const Eigen::VectorXd & knotTimes, const Eigen::MatrixXd & controlVertices);
+
+		void initWithKnots(const Eigen::VectorXd & knotTimes);
+		void initWithKnotsAndControlVertices(const Eigen::VectorXd & knotTimes, const Eigen::MatrixXd & controlVertices);
+
+		void setControlVertices(const Eigen::MatrixXd & controlVertices);
 
 		void initConstantUniformSpline(const time_t & t_min, const time_t & t_max, int numSegments, const point_t & constant);
 
@@ -220,7 +230,7 @@ namespace bsplines {
 		inline time_t getMinTime() const;
 		inline time_t getMaxTime() const;
 
-		inline std::pair<time_t, time_t >getTimeInterval() const { return std::pair<time_t, time_t> (getMinTime(), getMaxTime()); };
+		inline std::pair<time_t, time_t>getTimeInterval() const { return std::pair<time_t, time_t> (getMinTime(), getMaxTime()); };
 
 		inline SegmentIterator firstRelevantSegment();
 		inline SegmentConstIterator firstRelevantSegment() const;

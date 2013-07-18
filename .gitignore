@@ -2,6 +2,10 @@
 .cproject
 .project
 .pydevproject
+*/.settings/org.eclipse.cdt.core.prefs
+*/.settings/org.eclipse.cdt.ui.prefs
+*/.settings/org.eclipse.ltk.core.refactoring.prefs
+*~
 *.so
 aslam_spline_design_variables/build/
 aslam_splines/bin/

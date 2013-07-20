@@ -11,10 +11,10 @@
 #include <cmath>
 
 namespace bsplines {
-	template <typename SIMPLE_TYPE>
+	template <typename SimpleType_>
 	struct SimpleTypeTimePolicy {
-		typedef SIMPLE_TYPE time_t;
-		typedef SIMPLE_TYPE duration_t;
+		typedef SimpleType_ time_t;
+		typedef SimpleType_ duration_t;
 
 		inline static duration_t computeDuration(time_t from, time_t till){
 			return till - from;
@@ -36,11 +36,11 @@ namespace bsplines {
 		}
 
 		inline static duration_t getZero(){
-			return 0.0;
+			return duration_t(0.0);
 		}
 
 		inline static duration_t getOne(){
-			return 1.0;
+			return duration_t(1.0);
 		}
 	};
 }

@@ -105,6 +105,31 @@ TEST(DiffManifoldBSplineTestSuite, testInitialization)
 	}
 }
 
+TEST(DiffManifoldBSplineTestSuite, testCopyAndAssign)
+{
+	TestSpline rbspline;
+	Eigen::VectorXd x = Eigen::VectorXd::Random(rows);
+	rbspline.initConstantUniformSpline(minTime, maxTime, numberOfSegments, x);
+
+	const int nCopies = 2;
+	TestSpline rbsplineCopies[nCopies] = {rbspline};
+
+	rbsplineCopies[1] = rbspline;
+
+	double t = minTime + maxTime / 2;
+
+	for(int i = 0; i < nCopies; i++){
+		SM_ASSERT_EQ(std::runtime_error, rbsplineCopies[i].getAbsoluteNumberOfSegments() , numberOfSegments + splineOrder * 2 - 1, "");
+		SM_ASSERT_EQ(std::runtime_error, maxTime, rbsplineCopies[i].getMaxTime(), "");
+		SM_ASSERT_EQ(std::runtime_error, minTime, rbsplineCopies[i].getMinTime(), "");
+
+		SM_ASSERT_EQ(std::runtime_error, minTime, rbsplineCopies[i].getTimeInterval().first, "");
+		SM_ASSERT_EQ(std::runtime_error, maxTime, rbsplineCopies[i].getTimeInterval().second, "");
+
+		sm::eigen::assertEqual(rbspline.getEvaluatorAt<0>(t).eval(), rbsplineCopies[i].getEvaluatorAt<0>(t).eval(), SM_SOURCE_FILE_POS, "");
+	}
+}
+
 TEST(DiffManifoldBSplineTestSuite, testAddingSegments)
 {
 	TestSpline rbspline;

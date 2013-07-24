@@ -13,6 +13,18 @@ namespace bsplines {
 #define _CLASS DiffManifoldBSpline<DiffManifoldBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>, TConfigurationDerived>
 
 	_TEMPLATE
+	_CLASS & _CLASS::operator=(const DiffManifoldBSpline & other){
+		_state = other._state;
+		_configuration = other._configuration;
+		_manifold = other._manifold;
+		_segments = boost::shared_ptr<segment_map_t>(new segment_map_t(*other._segments));
+		if(isInitialized()){
+			initIterators();
+		}
+		return *this;
+	}
+
+	_TEMPLATE
 	inline
 	const typename _CLASS::manifold_t & _CLASS::getManifold() const {
 		return _manifold;
@@ -119,13 +131,19 @@ namespace bsplines {
 
 		SM_ASSERT_GE(Exception, getNumValidTimeSegments(), 1, "There must be at least one segment");
 
-		_firstRelevantSegment = _segments->begin();
-		moveIterator(_begin = _segments->begin(), SegmentIterator(_segments->end()), getSplineOrder() - 1);
-		moveIterator(_end = _segments->end(), SegmentIterator(_segments->begin()), - getSplineOrder());
+		initIterators();
 
 		initializeBasisMatrices();
 
 		getDerived().setState(internal::state::EVALUABLE);
+	}
+
+
+	_TEMPLATE
+	void _CLASS::initIterators() {
+		_firstRelevantSegment = _segments->begin();
+		moveIterator(_begin = _segments->begin(), SegmentIterator(_segments->end()), getSplineOrder() - 1);
+		moveIterator(_end = _segments->end(), SegmentIterator(_segments->begin()), - getSplineOrder());
 	}
 
 

@@ -68,7 +68,7 @@ namespace manifolds {
 	template <typename TConfigurationDerived>
 	class DiffManifold<DiffManifoldConfigurationBase, TConfigurationDerived> {
 	private:
-		const TConfigurationDerived _configuration;
+		TConfigurationDerived _configuration;
 		typedef DiffManifold<TConfigurationDerived, TConfigurationDerived> DERIVED;
 	public:
 		typedef internal::DiffManifoldConfigurationTypeTrait<TConfigurationDerived> Types;

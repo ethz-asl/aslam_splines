@@ -1,6 +1,7 @@
 #ifndef EXTERNALINCLUDE_HPP_
 #define EXTERNALINCLUDE_HPP_
 
+#include <utility>
 #include <Eigen/Core>
 #include <vector>
 #include <map>

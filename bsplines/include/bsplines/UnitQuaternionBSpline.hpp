@@ -8,7 +8,6 @@
 #ifndef UNITQUATERNIONBSPLINE_HPP_
 #define UNITQUATERNIONBSPLINE_HPP_
 
-
 #include "manifolds/UnitQuaternionManifold.hpp"
 #include "DiffManifoldBSpline.hpp"
 
@@ -57,6 +56,7 @@ namespace bsplines {
 
 		DiffManifoldBSpline(int splineOrder = parent_t::SplineOrder) : parent_t(configuration_t (typename configuration_t::ManifoldConf(), splineOrder)){}
 		DiffManifoldBSpline(configuration_t conf) : parent_t(conf){}
+
 	public:
 		template<int IMaximalDerivativeOrder>
 		class Evaluator : public parent_t::template Evaluator<IMaximalDerivativeOrder> {

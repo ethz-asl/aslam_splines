@@ -8,13 +8,14 @@
 #ifndef RIEMANNIANBSPLINE_HPP_
 #define RIEMANNIANBSPLINE_HPP_
 
+
 #include "ExternalIncludes.hpp"
+#include <gtest/gtest_prod.h>
 #include "DynamicOrTemplateInt.hpp"
 #include "SimpleTypeTimePolicy.hpp"
 #include "manifolds/DiffManifold.hpp"
 #include "KnotArithmetics.hpp"
 
-#include "gtest/gtest_prod.h"
 
 namespace bsplines {
 	typedef SimpleTypeTimePolicy<double> DefaultTimePolicy;
@@ -39,7 +40,7 @@ namespace bsplines {
 		const SplineOrder getSplineOrder() const { return _splineOrder; }
 
 	private:
-		const SplineOrder _splineOrder;
+		SplineOrder _splineOrder;
 	};
 
 
@@ -157,6 +158,12 @@ namespace bsplines {
 
 
 		DiffManifoldBSpline(const configuration_t & configuration) : _configuration(configuration), _state(internal::state::CONSTRUCTING), _manifold(configuration), _segments(new segment_map_t()) {}
+
+		DiffManifoldBSpline(const DiffManifoldBSpline & other) : _configuration(other._configuration), _state(other._state), _manifold(other._manifold), _segments(new segment_map_t(*other._segments)) { if(isInitialized()) initIterators();}
+		DiffManifoldBSpline(DiffManifoldBSpline && other) = default;
+
+		DiffManifoldBSpline & operator=(const DiffManifoldBSpline & other);
+		DiffManifoldBSpline & operator=(DiffManifoldBSpline && other) = default;
 
 		inline typename configuration_t::SplineOrder getSplineOrder() const { return _configuration.getSplineOrder(); }
 		inline typename configuration_t::Dimension getDimension() const { return _configuration.getDimension(); }
@@ -340,10 +347,10 @@ namespace bsplines {
 	protected:
 		typedef typename KnotArithmetics::UniformTimeCalculator<TimePolicy> UniformTimeCalculator;
 
-		const TConfigurationDerived _configuration;
+		TConfigurationDerived _configuration;
 		enum internal::state::SplineState _state;
-		const manifold_t _manifold;
-		const boost::shared_ptr<segment_map_t> _segments;
+		manifold_t _manifold;
+		boost::shared_ptr<segment_map_t> _segments;
 		SegmentIterator _begin, _end, _firstRelevantSegment;
 
 		inline const spline_t & getDerived() const { return *static_cast<const spline_t *>(this); }
@@ -357,6 +364,7 @@ namespace bsplines {
 
 		inline void assertEvaluable() const;
 		inline void assertConstructing() const;
+		inline bool isInitialized() { return _state == internal::state::SplineState::EVALUABLE; }
 
 		/**
 		 * compute duration
@@ -390,6 +398,9 @@ namespace bsplines {
 		inline static void computeLocalViInto(const SplineOrderVector & v, SplineOrderVector& localVi, const SegmentMapConstIterator & it);
 
 		template<int IMaximalDerivativeOrder> friend class Evaluator;
+
+	private:
+		void initIterators();
 	};
 }
 

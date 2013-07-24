@@ -73,7 +73,8 @@ struct OPTSplineTester{
 
 	void static testCompilationAndExpressions(){
 
-		TestBSpline bspline(createConf<typename TSplineMap::CONF, ISplineOrder, IDim>());
+		TestBSpline bspline(createConf<typename TSplineMap::CONF, ISplineOrder, IDim>()), bsplineCopyAssign(createConf<typename TSplineMap::CONF, ISplineOrder, IDim>()), bsplineCopyConstruct(bspline);
+		bsplineCopyAssign = bspline;
 
 		const int pointSize = bspline.getPointSize();
 
@@ -110,9 +111,7 @@ struct OPTSplineTester{
 			const int maxDerivativeOrder = MaxDerivative<TSplineMap, ISplineOrder>::VALUE;
 			typename TestBSpline::template ExpressionFactory<maxDerivativeOrder> fact = bspline.template getExpressionFactoryAt <maxDerivativeOrder> (t);
 			typename TestBSpline::template Evaluator<maxDerivativeOrder> eval = bspline.template getEvaluatorAt <maxDerivativeOrder > (t);
-//			std::cout << "t=" << t << std::endl; // XXX: debug output of t
 			for(int derivativeOrder = 0; derivativeOrder <= maxDerivativeOrder; derivativeOrder++){
-//				std::cout << "derivativeOrder=" << derivativeOrder << std::endl; // XXX: debug output of derivativeOrder
 				BOOST_AUTO(expression, fact.getValueExpression(derivativeOrder));
 
 				sm::eigen::assertEqual(fact.getEvaluator().evalD(derivativeOrder), expression.evaluate(), SM_SOURCE_FILE_POS);

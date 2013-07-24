@@ -42,7 +42,7 @@ namespace eigenTools {
 	template <>
 	struct DynamicOrTemplateInt<Eigen::Dynamic>{
 		enum { VALUE = Eigen::Dynamic, IS_DYNAMIC = 1 };
-		const int _value;
+		int _value;
 
 		DynamicOrTemplateInt(int value) : _value(value){
 			if(value == Eigen::Dynamic)

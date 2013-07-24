@@ -468,7 +468,7 @@ struct BSplineJacobianFunctor
 	typedef Eigen::VectorXd value_t;
 	typedef double scalar_t;
 
-	BSplineJacobianFunctor(TestSplineDD bs, double t, int dim) :
+	BSplineJacobianFunctor(TestSplineDD & bs, double t, int dim) :
 		bs_(bs), t_(t), _dim(dim), _evaluator(bs, t)
 	{
 	}
@@ -486,7 +486,7 @@ struct BSplineJacobianFunctor
 		return _evaluator.evalD(IDerivativeOrder);
 	}
 
-	TestSplineDD bs_;
+	TestSplineDD & bs_;
 	double t_;
 	int _dim;
 	TestSplineDD::Evaluator<IDerivativeOrder> _evaluator;

@@ -25,7 +25,7 @@ void exportBSplineMotionError()
   
     class_<BSplineMotionError<aslam::splines::BSplinePoseDesignVariable>, boost::shared_ptr<BSplineMotionError<aslam::splines::BSplinePoseDesignVariable> >, bases<ErrorTerm> >
         ("BSplineMotionError", init<aslam::splines::BSplinePoseDesignVariable*, Eigen::MatrixXd >("BSplineMotionError(BSplinePoseDesignVariable, W)"))
-         .def(init<aslam::splines::BSplinePoseDesignVariable*, Eigen::MatrixXd, unsigned int >("BSplineRSMotionError(BSplinePoseDesignVariable, W, errorTermOrder)"))
+         .def(init<aslam::splines::BSplinePoseDesignVariable*, Eigen::MatrixXd, unsigned int >("BSplineMotionError(BSplinePoseDesignVariable, W, errorTermOrder)"))
          ;
 
     class_<BSplineMotionError<aslam::splines::BSplineRSPoseDesignVariable>, boost::shared_ptr<BSplineMotionError<aslam::splines::BSplineRSPoseDesignVariable> >, bases<ErrorTerm> >

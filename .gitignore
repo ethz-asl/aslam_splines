@@ -21,3 +21,14 @@ aslam_splines_python/lib/
 *#
 #*
 .#*
+*~
+#*
+bin
+build
+lib
+*.o
+*.so
+*.pyc
+.project
+.cproject
+.pydevproject

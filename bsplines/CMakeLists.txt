@@ -7,9 +7,10 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  Release        : w/o debug symbols, w/ optimization
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE Debug)
-#set(ROS_BUILD_TYPE RelWithDebInfo)
 set(ROS_BUILD_TYPE Release)
+# just write the upper line into LocalBuildType.cmake to have a ROS_BUILD_TYPE not under version control as it should be.
+include(LocalBuildType.cmake OPTIONAL)
+message("ROS_BUILD_TYPE=" ${ROS_BUILD_TYPE})
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 rosbuild_init()

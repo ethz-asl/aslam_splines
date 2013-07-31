@@ -25,8 +25,6 @@ namespace manifolds {
 
 	template <typename TScalar, typename TConfigurationDerived >
 	class DiffManifold< UnitQuaternionManifoldConf<TScalar>, TConfigurationDerived> : public DiffManifold<typename UnitQuaternionManifoldConf<TScalar>::ParentConf, TConfigurationDerived> {
-		static const TScalar epsilon6thRoot;
-
 	public:
 		typedef DiffManifold<typename UnitQuaternionManifoldConf<TScalar>::ParentConf, TConfigurationDerived> parent_t;
 		typedef TConfigurationDerived configuration_t;
@@ -35,6 +33,7 @@ namespace manifolds {
 		typedef typename Types::point_t point_t;
 		typedef typename Types::tangent_vector_t tangent_vector_t;
 		typedef typename Types::dmatrix_t dmatrix_t;
+		typedef typename Types::dmatrix_transposed_t dmatrix_transposed_t;
 		typedef typename Eigen::Matrix<scalar_t, configuration_t::Dimension::VALUE, configuration_t::PointSize::VALUE> dlog_matrix_t;
 
 		DiffManifold(configuration_t configuration) : parent_t(configuration) {};
@@ -59,8 +58,8 @@ namespace manifolds {
 
 		static void logAtIdInto(const point_t & to, tangent_vector_t & result);
 		static void logInto(const point_t & from, const point_t & to, tangent_vector_t & result);
-		void dlogInto(const point_t & point, const tangent_vector_t & vec, dmatrix_t & result) const;
-		void dlogAtIdInto(const tangent_vector_t & vec, dmatrix_t & result) const;
+		void dlogInto(const point_t & point, const point_t & to, dmatrix_transposed_t & result) const;
+		void dlogAtIdInto(const point_t & to, dmatrix_transposed_t & result) const;
 	};
 }
 

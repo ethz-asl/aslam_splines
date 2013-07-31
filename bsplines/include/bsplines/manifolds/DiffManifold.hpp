@@ -50,6 +50,7 @@ namespace manifolds {
 			typedef Eigen::Matrix<scalar_t, PointSize, 1> point_t;
 			typedef Eigen::Matrix<scalar_t, Dimension, 1> tangent_vector_t;
 			typedef Eigen::Matrix<scalar_t, PointSize, Dimension> dmatrix_t;
+			typedef Eigen::Matrix<scalar_t, Dimension, PointSize> dmatrix_transposed_t;
 		};
 
 		template <typename TManifoldConf, typename TConfigurationDerived = TManifoldConf>

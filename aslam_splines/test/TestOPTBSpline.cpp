@@ -27,6 +27,9 @@ using namespace aslam::splines;
 using namespace bsplines;
 using namespace std;
 
+const double JACOBIAN_THRESHOLD = 1E-5;
+const double JACOBIAN_EPS = 1E-8;
+
 const int numSegments = 3, numberOfTimesToProbe = 10;
 const double tmin = 0;
 const double tmax = numSegments / 2.0;
@@ -141,7 +144,7 @@ struct OPTSplineTester{
 
 				{
 					SCOPED_TRACE("");
-					testJacobian(expression, false, 1E-3, 1E-6);
+					testJacobian(expression, false, JACOBIAN_THRESHOLD, JACOBIAN_EPS);
 				}
 
 				OPTSplineSpecializationTester<TSplineMap, ISplineOrder, IDim>::test(bspline, t);
@@ -188,11 +191,11 @@ struct OPTSplineSpecializationTester<UnitQuaternionBSpline<IEigenSplineOrder>, I
 
 		{
 			SCOPED_TRACE("");
-			testJacobian(avexpression, false, 1E-3, 1E-6);
+			testJacobian(avexpression, false, JACOBIAN_THRESHOLD, JACOBIAN_EPS);
 		}
 		{
 			SCOPED_TRACE("");
-			testJacobian(aaexpression, false, 1E-3, 1E-6);
+			testJacobian(aaexpression, false, JACOBIAN_THRESHOLD, JACOBIAN_EPS);
 		}
 	}
 };

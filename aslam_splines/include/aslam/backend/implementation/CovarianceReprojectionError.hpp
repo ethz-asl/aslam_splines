@@ -125,7 +125,7 @@ namespace aslam {
 
       
     template<typename F>
-    void CovarianceReprojectionError<F>::evaluateJacobiansImplementation()
+    void CovarianceReprojectionError<F>::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & _jacobians)
     {
       //const keypoint_t & k = _frame->keypoint(_keypointIndex);
       const camera_geometry_t & cam = _frame->geometry();
@@ -135,9 +135,9 @@ namespace aslam {
       measurement_t hat_y;
 	  cam.homogeneousToKeypoint(p, hat_y, J);
 
-      _point.evaluateJacobians(parent_t::_jacobians, -J);
+      _point.evaluateJacobians(_jacobians, -J);
 
-      _camera.evaluateJacobians(parent_t::_jacobians, p);
+      _camera.evaluateJacobians(_jacobians, p);
 
     }
 

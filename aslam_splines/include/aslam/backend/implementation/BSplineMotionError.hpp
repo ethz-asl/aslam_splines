@@ -79,9 +79,12 @@ namespace aslam {
 
         /// \brief evaluate the jacobians
         template<class SPLINE_T>
-        void BSplineMotionError<SPLINE_T>::evaluateJacobiansImplementation()
+        void BSplineMotionError<SPLINE_T>::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & _jacobians)
         {
-
+                      
+          // this is an error...
+          SM_THROW(Exception, "This is currently unsupported");
+          
         }
           
           
@@ -177,12 +180,6 @@ namespace aslam {
             return b_u;
         }
       
-        template<class SPLINE_T>
-        const JacobianContainer & BSplineMotionError<SPLINE_T>::getJacobiansImplementation() const
-        {
-            SM_THROW(Exception, "This is currently unsupported");
-            return _jacobians;
-        }
 
 
     } // namespace backend

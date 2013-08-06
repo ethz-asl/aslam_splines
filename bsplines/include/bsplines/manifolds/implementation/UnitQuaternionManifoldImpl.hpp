@@ -31,11 +31,10 @@ namespace manifolds {
 		result = quat2AxisAngle(to);
 	}
 
-
 	_TEMPLATE
 	inline void _CLASS::logInto(const point_t & from, const point_t & to, tangent_vector_t & result)
 	{
-		logAtIdInto(qplus(quatInv(from), to), result);
+		_CLASS::DERIVED::logAtIdInto(qplus(quatInv(from), to), result);
 	}
 
 	_TEMPLATE
@@ -80,12 +79,12 @@ namespace manifolds {
 	_TEMPLATE
 	void _CLASS::dlogInto(const point_t & from, const point_t & to, dmatrix_transposed_t & result) const {
 		auto fromInv = quatInv(from);
-		result = quatLogJacobian(qplus(fromInv, to)) * quatPlus(fromInv);
+		result = quatLogJacobian2(qplus(fromInv, to)) * quatPlus(fromInv);
 	}
 
 	_TEMPLATE
 	void _CLASS::dlogAtIdInto(const point_t & to, dmatrix_transposed_t & result) const {
-		result = quatLogJacobian(to);
+		result = quatLogJacobian2(to);
 	}
 
 	_TEMPLATE

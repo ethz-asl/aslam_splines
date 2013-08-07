@@ -548,7 +548,7 @@ namespace bsplines {
 			}
 		}
 
-		V *= computeSegmentLength(segmentIt);
+		V *= getDurationAsDouble(computeSegmentLength(segmentIt));
 	}
 
 

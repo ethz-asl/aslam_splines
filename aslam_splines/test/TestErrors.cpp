@@ -45,11 +45,11 @@ TEST(SplineErrorTestSuite, testSimpleSplineError)
         VectorExpression<1> splineExpression =  initSpline.toExpression(5.0,0);
         SimpleSplineError<BSplineDesignVariable<1> > e(&initSpline, &splineExpression, values, 5.0);
         
-        e.evaluateJacobiansFiniteDifference();
-        JacobianContainer estJ = e.getJacobians();
+        JacobianContainer estJ(e.dimension());
+        e.evaluateJacobiansFiniteDifference(estJ);
         
-        e.evaluateJacobians();
-        JacobianContainer J = e.getJacobians();
+        JacobianContainer J(e.dimension());
+        e.evaluateJacobians(J);
         
         SCOPED_TRACE("");
         sm::eigen::assertNear(J.asDenseMatrix(), estJ.asDenseMatrix(), 1e-6, SM_SOURCE_FILE_POS, "Checking the jacobian vs. finite differences");

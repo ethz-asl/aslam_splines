@@ -54,8 +54,8 @@ namespace bsplines {
 			MaxSupportedDerivativeOrderJacobian = 2
 		};
 
-		DiffManifoldBSpline(int splineOrder = parent_t::SplineOrder) : parent_t(configuration_t (typename configuration_t::ManifoldConf(), splineOrder)){}
-		DiffManifoldBSpline(configuration_t conf) : parent_t(conf){}
+		DiffManifoldBSpline(int splineOrder = parent_t::SplineOrder) : parent_t(UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>(typename configuration_t::ManifoldConf(), splineOrder)){}
+		DiffManifoldBSpline(const configuration_t & conf) : parent_t(conf){}
 
 	public:
 		template<int IMaximalDerivativeOrder>

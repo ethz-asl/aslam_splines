@@ -41,9 +41,11 @@ namespace bsplines {
 		}
 
 		inline static duration_t getOne(){
+			static_assert(!std::is_integral<duration_t>::value, "Please override (shadow) this (getOne) method for your simple type's time policy - preferably with a inline or even better constexpr function.");
 			return duration_t(1.0);
 		}
 	};
-}
+
+} // namespace bsplines
 
 #endif /* SIMPLETYPETIMEPOLICY_HPP_ */

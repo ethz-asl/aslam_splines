@@ -257,6 +257,8 @@ TEST(OPTBSplineTestSuite, testPoseErrorWithOPTSplines)
 		}
 
 		RotationExpression rexp(Vector2RotationQuaternionExpressionAdapter::adapt(VectorExpression<4>(valueExpression)));
+		sm::eigen::assertEqual(sm::kinematics::quat2r(valueExpression.toValue()), rexp.toRotationMatrix(), SM_SOURCE_FILE_POS);
+
 		for(int i = 0 ; i < 3 ; i++)
 		{
 			SCOPED_TRACE("");

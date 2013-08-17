@@ -2,7 +2,7 @@
 
 namespace bsplines {
 
-TEST(DiffManifoldBSplineTestSuite, testQuaternionBSplineCompilation)
+TEST(UnitQuaternionBSplineTestSuite, testQuaternionBSplineCompilation)
 {
 	UnitQuaternionBSpline<splineOrder>::TYPE rbspline;
 	const UnitQuaternionBSpline<splineOrder>::TYPE::point_t p = UnitQuaternionBSpline<splineOrder>::TYPE::point_t(1, 0, 0, 0);

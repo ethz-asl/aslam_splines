@@ -20,6 +20,10 @@ namespace bsplines {
 			return till - from;
 		}
 
+		inline static duration_t addScaledDuration(time_t from, duration_t dist, int scale){
+			return from + dist * scale;
+		}
+
 		inline static double divideDurations(duration_t a, duration_t b){
 			return (double) a/b;
 		}

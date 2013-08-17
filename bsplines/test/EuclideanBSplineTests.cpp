@@ -516,7 +516,7 @@ void testBSplineJacobiansSO(){
 	testBSplineJacobiansSO<ISplineOrder - 1>();
 
 	const int segments = 2;
-	const int nk = KnotArithmetics::getNumKnotsRequired(segments, ISplineOrder);
+	const int nk = knot_arithmetics::getNumKnotsRequired(segments, ISplineOrder);
 	for(int dim = 1; dim < 4; dim++)
 	{
 		TestSplineDD bs(ISplineOrder, dim);

@@ -219,7 +219,7 @@ namespace bsplines {
 		SM_ASSERT_GE(Exception, numSegments, 1, "There must be at least one segment");
 		SM_ASSERT_GE(Exception, constant.size(), 1, "The constant vector must be of at least length 1");
 
-		int K = KnotArithmetics::getNumKnotsRequired(numSegments, getSplineOrder());
+		int K = knot_arithmetics::getNumKnotsRequired(numSegments, getSplineOrder());
 		UniformTimeCalculator timeCalculator(getSplineOrder(), t_min, t_max, numSegments);
 		for(int i = 0; i < K; i++)
 			addControlVertex(timeCalculator.getTimeByKnotIndex(i), constant);
@@ -279,13 +279,13 @@ namespace bsplines {
 	_TEMPLATE
 	int _CLASS::getNumKnotsRequired(int validSegments) const
 	{
-		return KnotArithmetics::getNumKnotsRequired(validSegments, getSplineOrder());
+		return knot_arithmetics::getNumKnotsRequired(validSegments, getSplineOrder());
 	}
 
 	_TEMPLATE
 	int _CLASS::getNumControlVerticesRequired(int validSegments) const
 	{
-		return KnotArithmetics::getNumControlVerticesRequired(validSegments, getSplineOrder());
+		return knot_arithmetics::getNumControlVerticesRequired(validSegments, getSplineOrder());
 	}
 
 	_TEMPLATE
@@ -445,14 +445,14 @@ namespace bsplines {
 	_TEMPLATE
 	inline int _CLASS::getNumValidTimeSegments() const
 	{
-		return KnotArithmetics::getNumValidTimeSegments(getNumKnots(), getSplineOrder());
+		return knot_arithmetics::getNumValidTimeSegments(getNumKnots(), getSplineOrder());
 	}
 
 
 	_TEMPLATE
 	inline int _CLASS::getNumControlVertices() const{
 		assertEvaluable();
-		return KnotArithmetics::getNumControlVerticesRequired(getNumValidTimeSegments(), getSplineOrder());
+		return knot_arithmetics::getNumControlVerticesRequired(getNumValidTimeSegments(), getSplineOrder());
 	}
 
 

@@ -16,7 +16,7 @@ TEST(UnitQuaternionBSplineTestSuite, differentEvalMethodsEvalTheSame)
 	initMinimalSpline(spline);
 
 	UQTestSpline::point_t p;
-	for(int i = 0, n = KnotArithmetics::getNumControlVerticesRequired(2, splineOrder) ; i < n; i ++){
+	for(int i = 0, n = knot_arithmetics::getNumControlVerticesRequired(2, splineOrder) ; i < n; i ++){
 		spline.getManifold().randomizePoint(p);
 		spline.addControlVertex(i, p);
 	}

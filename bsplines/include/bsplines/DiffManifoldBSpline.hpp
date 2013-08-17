@@ -345,7 +345,7 @@ namespace bsplines {
 		inline Evaluator<IMaximalDerivativeOrder> getEvaluatorAt(const time_t & t) const;
 
 	protected:
-		typedef typename KnotArithmetics::UniformTimeCalculator<TimePolicy> UniformTimeCalculator;
+		typedef typename knot_arithmetics::UniformTimeCalculator<TimePolicy> UniformTimeCalculator;
 
 		TConfigurationDerived _configuration;
 		enum internal::state::SplineState _state;

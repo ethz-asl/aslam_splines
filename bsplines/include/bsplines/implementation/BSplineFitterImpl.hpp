@@ -11,6 +11,8 @@
 #include "../DynamicOrTemplateInt.hpp"
 #include "../DiffManifoldBSpline.hpp"
 
+#include <memory>
+#include <map>
 #include <Eigen/Cholesky>
 #include <Eigen/LU>
 #include <Eigen/QR>
@@ -20,22 +22,42 @@ namespace bsplines{
 #define _TEMPLATE template <typename TSpline>
 #define _CLASS BSplineFitter <TSpline>
 
-	_TEMPLATE
-	inline void _CLASS::initUniformSpline(TSpline & spline, const std::vector<typename TSpline::time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda){
-		initUniformSplineSparse(spline, times, interpolationPoints, numSegments, lambda);
-	}
-
-	//copied from initSpline3 in BSpline
 	//TODO improve : support different containers of times and interpolationPoints
 	_TEMPLATE
-	void _CLASS::initUniformSplineDense(TSpline & spline, const std::vector<typename TSpline::time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda)
-	{
+	inline void _CLASS::initUniformSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda, Backend backend){
+		const size_t numInterpolationPoints = interpolationPoints.size();
+		IntervalUniformKnotGenerator<TimePolicy> knotGenerator(spline.getSplineOrder(), times[0], times[numInterpolationPoints - 1], numSegments);
+		initSpline(spline, knotGenerator, times, interpolationPoints, numSegments, lambda, backend);
+	}
+
+namespace internal{
+	template<typename T>
+	class PointerGuard {
+		bool _deleteIt;
+		T * _ptr;
+	 public:
+		PointerGuard() : _deleteIt(false), _ptr(nullptr) {}
+		inline void init(T* ptr, bool deleteIt = true) {
+			_deleteIt = deleteIt;
+			_ptr = ptr;
+		}
+		inline ~PointerGuard(){
+			if(_deleteIt) delete _ptr;
+		}
+		inline T& operator *(){
+			return *_ptr;
+		}
+	};
+}
+
+	_TEMPLATE
+	void _CLASS::initSpline(TSpline & spline, KnotGenerator<time_t> & knotGenerator, const std::vector<time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda, Backend backend){
 		const int splineOrder = spline.getSplineOrder();
 		const size_t numInterpolationPoints = interpolationPoints.size();
 
 		SM_ASSERT_EQ(Exception, times.size(), numInterpolationPoints, "The number of times and the number of interpolation points must be equal");
-		SM_ASSERT_GE(Exception,numInterpolationPoints, 2, "There must be at least two times");
-		SM_ASSERT_GE(Exception,numSegments, 1, "There must be at least one time segment");
+		SM_ASSERT_GE(Exception, numInterpolationPoints, 2, "There must be at least two times/points");
+		SM_ASSERT_GE(Exception, numSegments, 1, "There must be at least one time segment");
 		for(size_t i = 1; i < numInterpolationPoints; i++)
 		{
 			SM_ASSERT_LE(Exception, times[i-1], times[i],
@@ -44,13 +66,64 @@ namespace bsplines{
 		}
 
 		// How many knots are required for one time segment?
-		const size_t K = KnotArithmetics::getNumKnotsRequired(numSegments, splineOrder);
+		const size_t K = knot_arithmetics::getNumKnotsRequired(numSegments, splineOrder);
+
+		internal::PointerGuard<const KnotIndexResolver<time_t> > resolverPtr;
+
+		struct MapKnotResolver : public KnotIndexResolver<time_t>{
+			std::map<time_t, int> knots;
+			inline int getKnotIndexAtTime(time_t t) const { return knots.lower_bound(t)->second; };
+		};
+
+		if(knotGenerator.hasKnotResolver()){
+			for(size_t i = 0; i < K; i ++){
+				spline.addKnot(knotGenerator.getNextKnot());
+			}
+			resolverPtr.init(&knotGenerator.getKnotResolver(), false);
+		}else{
+			MapKnotResolver * mapResolver = new MapKnotResolver();
+			resolverPtr.init(mapResolver, true);
+			for(size_t i = 0; i < K; i ++){
+				time_t nextKnot = knotGenerator.getNextKnot();
+				spline.addKnot(nextKnot);
+				mapResolver->knots[nextKnot] = i;
+			}
+		}
+
+		spline.init();
+
+		switch(backend){
+			case Backend::SPARSE:
+				calcFittedControlVerticesSparse(spline, *resolverPtr, times, interpolationPoints, numSegments, lambda);
+				break;
+			case Backend::DENSE:
+				calcFittedControlVerticesDense(spline, *resolverPtr, times, interpolationPoints, numSegments, lambda);
+				break;
+		}
+	}
+
+	_TEMPLATE
+	void _CLASS::initUniformSplineDense(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda)
+	{
+		initUniformSpline(spline, times, interpolationPoints, numSegments, lambda, Backend::DENSE);
+	}
+
+	_TEMPLATE
+	void _CLASS::initUniformSplineSparse(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda)
+	{
+		initUniformSpline(spline, times, interpolationPoints, numSegments, lambda, Backend::SPARSE);
+	}
+
+	_TEMPLATE
+	void _CLASS::calcFittedControlVerticesDense(TSpline & spline, const KnotIndexResolver<time_t> & knotResolver, const std::vector<time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda)
+	{
+		const int splineOrder = spline.getSplineOrder();
+		const size_t numInterpolationPoints = interpolationPoints.size();
+
 		// What is the vector coefficient dimension
 		const size_t D = spline.getPointSize();
 		// How many coefficients are required for one time segment?
-		const size_t C = KnotArithmetics::getNumControlVerticesRequired(numSegments, splineOrder);
-
-		const KnotArithmetics::UniformTimeCalculator<typename TSpline::TimePolicy> timeCalculator(splineOrder, times[0], times[numInterpolationPoints - 1], numSegments);
+		const size_t C = knot_arithmetics::getNumControlVerticesRequired(numSegments, splineOrder);
 
 		// Now we have to solve an Ax = b linear system to determine the correct coefficient vectors.
 		size_t coefficientDim = C * D;
@@ -61,17 +134,11 @@ namespace bsplines{
 		Eigen::MatrixXd A = Eigen::MatrixXd::Zero(constraintSize, coefficientDim);
 		Eigen::VectorXd b = Eigen::VectorXd::Zero(constraintSize);
 
-		for(size_t i = 0; i < K; i ++){
-			spline.addKnot(timeCalculator.getTimeByKnotIndex(i));
-		}
-
-		spline.init();
-
 		int brow = 0;
 		// Add the position constraints.
 		for(size_t i = 0; i < numInterpolationPoints; i++)
 		{
-			int knotIndex = timeCalculator.getKnotIndexAtTime(times[i]);
+			int knotIndex = knotResolver.getKnotIndexAtTime(times[i]);
 			//TODO optimize : a uniform time spline evaluator could be much faster here!
 			typename TSpline::SplineOrderVector bi = spline.template getEvaluatorAt<1>(times[i]).getLocalBi();
 
@@ -112,31 +179,19 @@ namespace bsplines{
 	}
 
 	_TEMPLATE
-	void _CLASS::initUniformSplineSparse(TSpline & spline, const std::vector<typename TSpline::time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda)
+	void _CLASS::calcFittedControlVerticesSparse(TSpline & spline, const KnotIndexResolver<time_t> & knotResolver, const std::vector<time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda)
 	{
 		const int splineOrder = spline.getSplineOrder();
 		const size_t numInterpolationPoints = interpolationPoints.size();
 
-		SM_ASSERT_EQ(Exception,times.size(), numInterpolationPoints, "The number of times and the number of interpolation points must be equal");
-		SM_ASSERT_GE(Exception,times.size(),2, "There must be at least two times");
-		SM_ASSERT_GE(Exception,numSegments,1, "There must be at least one time segment");
-		for(size_t i = 1; i < numInterpolationPoints; i++)
-		{
-			SM_ASSERT_LE(Exception, times[i-1], times[i],
-					"The time sequence must be nondecreasing. time " << i
-					<< " was not greater than or equal to time " << (i-1));
-		}
-
-		// How many knots are required for one time segment?
-		const size_t K = KnotArithmetics::getNumKnotsRequired(numSegments, splineOrder);
 		// What is the vector coefficient dimension
 		const size_t D = spline.getPointSize();
 		// How many coefficients are required for one time segment?
-		const size_t C = KnotArithmetics::getNumControlVerticesRequired(numSegments, splineOrder);
+		const size_t C = knot_arithmetics::getNumControlVerticesRequired(numSegments, splineOrder);
 
 
 		// Initialize a uniform knot sequence
-		const KnotArithmetics::UniformTimeCalculator<typename TSpline::TimePolicy> timeCalculator(splineOrder, times[0], times[numInterpolationPoints - 1], numSegments);
+		const knot_arithmetics::UniformTimeCalculator<typename TSpline::TimePolicy> timeCalculator(splineOrder, times[0], times[numInterpolationPoints - 1], numSegments);
 
 		// Now we have to solve an Ax = b linear system to determine the correct coefficient vectors.
 		size_t coefficientDim = C * D;
@@ -148,23 +203,16 @@ namespace bsplines{
 		for (unsigned int i = 1; i <= numInterpolationPoints; i++) rows.push_back(i*D);
 		for(unsigned int i = 1; i <= C; i++) cols.push_back(i*D);
 
-
 		std::vector<int> bcols(1);
 		bcols[0] = 1;
 
 		sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> A(rows,cols, true);
 		sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> b(rows,bcols, true);
 
-		for(size_t i = 0; i < K; i ++){
-			spline.addKnot(timeCalculator.getTimeByKnotIndex(i));
-		}
-
-		spline.init();
-
 		int brow = 0;
 		// try to fill the matrix:
 		for(unsigned int i = 0; i < numInterpolationPoints; i++) {
-			int knotIndex = timeCalculator.getKnotIndexAtTime(times[i]);
+			int knotIndex = knotResolver.getKnotIndexAtTime(times[i]);
 			//TODO optimize : a uniform time spline evaluator could be much faster here!
 			typename TSpline::SplineOrderVector bi = spline.template getEvaluatorAt<1>(times[i]).getLocalBi();
 
@@ -211,8 +259,6 @@ namespace bsplines{
 //			// A'A + Q
 //			Q.add(AtAp);
 		}
-
-
 
 		// solve:
 		sparse_block_matrix::LinearSolverCholmod<Eigen::MatrixXd> solver;

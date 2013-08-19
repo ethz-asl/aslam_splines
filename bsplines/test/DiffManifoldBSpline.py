@@ -89,6 +89,8 @@ class TestBSplines(BSplineTestCase):
         v = (p_1 - p_0)/dt
         for order in range(2,10):
             aspl = bsplines.EuclideanBSpline(order, 3)
+            self.assertEqual(order, aspl.splineOrder())
+
             #print "order: %d" % order
             #print "p_0: %s" % p_0
             #print "p_1: %s" % p_1

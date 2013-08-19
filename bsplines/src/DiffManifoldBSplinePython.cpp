@@ -155,8 +155,19 @@ struct BSplineImporter {
 	}
 };
 
+struct DynamicOrTemplateInt_to_python_int
+{
+	static PyObject* convert(eigenTools::DynamicOrTemplateInt<Eigen::Dynamic> const& s)
+	{
+		return boost::python::incref(
+				boost::python::object(s.getValue()).ptr());
+	}
+};
+
 void import_bspline_diff_manifold_python()
 {
+	boost::python::to_python_converter<eigenTools::DynamicOrTemplateInt<Eigen::Dynamic>, DynamicOrTemplateInt_to_python_int>();
+
 	{
 		typedef EuclideanBSpline<>::TYPE Spline;
 		typedef BSplineImporter<Spline> SplineImporter;

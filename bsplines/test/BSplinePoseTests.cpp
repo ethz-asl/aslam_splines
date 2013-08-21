@@ -377,8 +377,10 @@ TEST(SplineTestSuite, testInitSpline3Sparse) {
         
         rvs.reset(new RotationVector());
         
-        const int length = 1000;
-        int numSegments = 200;
+        const bool benchmark = false;
+
+        const int length = benchmark ? 1000 : 100;
+        int numSegments = benchmark ? 200 : 20;
         double lambda = 0.1;
       //  int order = 2;
         for(int order = 2; order < 8; order++)
@@ -401,15 +403,17 @@ TEST(SplineTestSuite, testInitSpline3Sparse) {
             
             Eigen::MatrixXd poses = Eigen::MatrixXd::Random(6,length);
 
-            {
-                boost::progress_timer timer;
-                std::cout << "Dense:" << std::endl;
-                bs_dense.initPoseSpline3(times,poses,numSegments,lambda);
-            }
-            {
-                boost::progress_timer timer;
-                std::cout << "Sparse:" << std::endl;
-                bs_sparse.initPoseSplineSparse(times,poses,numSegments,lambda);
+            if(benchmark){
+              {
+                  boost::progress_timer timer;
+                  std::cout << "Dense:" << std::endl;
+                  bs_dense.initPoseSpline3(times,poses,numSegments,lambda);
+              }
+              {
+                  boost::progress_timer timer;
+                  std::cout << "Sparse:" << std::endl;
+                  bs_sparse.initPoseSplineSparse(times,poses,numSegments,lambda);
+              }
             }
             
             // diagonals

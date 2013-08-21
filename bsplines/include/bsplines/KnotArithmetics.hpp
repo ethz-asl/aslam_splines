@@ -23,6 +23,7 @@ template <typename Time_>
 class KnotGenerator{
  public:
 	virtual Time_ getNextKnot() = 0;
+	virtual void jumpOverNextKnots(int amount) { for (int i = 0; i < amount; i++) getNextKnot(); };
 	virtual bool hasKnotResolver() { return false; }
 	virtual const KnotIndexResolver<Time_>& getKnotResolver() const { throw std::runtime_error("unsupported operation");};
 	virtual bool supportsAppending() const { return false; }
@@ -101,7 +102,7 @@ class DeltaUniformKnotGenerator : public KnotGenerator<typename TimePolicy_::tim
  public:
 	typedef typename TimePolicy_::time_t time_t;
 	typedef typename TimePolicy_::duration_t duration_t;
-	inline DeltaUniformKnotGenerator(time_t start, duration_t delta, int splineOrder, bool splineIsAlreadyInitialized = false) : _lastKnot(splineIsAlreadyInitialized ? start : TimePolicy_::addScaledDuration( start, delta, -(knot_arithmetics::getNumRequiredPreambleKnots(splineOrder) + 1))), _delta(delta) {}
+	inline DeltaUniformKnotGenerator(time_t start, duration_t delta, int splineOrder, bool splineIsAlreadyInitialized = false) : _lastKnot(TimePolicy_::addScaledDuration(start, delta, splineIsAlreadyInitialized ? -1: -(knot_arithmetics::getNumRequiredPreambleKnots(splineOrder) + 1))), _delta(delta) {}
 	virtual time_t getNextKnot() { return (_lastKnot = TimePolicy_::addScaledDuration(_lastKnot, _delta, 1)); };
 	virtual bool supportsAppending() const { return true; }
 	virtual ~DeltaUniformKnotGenerator() {}

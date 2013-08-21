@@ -5,7 +5,7 @@
  *      Author: Hannes Sommer
  */
 
-#include "bsplines/NumericIntegrator.hpp"
+#include "../NumericIntegrator.hpp"
 
 namespace bsplines {
 
@@ -211,24 +211,32 @@ namespace bsplines {
 		}
 	}
 
-
 	_TEMPLATE
-	void _CLASS::initConstantUniformSpline(const time_t & t_min, const time_t & t_max, int numSegments, const point_t & constant)
+	void _CLASS::initConstantSpline(KnotGenerator<time_t> & knotGenerator, int numSegments, const point_t & constant)
 	{
-		SM_ASSERT_GT(Exception, t_max, t_min, "The max time is less than the min time");
+		assertConstructing();
 		SM_ASSERT_GE(Exception, numSegments, 1, "There must be at least one segment");
 		SM_ASSERT_GE(Exception, constant.size(), 1, "The constant vector must be of at least length 1");
 
 		int K = knot_arithmetics::getNumKnotsRequired(numSegments, getSplineOrder());
-		UniformTimeCalculator timeCalculator(getSplineOrder(), t_min, t_max, numSegments);
 		for(int i = 0; i < K; i++)
-			addControlVertex(timeCalculator.getTimeByKnotIndex(i), constant);
+			addControlVertex(knotGenerator.getNextKnot(), constant);
 
 		getDerived().init();
 	}
 
 	_TEMPLATE
-	typename _CLASS::time_t _CLASS::appendSegmentsUniformly(unsigned int numSegments = 1, const point_t * value = NULL) {
+	void _CLASS::initConstantUniformSpline(const time_t & tMin, const time_t & tMax, int numSegments, const point_t & constant)
+	{
+		auto generator = IntervalUniformKnotGenerator<TimePolicy>(getSplineOrder(), tMin, tMax, numSegments);
+		initConstantSpline(generator, numSegments, constant) ;
+	}
+
+	_TEMPLATE
+	typename _CLASS::time_t _CLASS::appendSegments(KnotGenerator<time_t> & knotGenerator, unsigned int numSegments, const point_t * value) {
+		assertEvaluable();
+		SM_ASSERT_TRUE(Exception, knotGenerator.supportsAppending(), "The knot generator needs to support appending!");
+
 		SegmentIterator it = getAbsoluteEnd(), aBegin = getAbsoluteBegin();
 		moveIterator(it, aBegin, -1);
 
@@ -240,8 +248,9 @@ namespace bsplines {
 		moveIterator(it, aBegin, -(getSplineOrder() - 2));
 		SM_ASSERT_TRUE(Exception, _end == it, "Append may only be called on a tail slice.");
 
+
 		for(unsigned int j = 0; j < numSegments; j++) {
-			time_t newKnot = TTimePolicy::linearlyInterpolate(beforeAEndKnot, aEndKnot, 1, 2 + j);
+			time_t newKnot = knotGenerator.getNextKnot();
 			addKnot(newKnot);
 			if(value != NULL) {
 				it->setControlVertex(*value);
@@ -258,6 +267,22 @@ namespace bsplines {
 		}
 		return getMaxTime();
 	}
+
+	_TEMPLATE
+	typename _CLASS::time_t _CLASS::appendSegmentsUniformly(unsigned int numSegments, const point_t * value) {
+		SegmentIterator it = getAbsoluteEnd(), aBegin = getAbsoluteBegin();
+		moveIterator(it, aBegin, -1);
+
+		time_t atEndKnot = it.getKnot();
+
+		moveIterator(it, aBegin, -1);
+		time_t beforeAtEndKnot = it.getKnot();
+
+		auto knotGenerator = DeltaUniformKnotGenerator<TimePolicy>(beforeAtEndKnot, computeDuration(beforeAtEndKnot, atEndKnot), getSplineOrder(), true);
+		knotGenerator.jumpOverNextKnots(2);
+		return appendSegments(knotGenerator, numSegments, value);
+	}
+
 
 	_TEMPLATE
 	inline typename _CLASS::duration_t _CLASS::computeDuration(typename _CLASS::time_t from, typename _CLASS::time_t till){
@@ -330,7 +355,6 @@ namespace bsplines {
 	{
 		int i = getSplineOrder() - 1;
 		SM_ASSERT_GE_DBG(Exception, k, 1, "The parameter k must be greater than or equal to 1");
-		// \todo: redo these checks.
 		SM_ASSERT_EQ_DBG(Exception, (int)knots.size(), getSplineOrder() * 2, "The parameter knots must have ISplineOrder many elements");
 		if(k == 1)
 		{
@@ -799,8 +823,6 @@ namespace bsplines {
 		else
 			computeLocalBiInto(ret, derivativeOrder);
 	}
-
-	//TODO optimize enable return by reference here!
 
 	_TEMPLATE
 	template <int IMaximalDerivativeOrder>

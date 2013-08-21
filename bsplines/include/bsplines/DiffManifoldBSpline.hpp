@@ -200,7 +200,8 @@ namespace bsplines {
 
 		void setControlVertices(const Eigen::MatrixXd & controlVertices);
 
-		void initConstantUniformSpline(const time_t & t_min, const time_t & t_max, int numSegments, const point_t & constant);
+		void initConstantSpline(KnotGenerator<time_t> & knotGenerator, int numSegments, const point_t & constant);
+		void initConstantUniformSpline(const time_t & tMin, const time_t & tMax, int numSegments, const point_t & constant);
 
 		/**
 		 * Appends numSegments knots to the spline, such that after that the last 2 + numSegments knots in the spline are uniformly spaced.
@@ -210,10 +211,21 @@ namespace bsplines {
 		 * This is only allowed on slices up to the splines end. Then it extends the slice as well.
 		 *
 		 * @param the number of segments to be added
-		 * @param value the value for the newly relevant control vertices.
+		 * @param value the value for the newly relevant control vertices may be nullptr. Then the manifold's default point is used.
 		 * @return returns the new maximal time.
 		 */
-		time_t appendSegmentsUniformly(unsigned int numSegments, const point_t * value);
+		time_t appendSegmentsUniformly(unsigned int numSegments = 1, const point_t * value = nullptr);
+
+		/**
+		 * Appends numSegments knots to the spline, according to given KnotGenerator.
+		 *
+		 * This is only allowed on slices up to the splines end. Then it extends the slice as well.
+		 *
+		 * @param the number of segments to be added
+		 * @param value the value for the newly relevant control vertices may be nullptr. Then the manifold's default point is used.
+		 * @return returns the new maximal time.
+		 */
+		time_t appendSegments(KnotGenerator<time_t> & knotGenerator, unsigned int numSegments = 1, const point_t * value = nullptr);
 
 		/**
 		 * Get the number of valid time segments in the slice. Valid is a time segment, in whose interior spline order many basis functions are nonzero.

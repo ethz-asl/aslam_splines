@@ -73,7 +73,6 @@ namespace bsplines {
     Eigen::MatrixXd BSpline::M(int k, int i)
     {
       SM_ASSERT_GE_DBG(Exception, k, 1, "The parameter k must be greater than or equal to 1");
-      // \todo: redo these checks.
       SM_ASSERT_GE_DBG(Exception, i, 0, "The parameter i must be greater than or equal to 0");
       SM_ASSERT_LT_DBG(Exception, i, (int)knots_.size(), "The parameter i must be less than the number of time segments");
       if(k == 1)

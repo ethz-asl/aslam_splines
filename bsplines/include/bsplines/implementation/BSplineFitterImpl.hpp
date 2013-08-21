@@ -143,7 +143,7 @@ namespace internal{
 			typename TSpline::SplineOrderVector bi = spline.template getEvaluatorAt<1>(times[i]).getLocalBi();
 
 			knotIndex -=  splineOrder - 1;
-			if(i == numInterpolationPoints - 1){ //TODO cleanup
+			if(i == numInterpolationPoints - 1){ //TODO improve: remove this irregularity
 				knotIndex --;
 			}
 
@@ -169,7 +169,6 @@ namespace internal{
 		// Solve for the coefficient vector.
 		Eigen::VectorXd c = A.ldlt().solve(b);
 
-		//TODO improve API : better control point construction
 		size_t i = 0;
 		for(typename TSpline::SegmentIterator it = spline.getAbsoluteBegin(), end = spline.getAbsoluteEnd(); it != end && i < coefficientDim; it ++){
 			it->getControlVertex() = c.segment(i, D);
@@ -217,7 +216,7 @@ namespace internal{
 			typename TSpline::SplineOrderVector bi = spline.template getEvaluatorAt<1>(times[i]).getLocalBi();
 
 			knotIndex -=  splineOrder - 1;
-			if(i == numInterpolationPoints - 1){ //TODO cleanup
+			if(i == numInterpolationPoints - 1){ //TODO improve: remove this irregularity
 				knotIndex --;
 			}
 
@@ -254,10 +253,6 @@ namespace internal{
 			// Add the motion constraint.
 			point_t W = point_t::Constant(D, lambda);
 			addCurveQuadraticIntegralDiagToSparse(spline, W, 2, *AtAp);
-
-//			sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> Q = curveQuadraticIntegralDiagSparse(W, 2);
-//			// A'A + Q
-//			Q.add(AtAp);
 		}
 
 		// solve:

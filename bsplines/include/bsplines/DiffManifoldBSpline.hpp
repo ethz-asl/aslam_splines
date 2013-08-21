@@ -171,7 +171,6 @@ namespace bsplines {
 
 		inline const manifold_t & getManifold() const;
 
-		//TODO optimize : enable returning reference
 		inline const SegmentConstIterator getAbsoluteBegin() const;
 
 		inline const SegmentIterator getAbsoluteBegin();
@@ -188,6 +187,7 @@ namespace bsplines {
 
 		inline void addKnot(const time_t & time);
 
+		//TODO improve API : better control point construction
 		void addControlVertex(const time_t & time, const point_t & point);
 
 		void init();
@@ -322,7 +322,7 @@ namespace bsplines {
 		protected:
 			enum { NumberOfPreparedDerivatives = (IMaximalDerivativeOrder <= SplineOrder ? IMaximalDerivativeOrder : SplineOrder) + 1};
 			SplineOrderVector _localBi[NumberOfPreparedDerivatives];
-			//TODO cache results
+			//TODO optimize : cache results
 			mutable SplineOrderVector _tmp;
 
 			const spline_t & _spline;

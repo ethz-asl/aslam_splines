@@ -111,7 +111,6 @@ TEST(UnitQuaternionBSplineTestSuite, evalAngularVelocityAndAcceleration)
 
 //
 //	for(UQTestSpline::SegmentIterator i = spline.getAbsoluteBegin(); i != spline.getAbsoluteEnd(); i++){
-//		std::cout << "t=" << i.getTime() <<" -> " << i->getControlVertex() << std::endl; // XXX: debug output of i
 //		if(i.getTime() >= numPoints -1) break;
 //	}
 

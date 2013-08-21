@@ -40,7 +40,6 @@ namespace bsplines {
 		return * _segments;
 	}
 
-	//TODO optimize : enable returning reference
 	_TEMPLATE
 	inline const typename _CLASS::SegmentConstIterator _CLASS::getAbsoluteBegin() const {
 		return _segments->begin();

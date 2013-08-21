@@ -69,7 +69,7 @@ TEST(DiffManifoldBSplineTestSuite, testInitialization)
 
 	SM_ASSERT_EQ(std::runtime_error, minTime, rbspline.getEvaluatorAt<0>(minTime).getKnot(),"");
 	SM_ASSERT_EQ(std::runtime_error, minTime, rbspline.getEvaluatorAt<0>(minTime + 0.01).getKnot(), "");
-	SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt<0>(maxTime - 0.01).getKnot(), rbspline.getEvaluatorAt<0>(maxTime).getKnot(), ""); //TODO remove this irregularity
+	SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt<0>(maxTime - 0.01).getKnot(), rbspline.getEvaluatorAt<0>(maxTime).getKnot(), ""); //TODO improve: remove this irregularity
 	SM_ASSERT_GT(std::runtime_error, maxTime, rbspline.getEvaluatorAt<0>(maxTime - 0.01).getKnot(), "");
 
 	TestSpline::SegmentConstIterator i = rbspline.getAbsoluteBegin(), end = rbspline.getAbsoluteEnd();
@@ -164,7 +164,7 @@ TEST(DiffManifoldBSplineTestSuite, testAddingSegments)
 
 		SM_ASSERT_EQ(std::runtime_error, minTime, rbspline.getEvaluatorAt<0>(minTime).getKnot(),"");
 		SM_ASSERT_EQ(std::runtime_error, minTime, rbspline.getEvaluatorAt<0>(minTime + 0.01).getKnot(), "");
-		SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt<0>(maxTime - 0.01).getKnot(), rbspline.getEvaluatorAt<0>(maxTime).getKnot(), ""); //TODO remove this irregularity
+		SM_ASSERT_EQ(std::runtime_error, rbspline.getEvaluatorAt<0>(maxTime - 0.01).getKnot(), rbspline.getEvaluatorAt<0>(maxTime).getKnot(), ""); //TODO improve: remove this irregularity
 		SM_ASSERT_GT(std::runtime_error, maxTime, rbspline.getEvaluatorAt<0>(maxTime - 0.01).getKnot(), "");
 
 		TestSpline rbsplineToCompare;

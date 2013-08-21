@@ -169,12 +169,7 @@ namespace internal{
 		// Solve for the coefficient vector.
 		Eigen::VectorXd c = A.ldlt().solve(b);
 
-		size_t i = 0;
-		for(typename TSpline::SegmentIterator it = spline.getAbsoluteBegin(), end = spline.getAbsoluteEnd(); it != end && i < coefficientDim; it ++){
-			it->getControlVertex() = c.segment(i, D);
-			spline.getManifold().projectIntoManifold(it->getControlVertex());
-			i+= D;
-		}
+		spline.setControlVertices(c);
 	}
 
 	_TEMPLATE
@@ -191,9 +186,6 @@ namespace internal{
 
 		// Initialize a uniform knot sequence
 		const knot_arithmetics::UniformTimeCalculator<typename TSpline::TimePolicy> timeCalculator(splineOrder, times[0], times[numInterpolationPoints - 1], numSegments);
-
-		// Now we have to solve an Ax = b linear system to determine the correct coefficient vectors.
-		size_t coefficientDim = C * D;
 
 		// define the structure:
 		std::vector<int> rows;
@@ -267,17 +259,12 @@ namespace internal{
 		if(!result) {
 			c.setZero();
 			// fallback => use nonsparse solver:
-					std::cout << "Fallback to Dense Solver" << std::endl;
-					Eigen::MatrixXd Adense = AtAp->toDense();
-					c = Adense.ldlt().solve(b_dense);
+			std::cout << "Fallback to Dense Solver" << std::endl;
+			Eigen::MatrixXd Adense = AtAp->toDense();
+			c = Adense.ldlt().solve(b_dense);
 		}
 
-		size_t i = 0;
-		for(typename TSpline::SegmentIterator it = spline.getAbsoluteBegin(), end = spline.getAbsoluteEnd(); it != end && i < coefficientDim; it ++){
-			it->getControlVertex() = c.segment(i, D);
-			spline.getManifold().projectIntoManifold(it->getControlVertex());
-			i+= D;
-		}
+		spline.setControlVertices(c);
 	}
 
 

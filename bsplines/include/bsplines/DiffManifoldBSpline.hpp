@@ -187,7 +187,6 @@ namespace bsplines {
 
 		inline void addKnot(const time_t & time);
 
-		//TODO improve API : better control point construction
 		void addControlVertex(const time_t & time, const point_t & point);
 
 		void init();
@@ -198,6 +197,18 @@ namespace bsplines {
 		void initWithKnots(const Eigen::VectorXd & knotTimes);
 		void initWithKnotsAndControlVertices(const Eigen::VectorXd & knotTimes, const Eigen::MatrixXd & controlVertices);
 
+		/**
+		 * Iterates a callback function over the first manipulateTheFirstNControlVertices control vertices in this slice.
+		 * @param controlVertexManipulator This callback function manipulates the control vertex having the index given by the first argument.
+		 * @param manipulateTheFirstNControlVertices That much control vertices will be given to the manipulator starting from the first relevant control vertex.
+		 */
+		void manipulateControlVertices(std::function<void (int index, point_t & controlVertex)> controlVertexManipulator, int manipulateTheFirstNControlVertices);
+
+		/**
+		 * Sets as much control vertices of the spline as contained in the controlVertices matrix. Starting at the first relevant control vertex.
+		 * It it or its transposed must be (dim * n) x 1 or dim x n, where n is the number of contained control vertices.
+		 * @param controlVertices
+		 */
 		void setControlVertices(const Eigen::MatrixXd & controlVertices);
 
 		void initConstantSpline(KnotGenerator<time_t> & knotGenerator, int numSegments, const point_t & constant);

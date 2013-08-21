@@ -198,15 +198,54 @@ namespace bsplines {
 		init();
 	}
 
+
 	_TEMPLATE
 	void _CLASS::setControlVertices(const Eigen::MatrixXd & controlVertices)
 	{
-		SM_ASSERT_EQ(Exception, controlVertices.cols(), getNumControlVertices(), "There must be getNumControlVertices() many controlVertices!");
+		bool columnsMode;
+		int n = controlVertices.size();
+		int D = getDimension();
 
+		if(D == 1){
+			columnsMode = controlVertices.rows() == 1;
+		}
+		else{
+			if((columnsMode = (controlVertices.rows() == D)) || controlVertices.cols() == D){
+				n /= D;
+				D = 1;
+			}
+			else if ((columnsMode = (controlVertices.rows() == 1)) || controlVertices.cols() == 1){
+				SM_ASSERT_EQ(Exception, (n % D), 0, "The size of the matrix must be a multiple of the spline's dimension!");
+				n /= D;
+			}
+			else {
+				SM_THROW(Exception, "The size of the matrix has illegal shape: " << controlVertices.rows() << " x " << controlVertices.cols() << "!");
+			}
+		}
+
+		std::function<void (int, point_t &)> vertexManipulator;
+		if(D == 1){
+			if(columnsMode)
+				vertexManipulator = [&controlVertices](int i, point_t & v) { v = controlVertices.row(i); };
+			else
+				vertexManipulator = [&controlVertices](int i, point_t & v) { v = controlVertices.col(i); };
+		}
+		else {
+			if(columnsMode)
+				vertexManipulator = [&controlVertices, D](int i, point_t & v) { v = controlVertices.block(0, i * D, 1, D).transpose(); };
+			else
+				vertexManipulator = [&controlVertices, D](int i, point_t & v) { v = controlVertices.block(i * D, 0, D, 1); };
+		}
+		manipulateControlVertices(vertexManipulator, n);
+	}
+
+	_TEMPLATE
+	void _CLASS::manipulateControlVertices(std::function<void (int index, point_t & controlVertex)> controlVertexManipulator, int manipulateTheFirstNControlVertices)
+	{
+		SM_ASSERT_LE(Exception, manipulateTheFirstNControlVertices, getNumControlVertices(), "There must be getNumControlVertices() or less many controlVertices to be manipulated!");
 		int i = 0;
-		for(SegmentIterator it = getAbsoluteBegin(), end = getAbsoluteEnd(); it != end && i < controlVertices.cols(); it ++){
-			it->getControlVertex() = controlVertices.col(i);
-			i++;
+		for(SegmentIterator it = getAbsoluteBegin(), end = getAbsoluteEnd(); it != end && i < manipulateTheFirstNControlVertices; it ++){
+			controlVertexManipulator(i++, it->getControlVertex());
 		}
 	}
 

@@ -510,22 +510,10 @@ template<typename TSpline> void copyKnots(TSpline & src, BSpline & dest){
 	dest.setKnotVectorAndCoefficients(knots, dest.coefficients());
 }
 
-template <typename TSpline>
-void setControlVertices(TSpline & spline, const Eigen::MatrixXd & controlVertices){
-	typename TSpline::SegmentIterator it = spline.getAbsoluteBegin();
-	for(int c = 0, n = controlVertices.cols(); c < n ; c++){
-		it->getControlVertex() = controlVertices.col(c);
-		it++;
-	}
-}
-
 template <typename TSpline, typename Container>
 void setControlVerticesFromContainer(TSpline & spline, const Container & controlVertices){
-	typename TSpline::SegmentIterator it = spline.getAbsoluteBegin();
-	for(typename TSpline::point_t p : controlVertices){
-		it->getControlVertex() = p;
-		it++;
-	}
+	auto it = controlVertices.begin();
+	spline.manipulateControlVertices([&it, &controlVertices, &spline](int, typename TSpline::point_t & vertex){ vertex = *it; it++;}, controlVertices.size());
 }
 
 }// namespace bsplines

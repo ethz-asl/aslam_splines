@@ -14,6 +14,11 @@
 #include "KnotArithmetics.hpp"
 
 namespace bsplines{
+enum class FittingBackend {
+	DENSE,
+	SPARSE,
+	DEFAULT = SPARSE
+};
 
 template <typename TSpline>
 class BSplineFitter {
@@ -23,20 +28,15 @@ class BSplineFitter {
 public :
 	SM_DEFINE_EXCEPTION(Exception, std::runtime_error);
 
-	enum class Backend {
-		DENSE,
-		SPARSE,
-		DEFAULT = SPARSE
-	};
-
-	static void initSpline(TSpline & spline, KnotGenerator<time_t> & knotGenerator, const std::vector<time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda, Backend backend = Backend::DEFAULT);
-	static void initUniformSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda, Backend backend = Backend::DEFAULT);
-	static void initUniformSplineDense(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda);
-	static void initUniformSplineSparse(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda);
+	static void initSpline(TSpline & spline, KnotGenerator<time_t> & knotGenerator, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda, FittingBackend fittingBackend = FittingBackend::DEFAULT);
+	static void fitSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, FittingBackend backend = FittingBackend::DEFAULT);
+	static void initUniformSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda, FittingBackend backend = FittingBackend::DEFAULT);
+	static void initUniformSplineDense(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda);
+	static void initUniformSplineSparse(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda);
 
 private:
 	static void addCurveQuadraticIntegralDiagTo(const TSpline & spline, const point_t & Wdiag, int derivativeOrder, Eigen::MatrixXd & toMatrix);
-	static void addCurveQuadraticIntegralDiagToSparse(const TSpline & spline, const point_t & Wdiag, int derivativeOrder, sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> & toMatrix);
+	static void addCurveQuadraticIntegralDiagTo(const TSpline & spline, const point_t & Wdiag, int derivativeOrder, sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> & toMatrix);
 
 	template<typename M_T>
 	static void addOrSetSegmentQuadraticIntegralDiag(const TSpline & spline, const point_t & Wdiag, typename TSpline::SegmentConstIterator segmentIt, int derivativeOrder, M_T toMatrix, bool add);
@@ -47,8 +47,9 @@ private:
 	template <typename M_T>
 	static void computeMiInto(const TSpline & spline, const typename TSpline::SegmentConstIterator & segmentIndex, M_T & M);
 
-	static void calcFittedControlVerticesDense(TSpline & spline, const KnotIndexResolver<time_t> & knotResolver, const std::vector<time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda);
-	static void calcFittedControlVerticesSparse(TSpline & spline, const KnotIndexResolver<time_t> & knotResolver, const std::vector<time_t> & times, const std::vector<point_t> & interpolationPoints, int numSegments, double lambda);
+	static void calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, FittingBackend fittingBackend = FittingBackend::DEFAULT, int fixNFirstRelevantControlVertices = 0);
+	template<enum FittingBackend FittingBackend_>
+	static void calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, int fixNFirstRelevantControlVertices = 0);
 };
 
 }

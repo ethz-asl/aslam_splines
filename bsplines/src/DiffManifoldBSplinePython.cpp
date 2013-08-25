@@ -92,7 +92,7 @@ struct BSplineImporter {
 		.def("addKnotsAndControlVertices", &TSpline::addKnotsAndControlVertices, "Adds the knots and control vertices to the spline")
 		.def("initWithKnots", &TSpline::initWithKnots, "Sets the spline's knots initializes it")
 		.def("initWithKnotsAndControlVertices", &TSpline::initWithKnotsAndControlVertices, "Sets the spline's knots and control vertices and initializes it")
-		.def("setControlVertices", &TSpline::setControlVertices, "Sets the spline's control vertices")
+		.def("setControlVertices", static_cast<void (TSpline::*)(const Eigen::MatrixXd &)>(&TSpline::setControlVertices), "Sets the spline's control vertices")
 		.def("getKnotsVector", getKnotsVector, "returns the current knot sequence")
 		.def("knots", getKnotsVector, "returns the current knot sequence")
 		.def("getKnotsVector", getKnotsVector, "returns the current knot sequence")

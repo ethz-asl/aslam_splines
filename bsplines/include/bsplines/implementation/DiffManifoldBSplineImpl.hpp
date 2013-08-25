@@ -198,9 +198,13 @@ namespace bsplines {
 		init();
 	}
 
+	_TEMPLATE
+	void _CLASS::setControlVertices(const Eigen::MatrixXd & controlVertices){
+		setControlVertices(controlVertices, getMinTime());
+	}
 
 	_TEMPLATE
-	void _CLASS::setControlVertices(const Eigen::MatrixXd & controlVertices)
+	void _CLASS::setControlVertices(const Eigen::MatrixXd & controlVertices, const time_t startTime)
 	{
 		bool columnsMode;
 		int n = controlVertices.size();
@@ -226,9 +230,9 @@ namespace bsplines {
 		std::function<void (int, point_t &)> vertexManipulator;
 		if(D == 1){
 			if(columnsMode)
-				vertexManipulator = [&controlVertices](int i, point_t & v) { v = controlVertices.row(i); };
-			else
 				vertexManipulator = [&controlVertices](int i, point_t & v) { v = controlVertices.col(i); };
+			else
+				vertexManipulator = [&controlVertices](int i, point_t & v) { v = controlVertices.row(i); };
 		}
 		else {
 			if(columnsMode)
@@ -236,15 +240,21 @@ namespace bsplines {
 			else
 				vertexManipulator = [&controlVertices, D](int i, point_t & v) { v = controlVertices.block(i * D, 0, D, 1); };
 		}
-		manipulateControlVertices(vertexManipulator, n);
+		manipulateControlVertices(vertexManipulator, n, startTime);
 	}
 
 	_TEMPLATE
 	void _CLASS::manipulateControlVertices(std::function<void (int index, point_t & controlVertex)> controlVertexManipulator, int manipulateTheFirstNControlVertices)
 	{
+		manipulateControlVertices(controlVertexManipulator, manipulateTheFirstNControlVertices, getMinTime());
+	}
+
+	_TEMPLATE
+	void _CLASS::manipulateControlVertices(std::function<void (int index, point_t & controlVertex)> controlVertexManipulator, int manipulateTheFirstNControlVertices, const time_t startingAtFirstRelevantControlVertexForThisTime)
+	{
 		SM_ASSERT_LE(Exception, manipulateTheFirstNControlVertices, getNumControlVertices(), "There must be getNumControlVertices() or less many controlVertices to be manipulated!");
 		int i = 0;
-		for(SegmentIterator it = getAbsoluteBegin(), end = getAbsoluteEnd(); it != end && i < manipulateTheFirstNControlVertices; it ++){
+		for(SegmentIterator it = getFirstRelevantSegmentByLast(getSegmentIterator(startingAtFirstRelevantControlVertexForThisTime)), end = getAbsoluteEnd(); it != end && i < manipulateTheFirstNControlVertices; it ++){
 			controlVertexManipulator(i++, it->getControlVertex());
 		}
 	}

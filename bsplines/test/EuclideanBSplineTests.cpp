@@ -16,7 +16,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 	BSpline bspline = BSpline(splineOrder);
 	bspline.initConstantSpline(minTime, maxTime, numberOfSegments, ones);
 
-	Eigen::Matrix<double, rows, Eigen::Dynamic> coefficients = Eigen::MatrixXd::Random(rows, bspline.numVvCoefficients());
+	Eigen::MatrixXd coefficients = Eigen::MatrixXd::Random(rows, bspline.numVvCoefficients());
 //	Eigen::Matrix<double, rows, Eigen::Dynamic> coefficients = Eigen::VectorXd::LinSpaced(bspline.numVvCoefficients(), 0, 10);
 
 	bspline.setCoefficientMatrix(coefficients);
@@ -35,10 +35,10 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 
 	SM_ASSERT_EQ(std::runtime_error, rbspline.getNumControlVertices(), bspline.numVvCoefficients(), "");
 
-	setControlVertices(rbspline, coefficients);
-	setControlVertices(rbsplineDS, coefficients);
-	setControlVertices(rbsplineSD, coefficients);
-	setControlVertices(rbsplineDD, coefficients);
+	rbspline.setControlVertices(coefficients);
+	rbsplineDS.setControlVertices(coefficients);
+	rbsplineSD.setControlVertices(coefficients);
+	rbsplineDD.setControlVertices(coefficients);
 
 	for(unsigned int i = 0; i <= numberOfTimeSteps; i ++) {
 		double t = minTime + duration * ((double) i / numberOfTimeSteps);
@@ -458,6 +458,37 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineFittingDenseSpar
 }
 
 
+TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineTailFitting)
+{
+	const int numberOfInterpolationPoints = numberOfSegments * 2 + 3;
+
+	Eigen::VectorXd times = Eigen::VectorXd::LinSpaced(numberOfInterpolationPoints, minTime, maxTime);
+	Eigen::MatrixXd interpolationPoints = Eigen::MatrixXd::Random(rows, numberOfInterpolationPoints);
+	const double lambda = 0.1; // 0; //.1;
+
+
+	std::vector<TestSpline::time_t> timesV;
+	std::vector<TestSpline::point_t> interpolationPointsV;
+	for(int i = 0; i < numberOfInterpolationPoints; i ++){
+		timesV.push_back((double)times[i]);
+		interpolationPointsV.push_back(interpolationPoints.col(i));
+	}
+
+	TestSpline rbspline;
+
+	BSplineFitter<TestSpline>::initUniformSplineDense(rbspline, timesV, interpolationPointsV, numberOfSegments, lambda);
+
+	SM_ASSERT_EQ(std::runtime_error, rbspline.getAbsoluteNumberOfSegments(), numberOfSegments + splineOrder * 2 - 1, "");
+	SM_ASSERT_EQ(std::runtime_error, maxTime, rbspline.getMaxTime(), "");
+	SM_ASSERT_EQ(std::runtime_error, minTime, rbspline.getMinTime(), "");
+
+	for(unsigned int i = 0; i <= numberOfTimeSteps; i ++) {
+		double t = minTime + duration * ((double) i / numberOfTimeSteps);
+		Eigen::VectorXd rval = rbspline.getEvaluatorAt<0>(t).eval();
+//		sm::eigen::assertNear(rval, val, 1E-9, SM_SOURCE_FILE_POS, "");
+	}
+}
+
 template <int IDerivativeOrder>
 struct BSplineJacobianFunctor
 {
@@ -525,7 +556,7 @@ void testBSplineJacobiansSO(){
 
 		int nc = bs.getNumControlVertices();
 		Eigen::MatrixXd C = Eigen::MatrixXd::Random(dim,nc);
-		setControlVertices(bs, C);
+		bs.setControlVertices(C);
 
 		Eigen::MatrixXd J(dim, dim * ISplineOrder);
 		Eigen::VectorXd coefficients(dim * ISplineOrder);

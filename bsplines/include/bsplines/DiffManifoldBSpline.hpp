@@ -203,6 +203,13 @@ namespace bsplines {
 		 * @param manipulateTheFirstNControlVertices That much control vertices will be given to the manipulator starting from the first relevant control vertex.
 		 */
 		void manipulateControlVertices(std::function<void (int index, point_t & controlVertex)> controlVertexManipulator, int manipulateTheFirstNControlVertices);
+		/**
+		 * Same as above but with an additional starting time. The control vertices are changed starting at the first relevant for this time.
+		 * @param controlVertexManipulator
+		 * @param manipulateTheFirstNControlVertices
+		 * @param startingAtFirstRelevantControlVertexForThisTime
+		 */
+		void manipulateControlVertices(std::function<void (int index, point_t & controlVertex)> controlVertexManipulator, int manipulateTheFirstNControlVertices, const time_t startingAtFirstRelevantControlVertexForThisTime);
 
 		/**
 		 * Sets as much control vertices of the spline as contained in the controlVertices matrix. Starting at the first relevant control vertex.
@@ -210,6 +217,13 @@ namespace bsplines {
 		 * @param controlVertices
 		 */
 		void setControlVertices(const Eigen::MatrixXd & controlVertices);
+
+		/**
+		 * Same as above but with an additional starting time. The control vertices are changed starting at the first relevant for this time.
+		 * @param controlVertices
+		 * @param startingAtFirstRelevantControlVertexForThisTime
+		 */
+		void setControlVertices(const Eigen::MatrixXd & controlVertices, const time_t startingAtFirstRelevantControlVertexForThisTime);
 
 		void initConstantSpline(KnotGenerator<time_t> & knotGenerator, int numSegments, const point_t & constant);
 		void initConstantUniformSpline(const time_t & tMin, const time_t & tMax, int numSegments, const point_t & constant);

@@ -5,6 +5,7 @@
  *      Author: Hannes Sommer
  */
 
+#include "DiffManifoldBSplineTools.hpp"
 #include "../NumericIntegrator.hpp"
 
 namespace bsplines {
@@ -83,35 +84,6 @@ namespace bsplines {
 		_segments->insert(typename segment_map_t::value_type(time, createSegmentData(time, point)));
 	}
 
-	template<typename Iterator>
-	inline void moveIterator(Iterator & it, const Iterator & limit, int steps)
-	{
-		if(steps == 0)
-			return;
-		if(steps > 0){
-			for (int c = steps; c>0; c--){
-				if(it == limit)
-					break;
-				it++;
-			}
-		}
-		else{
-			for (int c = -steps; c>0; c--){
-				if(it == limit)
-					break;
-				it--;
-			}
-		}
-	}
-
-	template<typename Iterator>
-	inline Iterator getMovedIterator(const Iterator & it, const Iterator & limit, int steps)
-	{
-		Iterator nIt(it);
-		moveIterator(nIt, limit, steps);
-		return nIt;
-	}
-
 	_TEMPLATE
 	inline
 	void _CLASS::assertEvaluable() const {
@@ -141,8 +113,8 @@ namespace bsplines {
 	_TEMPLATE
 	void _CLASS::initIterators() {
 		_firstRelevantSegment = _segments->begin();
-		moveIterator(_begin = _segments->begin(), SegmentIterator(_segments->end()), getSplineOrder() - 1);
-		moveIterator(_end = _segments->end(), SegmentIterator(_segments->begin()), - getSplineOrder());
+		internal::moveIterator(_begin = _segments->begin(), SegmentIterator(_segments->end()), getSplineOrder() - 1);
+		internal::moveIterator(_end = _segments->end(), SegmentIterator(_segments->begin()), - getSplineOrder());
 	}
 
 
@@ -286,14 +258,14 @@ namespace bsplines {
 		SM_ASSERT_TRUE(Exception, knotGenerator.supportsAppending(), "The knot generator needs to support appending!");
 
 		SegmentIterator it = getAbsoluteEnd(), aBegin = getAbsoluteBegin();
-		moveIterator(it, aBegin, -1);
+		internal::moveIterator(it, aBegin, -1);
 
 		time_t aEndKnot = it.getKnot();
 
-		moveIterator(it, aBegin, -1);
+		internal::moveIterator(it, aBegin, -1);
 		time_t beforeAEndKnot = it.getKnot();
 
-		moveIterator(it, aBegin, -(getSplineOrder() - 2));
+		internal::moveIterator(it, aBegin, -(getSplineOrder() - 2));
 		SM_ASSERT_TRUE(Exception, _end == it, "Append may only be called on a tail slice.");
 
 
@@ -306,12 +278,12 @@ namespace bsplines {
 			}
 		}
 
-		SegmentIterator formerLast = getMovedIterator(_end, aBegin, -1);
+		SegmentIterator formerLast = internal::getMovedIterator(_end, aBegin, -1);
 
-		moveIterator(_end, getAbsoluteEnd(), numSegments);
+		internal::moveIterator(_end, getAbsoluteEnd(), numSegments);
 
 		if(getState() == internal::state::EVALUABLE){
-			initializeBasisMatrices(getMovedIterator(formerLast, aBegin, -(getSplineOrder() - 1)), formerLast);
+			initializeBasisMatrices(internal::getMovedIterator(formerLast, aBegin, -(getSplineOrder() - 1)), formerLast);
 		}
 		return getMaxTime();
 	}
@@ -319,11 +291,11 @@ namespace bsplines {
 	_TEMPLATE
 	typename _CLASS::time_t _CLASS::appendSegmentsUniformly(unsigned int numSegments, const point_t * value) {
 		SegmentIterator it = getAbsoluteEnd(), aBegin = getAbsoluteBegin();
-		moveIterator(it, aBegin, -1);
+		internal::moveIterator(it, aBegin, -1);
 
 		time_t atEndKnot = it.getKnot();
 
-		moveIterator(it, aBegin, -1);
+		internal::moveIterator(it, aBegin, -1);
 		time_t beforeAtEndKnot = it.getKnot();
 
 		auto knotGenerator = DeltaUniformKnotGenerator<TimePolicy>(beforeAtEndKnot, computeDuration(beforeAtEndKnot, atEndKnot), getSplineOrder(), true);
@@ -492,7 +464,7 @@ namespace bsplines {
 			return TTimePolicy::getZero();
 		}
 		else{
-			return computeDuration(segmentIt->first, getMovedIterator<SegmentMapConstIterator>(segmentIt, _segments->end(), 1)->first);
+			return computeDuration(segmentIt->first, internal::getMovedIterator<SegmentMapConstIterator>(segmentIt, _segments->end(), 1)->first);
 		}
 	}
 
@@ -634,7 +606,7 @@ namespace bsplines {
 		{
 			//TODO discuss
 			// This is a special case to allow us to evaluate the spline at the boundary of the
-			// interval. This is not stritcly correct but it will be useful when we start doing
+			// interval. This is not strictly correct but it will be useful when we start doing
 			// estimation and defining knots at our measurement times.
 			ub = _end;
 		}
@@ -647,23 +619,23 @@ namespace bsplines {
 
 
 	_TEMPLATE
-	inline typename _CLASS::SegmentConstIterator _CLASS::getSegmentIterator(const typename _CLASS::time_t & t) const
+	inline typename _CLASS::SegmentConstIterator _CLASS::getSegmentIterator(const time_t & t) const
 	{
 		return const_cast<typename TConfigurationDerived::BSpline *>((const typename TConfigurationDerived::BSpline *)this)->getSegmentIterator(t);
 	}
 
 
 	_TEMPLATE
-	inline typename _CLASS::SegmentConstIterator _CLASS::getFirstRelevantSegmentByLast(const typename _CLASS::SegmentConstIterator & first) const
+	inline typename _CLASS::SegmentConstIterator _CLASS::getFirstRelevantSegmentByLast(const SegmentConstIterator & first) const
 	{
-		return getMovedIterator(first, getAbsoluteBegin(), -(getSplineOrder() - 1));
+		return internal::getMovedIterator(first, getAbsoluteBegin(), -(getSplineOrder() - 1));
 	}
 
 
 	_TEMPLATE
-	inline typename _CLASS::SegmentIterator _CLASS::getFirstRelevantSegmentByLast(const typename _CLASS::SegmentIterator & first)
+	inline typename _CLASS::SegmentIterator _CLASS::getFirstRelevantSegmentByLast(const SegmentIterator & first)
 	{
-		return getMovedIterator(first, getAbsoluteBegin(), -(getSplineOrder() - 1));
+		return internal::getMovedIterator(first, getAbsoluteBegin(), -(getSplineOrder() - 1));
 	}
 
 
@@ -739,7 +711,7 @@ namespace bsplines {
 		_t(t),
 		_ti(spline.getSegmentIterator(t)),
 		_firstRelevantControlVertexIt(spline.getFirstRelevantSegmentByLast(_ti)),
-		_end(getMovedIterator(_ti, spline.getAbsoluteEnd(), 1)),
+		_end(internal::getMovedIterator(_ti, spline.getAbsoluteEnd(), 1)),
 		_segmentLength(spline.computeSegmentLength(_ti)),
 		_positionInSegment(computeDuration(_ti.getKnot(), t)),
 		_relativePositionInSegment(((duration_t) (_segmentLength) == (duration_t) (TTimePolicy::getZero())) ? 0 : divideDurations(_positionInSegment, _segmentLength))

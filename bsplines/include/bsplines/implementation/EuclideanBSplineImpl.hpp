@@ -104,7 +104,9 @@ namespace bsplines {
 	typename _CLASS::point_t _CLASS::Evaluator<IMaximalDerivativeOrder>::evalD(int derivativeOrder) const
 	{
 		SM_ASSERT_GE(typename parent_t::Exception, derivativeOrder, 0, "To integrate, use the integral function");
-		SM_ASSERT_LT_DBG(typename parent_t::Exception, derivativeOrder, IMaximalDerivativeOrder + 1, "only derivatives up to the evaluator's template argument IMaximalDerivativeOrder are allowed");
+		if(IMaximalDerivativeOrder != Eigen::Dynamic){
+				SM_ASSERT_LT_DBG(typename parent_t::Exception, derivativeOrder, IMaximalDerivativeOrder + 1, "only derivatives up to the evaluator's template argument IMaximalDerivativeOrder are allowed");
+		}
 
 		point_t rv(this->_spline.getDimension());
 		if(derivativeOrder < this->_spline.getSplineOrder())

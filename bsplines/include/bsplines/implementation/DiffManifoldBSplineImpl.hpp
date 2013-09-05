@@ -176,7 +176,7 @@ namespace bsplines {
 	}
 
 	_TEMPLATE
-	void _CLASS::setControlVertices(const Eigen::MatrixXd & controlVertices, const time_t startTime)
+	void _CLASS::setControlVertices(const Eigen::MatrixXd & controlVertices, const time_t startTime, int offset)
 	{
 		bool columnsMode;
 		int n = controlVertices.size();
@@ -212,34 +212,36 @@ namespace bsplines {
 			else
 				vertexManipulator = [&controlVertices, D](int i, point_t & v) { v = controlVertices.block(i * D, 0, D, 1); };
 		}
-		manipulateControlVertices(vertexManipulator, n, startTime);
+		manipulateControlVertices(vertexManipulator, n, startTime, offset);
 	}
 
 	_TEMPLATE
-	void _CLASS::manipulateControlVertices(std::function<void (int index, point_t & controlVertex)> controlVertexManipulator, int manipulateTheFirstNControlVertices)
+	void _CLASS::manipulateControlVertices(std::function<void (int index, point_t & controlVertex)> controlVertexManipulator, int manipulateTheFirstNControlVertices, int offset)
 	{
-		manipulateControlVertices(controlVertexManipulator, manipulateTheFirstNControlVertices, getMinTime());
+		manipulateControlVertices(controlVertexManipulator, manipulateTheFirstNControlVertices, getMinTime(), offset);
 	}
 
 	_TEMPLATE
-	void _CLASS::manipulateControlVertices(std::function<void (int index, point_t & controlVertex)> controlVertexManipulator, int manipulateTheFirstNControlVertices, const time_t startingAtFirstRelevantControlVertexForThisTime)
+	void _CLASS::manipulateControlVertices(std::function<void (int index, point_t & controlVertex)> controlVertexManipulator, int manipulateTheFirstNControlVertices, const time_t startingAtFirstRelevantControlVertexForThisTime, int offset)
 	{
 		SM_ASSERT_LE(Exception, manipulateTheFirstNControlVertices, getNumControlVertices(), "There must be getNumControlVertices() or less many controlVertices to be manipulated!");
 		int i = 0;
-		for(SegmentIterator it = getFirstRelevantSegmentByLast(getSegmentIterator(startingAtFirstRelevantControlVertexForThisTime)), end = getAbsoluteEnd(); it != end && i < manipulateTheFirstNControlVertices; it ++){
+		SegmentIterator it = getFirstRelevantSegmentByLast(getSegmentIterator(startingAtFirstRelevantControlVertexForThisTime));
+		if(offset){
+			internal::moveIterator(it, offset > 0 ? end() : begin(), offset);
+		}
+		for(SegmentIterator  end = getAbsoluteEnd(); it != end && i < manipulateTheFirstNControlVertices; it ++){
 			controlVertexManipulator(i++, it->getControlVertex());
 		}
 	}
 
 	_TEMPLATE
-	void _CLASS::initConstantSpline(KnotGenerator<time_t> & knotGenerator, int numSegments, const point_t & constant)
+	void _CLASS::initConstantSpline(KnotGenerator<time_t> & knotGenerator, const point_t & constant)
 	{
 		assertConstructing();
-		SM_ASSERT_GE(Exception, numSegments, 1, "There must be at least one segment");
 		SM_ASSERT_GE(Exception, constant.size(), 1, "The constant vector must be of at least length 1");
 
-		int K = knot_arithmetics::getNumKnotsRequired(numSegments, getSplineOrder());
-		for(int i = 0; i < K; i++)
+		while(knotGenerator.hasNextKnot())
 			addControlVertex(knotGenerator.getNextKnot(), constant);
 
 		getDerived().init();
@@ -248,57 +250,72 @@ namespace bsplines {
 	_TEMPLATE
 	void _CLASS::initConstantUniformSpline(const time_t & tMin, const time_t & tMax, int numSegments, const point_t & constant)
 	{
-		auto generator = IntervalUniformKnotGenerator<TimePolicy>(getSplineOrder(), tMin, tMax, numSegments);
-		initConstantSpline(generator, numSegments, constant) ;
+		IntervalUniformKnotGenerator<TimePolicy> generator(getSplineOrder(), tMin, tMax, numSegments);
+		initConstantSpline(generator, constant) ;
 	}
 
 	_TEMPLATE
-	typename _CLASS::time_t _CLASS::appendSegments(KnotGenerator<time_t> & knotGenerator, unsigned int numSegments, const point_t * value) {
+	inline DeltaUniformKnotGenerator<typename _CLASS::TimePolicy> _CLASS::initConstantUniformSplineWithKnotDelta(const time_t & tMin, const time_t & beyondThisTime, const duration_t knotDelta, const point_t & constant){
+		DeltaUniformKnotGenerator<TimePolicy> generator(getSplineOrder(), tMin, beyondThisTime, knotDelta);
+		initConstantSpline(generator, constant);
+		return generator;
+	}
+
+
+	_TEMPLATE
+	typename _CLASS::time_t _CLASS::appendSegments(KnotGenerator<time_t> & knotGenerator, int numSegments, const point_t * value) {
 		assertEvaluable();
 		SM_ASSERT_TRUE(Exception, knotGenerator.supportsAppending(), "The knot generator needs to support appending!");
 
-		SegmentIterator it = getAbsoluteEnd(), aBegin = getAbsoluteBegin();
-		internal::moveIterator(it, aBegin, -1);
+		SegmentIterator it = getAbsoluteEnd(), absBegin = getAbsoluteBegin();
+		SegmentIterator currentValidEnd = _end;
+		internal::moveIterator(it, absBegin, -(getSplineOrder()));
+		SM_ASSERT_TRUE(Exception, currentValidEnd == it, "Append may only be called on a tail slice.");
 
-		time_t aEndKnot = it.getKnot();
+		unsigned int j;
+		for(j = 0; ; j++) {
+			if(numSegments >= 0) {
+				if(j >= numSegments)
+					break;
+			}
+			else {
+				if(!knotGenerator.hasNextKnot()){
+					break;
+				}
+			}
 
-		internal::moveIterator(it, aBegin, -1);
-		time_t beforeAEndKnot = it.getKnot();
-
-		internal::moveIterator(it, aBegin, -(getSplineOrder() - 2));
-		SM_ASSERT_TRUE(Exception, _end == it, "Append may only be called on a tail slice.");
-
-
-		for(unsigned int j = 0; j < numSegments; j++) {
 			time_t newKnot = knotGenerator.getNextKnot();
 			addKnot(newKnot);
+			currentValidEnd++;
 			if(value != NULL) {
 				it->setControlVertex(*value);
 				it++;
 			}
 		}
 
-		SegmentIterator formerLast = internal::getMovedIterator(_end, aBegin, -1);
+		if(_end != currentValidEnd){
+			SegmentIterator formerLast = internal::getMovedIterator(_end, absBegin, -1);
 
-		internal::moveIterator(_end, getAbsoluteEnd(), numSegments);
+			_end = currentValidEnd;
 
-		if(getState() == internal::state::EVALUABLE){
-			initializeBasisMatrices(internal::getMovedIterator(formerLast, aBegin, -(getSplineOrder() - 1)), formerLast);
+			if(getState() == internal::state::EVALUABLE){
+				initializeBasisMatrices(internal::getMovedIterator(formerLast, absBegin, -(getSplineOrder() - 1)), formerLast);
+			}
 		}
 		return getMaxTime();
 	}
 
 	_TEMPLATE
-	typename _CLASS::time_t _CLASS::appendSegmentsUniformly(unsigned int numSegments, const point_t * value) {
+	typename _CLASS::time_t _CLASS::appendSegmentsUniformly(unsigned int numSegments, const point_t * value, const time_t beyondThisTime) {
 		SegmentIterator it = getAbsoluteEnd(), aBegin = getAbsoluteBegin();
 		internal::moveIterator(it, aBegin, -1);
 
 		time_t atEndKnot = it.getKnot();
 
 		internal::moveIterator(it, aBegin, -1);
-		time_t beforeAtEndKnot = it.getKnot();
+		time_t beforeAbsEndKnot = it.getKnot();
 
-		auto knotGenerator = DeltaUniformKnotGenerator<TimePolicy>(beforeAtEndKnot, computeDuration(beforeAtEndKnot, atEndKnot), getSplineOrder(), true);
+		auto knotGenerator = DeltaUniformKnotGenerator<TimePolicy>(getSplineOrder(), beforeAbsEndKnot, beyondThisTime, computeDuration(beforeAbsEndKnot, atEndKnot), true);
 		knotGenerator.jumpOverNextKnots(2);
 		return appendSegments(knotGenerator, numSegments, value);
 	}
@@ -921,8 +938,7 @@ namespace bsplines {
 
 	_TEMPLATE
 	template <int IMaximalDerivativeOrder>
-	inline typename _CLASS::point_t _CLASS::Evaluator<IMaximalDerivativeOrder>::
-	evalGeneric() const {
+	inline typename _CLASS::point_t _CLASS::Evaluator<IMaximalDerivativeOrder>::evalGeneric() const {
 		const SplineOrderVector & cumulativeBi = getLocalCumulativeBi();
 		SegmentMapConstIterator it = _firstRelevantControlVertexIt;
 		const point_t * lastControlVertex_t = & it->second.getControlVertex();

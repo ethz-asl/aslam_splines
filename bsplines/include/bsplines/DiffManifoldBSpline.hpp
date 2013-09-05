@@ -198,18 +198,20 @@ namespace bsplines {
 		void initWithKnotsAndControlVertices(const Eigen::VectorXd & knotTimes, const Eigen::MatrixXd & controlVertices);
 
 		/**
-		 * Iterates a callback function over the first manipulateTheFirstNControlVertices control vertices in this slice.
+		 * Iterates a callback function over the first manipulateTheFirstNControlVertices control vertices relevant for this slice (after moving from begin() by offset).
 		 * @param controlVertexManipulator This callback function manipulates the control vertex having the index given by the first argument.
 		 * @param manipulateTheFirstNControlVertices That much control vertices will be given to the manipulator starting from the first relevant control vertex.
+		 * @param offset
 		 */
-		void manipulateControlVertices(std::function<void (int index, point_t & controlVertex)> controlVertexManipulator, int manipulateTheFirstNControlVertices);
+		void manipulateControlVertices(std::function<void (int index, point_t & controlVertex)> controlVertexManipulator, int manipulateTheFirstNControlVertices, int offset = 0);
 		/**
-		 * Same as above but with an additional starting time. The control vertices are changed starting at the first relevant for this time.
+		 * Same as above but with an additional starting time. The control vertices are changed starting at the one reached after moving offset from the first relevant for startingAtFirstRelevantControlVertexForThisTime time.
 		 * @param controlVertexManipulator
 		 * @param manipulateTheFirstNControlVertices
 		 * @param startingAtFirstRelevantControlVertexForThisTime
+		 * @param offset
 		 */
-		void manipulateControlVertices(std::function<void (int index, point_t & controlVertex)> controlVertexManipulator, int manipulateTheFirstNControlVertices, const time_t startingAtFirstRelevantControlVertexForThisTime);
+		void manipulateControlVertices(std::function<void (int index, point_t & controlVertex)> controlVertexManipulator, int manipulateTheFirstNControlVertices, const time_t startingAtFirstRelevantControlVertexForThisTime, int offset = 0);
 
 		/**
 		 * Sets as much control vertices of the spline as contained in the controlVertices matrix. Starting at the first relevant control vertex.
@@ -219,14 +221,16 @@ namespace bsplines {
 		void setControlVertices(const Eigen::MatrixXd & controlVertices);
 
 		/**
-		 * Same as above but with an additional starting time. The control vertices are changed starting at the first relevant for this time.
+		 * Same as above but with an additional starting time. The control vertices are changed starting at the the one reached after moving offset from the first relevant for startingAtFirstRelevantControlVertexForThisTime time.
 		 * @param controlVertices
 		 * @param startingAtFirstRelevantControlVertexForThisTime
+		 * @param offset
 		 */
-		void setControlVertices(const Eigen::MatrixXd & controlVertices, const time_t startingAtFirstRelevantControlVertexForThisTime);
+		void setControlVertices(const Eigen::MatrixXd & controlVertices, const time_t startingAtFirstRelevantControlVertexForThisTime, int offset = 0);
 
-		void initConstantSpline(KnotGenerator<time_t> & knotGenerator, int numSegments, const point_t & constant);
+		void initConstantSpline(KnotGenerator<time_t> & knotGenerator, const point_t & constant);
 		void initConstantUniformSpline(const time_t & tMin, const time_t & tMax, int numSegments, const point_t & constant);
+		inline DeltaUniformKnotGenerator<TimePolicy> initConstantUniformSplineWithKnotDelta(const time_t & tMin, const time_t & beyondThisTime, const duration_t knotDelta, const point_t & constant);
 
 		/**
 		 * Appends numSegments knots to the spline, such that after that the last 2 + numSegments knots in the spline are uniformly spaced.
@@ -235,22 +239,24 @@ namespace bsplines {
 		 *
 		 * This is only allowed on slices up to the splines end. Then it extends the slice as well.
 		 *
-		 * @param the number of segments to be added
+		 * @param numSegments the number of segments to be added or negative to activate beyondThisTime as end condition.
 		 * @param value the value for the newly relevant control vertices may be nullptr. Then the manifold's default point is used.
+		 * @param beyondThisTime If numSegments < 0 then segments are added until getMaxTime is greater then beyondThisTime.
 		 * @return returns the new maximal time.
 		 */
-		time_t appendSegmentsUniformly(unsigned int numSegments = 1, const point_t * value = nullptr);
+		time_t appendSegmentsUniformly(unsigned int numSegments = 1, const point_t * value = nullptr, const time_t beyondThisTime = time_t());
 
 		/**
 		 * Appends numSegments knots to the spline, according to given KnotGenerator.
 		 *
 		 * This is only allowed on slices up to the splines end. Then it extends the slice as well.
 		 *
-		 * @param the number of segments to be added
+		 * @param knotGenerator The knot generator determines the amount (if numSegments < 0) and time stamps of the appended spline knots.
+		 * @param numSegments the number of segments to be added or negative to activate the knot generator's end condition.
 		 * @param value the value for the newly relevant control vertices may be nullptr. Then the manifold's default point is used.
 		 * @return returns the new maximal time.
 		 */
-		time_t appendSegments(KnotGenerator<time_t> & knotGenerator, unsigned int numSegments = 1, const point_t * value = nullptr);
+		time_t appendSegments(KnotGenerator<time_t> & knotGenerator, int numSegments = 1, const point_t * value = nullptr);
 
 		/**
 		 * Get the number of valid time segments in the slice. Valid is a time segment, in whose interior spline order many basis functions are nonzero.

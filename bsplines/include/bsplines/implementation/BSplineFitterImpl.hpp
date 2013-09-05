@@ -8,6 +8,7 @@
 #ifndef RIEMANNIANBSPLINEFITTERIMPL_HPP_
 #define RIEMANNIANBSPLINEFITTERIMPL_HPP_
 
+#include "DiffManifoldBSplineTools.hpp"
 #include "../DynamicOrTemplateInt.hpp"
 #include "../DiffManifoldBSpline.hpp"
 
@@ -22,13 +23,21 @@ namespace bsplines{
 #define _TEMPLATE template <typename TSpline>
 #define _CLASS BSplineFitter <TSpline>
 
-	//TODO improve : support different containers of times and points
-	_TEMPLATE
-	inline void _CLASS::initUniformSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda, FittingBackend backend){
-		const size_t numInterpolationPoints = points.size();
-		IntervalUniformKnotGenerator<TimePolicy> knotGenerator(spline.getSplineOrder(), times[0], times[numInterpolationPoints - 1], numSegments);
-		initSpline(spline, knotGenerator, times, points, numSegments, lambda, backend);
-	}
+//TODO improve : support different containers of times and points
+_TEMPLATE
+inline void _CLASS::initUniformSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda, FittingBackend backend){
+	SM_ASSERT_GE(Exception, times.size(), 2, "There must be at least two time point pairs");
+	IntervalUniformKnotGenerator<TimePolicy> knotGenerator(spline.getSplineOrder(), *times.begin(), *--times.end(), numSegments);
+	initSpline(spline, knotGenerator, times, points, lambda, backend);
+}
+
+_TEMPLATE
+inline DeltaUniformKnotGenerator<typename _CLASS::TimePolicy> _CLASS::initUniformSplineWithKnotDelta(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, const duration_t knotDelta, double lambda, FittingBackend backend){
+	SM_ASSERT_GE(Exception, times.size(), 2, "There must be at least two time point pairs");
+	DeltaUniformKnotGenerator<TimePolicy> knotGenerator(spline.getSplineOrder(), *times.begin(), *--times.end(), knotDelta);
+	initSpline(spline, knotGenerator, times, points, lambda, backend);
+	return knotGenerator;
+}
 
 namespace internal{
 	template<typename T>
@@ -52,144 +61,228 @@ namespace internal{
 	template<typename TTime>
 	struct MapKnotIndexResolver : public KnotIndexResolver<TTime>{
 		std::map<TTime, int> knots;
-		inline int getKnotIndexAtTime(TTime t) const { return knots.lower_bound(t)->second; };
+		inline int getKnotIndexAtTime(TTime t) const { return (--knots.upper_bound(t))->second; };
 	};
+
+	template <typename TException, typename TTime>
+	inline void checkTimesBounds(const std::vector<TTime>& times)
+	{
+		if(times.size() > 1){
+			TTime min = *times.begin(), max=*--times.end();
+			for(TTime t : times){
+				SM_ASSERT_LE(TException, min, t, "The time sequence must be bounded by its bounding elements. But " << t << " is smaller than the first element :" << min);
+				SM_ASSERT_LE(TException, t, max, "The time sequence must be bounded by its bounding elements. But " << t << " is bigger than the last element :" << max);
+			}
+		}
+	}
 }
 
+
 	_TEMPLATE
-	void _CLASS::initSpline(TSpline & spline, KnotGenerator<time_t> & knotGenerator, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda, FittingBackend fittingBackend){
-		const int splineOrder = spline.getSplineOrder();
-		const size_t numInterpolationPoints = points.size();
+	void _CLASS::initSpline(TSpline & spline, KnotGenerator<time_t> & knotGenerator, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, FittingBackend fittingBackend){
+		const size_t numPoints = points.size();
 
-		SM_ASSERT_EQ(Exception, times.size(), numInterpolationPoints, "The number of times and the number of interpolation points must be equal");
-		SM_ASSERT_GE(Exception, numInterpolationPoints, 2, "There must be at least two times/points");
-		SM_ASSERT_GE(Exception, numSegments, 1, "There must be at least one time segment");
-		for(size_t i = 1; i < numInterpolationPoints; i++)
-		{
-			SM_ASSERT_LE(Exception, times[i-1], times[i],
-					"The time sequence must be nondecreasing. time " << i
-					<< " was not greater than or equal to time " << (i-1));
-		}
-
-		// How many knots are required for one time segment?
-		const size_t K = knot_arithmetics::getNumKnotsRequired(numSegments, splineOrder);
+		SM_ASSERT_EQ(Exception, times.size(), numPoints, "The number of times and the number of points must be equal");
+		SM_ASSERT_GE(Exception, numPoints, 2, "There must be at least two time point pairs");
+		internal::checkTimesBounds<Exception>(times);
 
 		internal::PointerGuard<const KnotIndexResolver<time_t> > resolverPtr;
 
-		if(knotGenerator.hasKnotResolver()){
-			for(size_t i = 0; i < K; i ++){
+		if(knotGenerator.hasKnotIndexResolver()){
+			for(size_t i = 0; knotGenerator.hasNextKnot(); i++){
 				spline.addKnot(knotGenerator.getNextKnot());
 			}
-			resolverPtr.init(&knotGenerator.getKnotResolver(), false);
+			resolverPtr.init(&knotGenerator.getKnotIndexResolver(), false);
 		}else{
 			auto mapResolver = new internal::MapKnotIndexResolver<time_t>();
 			resolverPtr.init(mapResolver, true);
-			for(size_t i = 0; i < K; i ++){
+			for(size_t i = 0; knotGenerator.hasNextKnot(); i++){
 				time_t nextKnot = knotGenerator.getNextKnot();
 				spline.addKnot(nextKnot);
-				mapResolver->knots[nextKnot] = i;
+				mapResolver->knots.insert(std::make_pair(nextKnot, i));
 			}
 		}
 
 		spline.init();
 
-		calcFittedControlVertices(spline, *resolverPtr, times, points, lambda, fittingBackend);
+		calcFittedControlVertices(spline, *resolverPtr, times, points, std::function<scalar_t(int) > (), lambda, 0, fittingBackend);
 	}
 
 	_TEMPLATE
-	void _CLASS::fitSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, FittingBackend fittingBackend){
-		spline.assertEvaluable();
+	void _CLASS::fitSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, int fixNFirstRelevantControlVertices, std::function<scalar_t(int i) > weights, FittingBackend fittingBackend){
+		const size_t numPoints = points.size();
+		SM_ASSERT_GE(Exception, numPoints, 1, "The must be at least one time point pair!");
+		SM_ASSERT_EQ(Exception, times.size(), numPoints, "The number of times and the number of points must be equal");
+		internal::checkTimesBounds<Exception>(times);
 
 		internal::MapKnotIndexResolver<time_t> mapResolver;
 		int i = 0;
-		for(auto it = spline.getFirstRelevantSegmentByLast(spline.getSegmentIterator(times[0])), end = ++spline.getSegmentIterator(times[times.size() - 1]); it != end; ++it){
+		auto lastTime = times[numPoints - 1];
+		for(auto it = spline.getFirstRelevantSegmentByLast(spline.getSegmentIterator(times[0])), end = spline.getAbsoluteEnd(); it != end; ++it){
 			time_t nextKnot = it->getKnot();
+			if(nextKnot > lastTime) break;
 			spline.addKnot(nextKnot);
-			mapResolver.knots[nextKnot] = i++;
+			mapResolver.knots.insert(std::make_pair(nextKnot, i++));
 		}
-		calcFittedControlVertices(spline, mapResolver, times, points, lambda, fittingBackend);
+
+		calcFittedControlVertices(spline, mapResolver, times, points, weights, lambda, fixNFirstRelevantControlVertices, fittingBackend);
 	}
 
-	_TEMPLATE
-	void _CLASS::initUniformSplineDense(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda)
+namespace internal{
+	template<typename TSpline>
+	int getNumberOfRelevantControlVertices(TSpline& spline, typename TSpline::time_t startTime, const typename TSpline::time_t& upToTime, std::function<void(typename TSpline::SegmentIterator it)> apply = std::function<void(typename TSpline::SegmentIterator it)>())
 	{
-		initUniformSpline(spline, times, points, numSegments, lambda, FittingBackend::DENSE);
+		int fixFirstVertices = 0;
+		for (auto it = spline.getFirstRelevantSegmentByLast(spline.getSegmentIterator(startTime));it->getKnot() < upToTime;fixFirstVertices++, it++) {
+			if(apply) apply(it);
+		}
+		return fixFirstVertices;
+	}
+}
+
+	_TEMPLATE
+	void _CLASS::extendAndFitSpline(TSpline & spline, KnotGenerator<time_t> & knotGenerator, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, unsigned char honorCurrentValuePercentage, FittingBackend fittingBackend){
+		const size_t numPoints = points.size();
+		SM_ASSERT_TRUE(Exception, knotGenerator.supportsAppending(), "The knot generator must support appending!");
+		SM_ASSERT_GE(Exception, numPoints, 1, "The must be at least one time point pair!");
+		SM_ASSERT_EQ(Exception, times.size(), numPoints, "The number of times and the number of points must be equal");
+		SM_ASSERT_LE(Exception, honorCurrentValuePercentage, 100, "honorCurrentValuePercentage must be in [0, 100]");
+
+		// first we get the time to which to extend the spline.
+		const time_t lastTime = times[times.size() - 1];
+
+		const time_t oldMaxTime = spline.getMaxTime();
+		if(lastTime > oldMaxTime){
+			knotGenerator.extendBeyondTime(lastTime);
+			spline.appendSegments(knotGenerator, -1, nullptr);
+		}
+
+		if(honorCurrentValuePercentage == 0 || honorCurrentValuePercentage == 100){
+			int fixFirstVertices;
+			if(honorCurrentValuePercentage) {
+				if(lastTime > oldMaxTime){
+					fixFirstVertices = internal::getNumberOfRelevantControlVertices(spline, times[0], oldMaxTime);
+				} else {
+					// no new vertices but old should not be touched
+					return;
+				}
+			}
+			else{// ignore former values
+				fixFirstVertices = 0;
+			}
+			fitSpline(spline, times, points, lambda, fixFirstVertices, std::function<scalar_t(int i) >(), fittingBackend);
+		}else{
+			vector<scalar_t> weights;
+			scalar_t baseWeight = scalar_t(honorCurrentValuePercentage) / scalar_t(100 - honorCurrentValuePercentage);
+
+			std::vector<time_t> newTimes;
+			std::vector<point_t> newPoints;
+
+			const int relevantOldVCs = internal::getNumberOfRelevantControlVertices<TSpline>(spline, times[0], oldMaxTime,
+				[&spline, &weights, &newTimes, &newPoints, &baseWeight](typename TSpline::SegmentIterator it)
+				{
+					it++;
+					time_t t(it->getKnot());
+					newTimes.push_back(t);
+					newPoints.push_back(spline.template getEvaluatorAt<0>(t).eval());
+					weights.push_back(baseWeight);
+				}
+			);
+			//TODO optimize: use better ways to concatenate times and points.
+			SM_ASSERT_EQ_DBG(std::runtime_error, newTimes.size(), relevantOldVCs, "BUG in "  << __FILE__ << ":" << __LINE__);
+			SM_ASSERT_EQ_DBG(std::runtime_error, newPoints.size(), relevantOldVCs, "BUG in "  << __FILE__ << ":" << __LINE__);
+
+			newTimes.resize(times.size() + relevantOldVCs);
+			copy(times.begin(), times.end(), newTimes.begin() + relevantOldVCs);
+			newPoints.resize(points.size() + relevantOldVCs);
+			copy(points.begin(), points.end(), newPoints.begin() + relevantOldVCs);
+
+			fitSpline(spline, newTimes, newPoints, lambda, 0, [relevantOldVCs, &weights](int i){ return i < relevantOldVCs ? weights[i]: scalar_t(1.0);}, fittingBackend);
+		}
 	}
 
 	_TEMPLATE
-	void _CLASS::initUniformSplineSparse(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda)
-	{
-		initUniformSpline(spline, times, points, numSegments, lambda, FittingBackend::SPARSE);
-	}
-
-	_TEMPLATE
-	void _CLASS::calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, FittingBackend fittingBackend, int fixNFirstRelevantControlVertices){
+	void _CLASS::calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotIndexResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, std::function<scalar_t(int i) > weights, double lambda, int fixNFirstRelevantControlVertices, FittingBackend fittingBackend){
 		switch(fittingBackend){
 			case FittingBackend::DENSE:
-				calcFittedControlVertices<FittingBackend::DENSE>(spline, knotResolver, times, points, lambda);
+				calcFittedControlVertices<FittingBackend::DENSE>(spline, knotIndexResolver, times, points, weights, lambda, fixNFirstRelevantControlVertices);
 				break;
 			case FittingBackend::SPARSE:
-				calcFittedControlVertices<FittingBackend::SPARSE>(spline, knotResolver, times, points, lambda);
+				calcFittedControlVertices<FittingBackend::SPARSE>(spline, knotIndexResolver, times, points, weights, lambda, fixNFirstRelevantControlVertices);
 				break;
 		}
 	}
 
 	namespace internal {
-		template< enum FittingBackend FittingBackend_> struct FittingBackendTraits {
+		template< enum FittingBackend FittingBackend_> struct FittingBackendFunctions {
 		};
 
-		template<> struct FittingBackendTraits<FittingBackend::DENSE> {
-			typedef Eigen::MatrixXd TypeA;
-			typedef Eigen::VectorXd TypeB;
+		template<> struct FittingBackendFunctions<FittingBackend::DENSE> {
+			typedef typename FittingBackendTraits<FittingBackend::DENSE>::Matrix Matrix;
+			typedef typename FittingBackendTraits<FittingBackend::DENSE>::Vector Vector;
 
-			inline TypeA createA(unsigned int constraintSize, unsigned int coefficientDim, unsigned int D) {
-				return TypeA::Zero(constraintSize, coefficientDim);
+			inline static Matrix createA(unsigned int constraintSize, unsigned int coefficientDim, unsigned int D) {
+				return Matrix::Zero(constraintSize, coefficientDim);
 			}
-			inline TypeB createB(int constraintSize) {
-				return TypeB::Zero(constraintSize);
+			inline static Vector createB(int constraintSize) {
+				return Vector::Zero(constraintSize);
 			}
 
-			inline auto blockA(TypeA & A, int row, int col, int D) -> decltype(A.block(0, 0, 0, 0)){
-				return A.block(row * D, col * D, D, D);
+			inline static auto blockA(Matrix & A, int row, int col, int D, int size = 1) -> decltype(A.block(0, 0, 0, 0)){
+				return A.block(row * D, col * D, size * D, size * D);
 			}
-			inline typename TypeB::SegmentReturnType segmentB(TypeB & b, int row, int D){
+			inline static typename Vector::SegmentReturnType segmentB(Vector & b, int row, int D){
 				return b.segment(row * D, D);
 			}
+			template <typename DERIVED, typename DERIVED2>
+			inline static void addBlockToBlock(Eigen::MatrixBase<DERIVED> & A, int aRow, int aCol, const Eigen::MatrixBase<DERIVED2> & Q, int qRow, int qCol, int rows, int cols, int D){
+				A.block(aRow * D, aCol * D, rows * D, cols * D) += Q.block(qRow * D, qCol * D, rows * D, cols * D);
+			}
 
-			inline Eigen::VectorXd solve(TypeA & A, TypeB & b){
+			inline static Eigen::VectorXd solve(Matrix & A, Vector & b){
 				return A.ldlt().solve(b);
 			}
 		};
 
-		template<> struct FittingBackendTraits<FittingBackend::SPARSE> {
-			typedef sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> TypeA;
-			typedef sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> TypeB;
+
+		template<> struct FittingBackendFunctions<FittingBackend::SPARSE> {
+			typedef typename FittingBackendTraits<FittingBackend::SPARSE>::Matrix Matrix;
+			typedef typename FittingBackendTraits<FittingBackend::SPARSE>::Vector Vector;
 
 			std::vector<int> rows;
 			std::vector<int> cols;
 
-			const bool allocateBlock = true;
+			const static bool allocateBlock = true;
 
-			inline TypeA createA(unsigned int constraintSize, unsigned int coefficientDim, unsigned int D) {
+			inline Matrix createA(unsigned int constraintSize, unsigned int coefficientDim, unsigned int D) {
 				for(unsigned int i = D; i <= constraintSize; i+=D) rows.push_back(i);
 				for(unsigned int i = D; i <= coefficientDim; i+=D) cols.push_back(i);
-				return TypeA(rows,cols, true);
+				return Matrix(rows,cols, true);
 			}
 
-			inline TypeB createB(int constraintSize) {
+			inline Vector createB(int constraintSize) {
 				std::vector<int> bcols(1);
 				bcols[0] = 1;
-				return TypeB(rows,bcols, true);
+				return Vector(rows,bcols, true);
 			}
 
-			inline typename TypeA::SparseMatrixBlock & blockA(TypeA & A, int row, int col, int D){
-				return *A.block(row, col, allocateBlock );
+			inline static typename Matrix::SparseMatrixBlock & blockA(Matrix & A, int row, int col, int D, int size = 1){
+				SM_ASSERT_EQ(std::runtime_error, 1, size, "This function should does not support size != 1");
+				return *A.block(row, col, allocateBlock);
 			}
-			inline typename TypeB::SparseMatrixBlock & segmentB(TypeB & b, int row, int D){
+			inline static typename Vector::SparseMatrixBlock & segmentB(Vector & b, int row, int D){
 				return *b.block(row, 0, allocateBlock);
 			}
+			template <typename DERIVED>
+			inline static void addBlockToBlock(Matrix & A, int aRow, int aCol, const Eigen::MatrixBase<DERIVED> & Q, int qRow, int qCol, int rows, int cols, int D){
+				for(int i = 0; i < rows; ++i){
+					for(int j = 0; j < cols; ++j){
+						*A.block(aRow + i, aCol + j, true) += Q.block((qRow + i) * D, (qCol + j) * D, D, D);
+					}
+				}
+			}
 
-			inline Eigen::VectorXd solve(TypeA & A, TypeB & b){
+			inline static Eigen::VectorXd solve(Matrix & A, Vector & b){
 				// solve:
 				sparse_block_matrix::LinearSolverCholmod<Eigen::MatrixXd> solver;
 				solver.init();
@@ -212,49 +305,63 @@ namespace internal{
 
 	_TEMPLATE
 	template <enum FittingBackend FittingBackend_>
-	void _CLASS::calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, int fixNFirstRelevantControlVertices)
+	void _CLASS::calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotIndexResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, std::function<scalar_t(int i) > weights, double lambda, int fixNFirstRelevantControlVertices)
 	{
+		SM_ASSERT_GE_DBG(Exception, fixNFirstRelevantControlVertices, 0, "fixNFirstRelevantControlVertices must be nonnegative.");
+		const time_t splineMaxTime = spline.getMaxTime(), lastTime = times[times.size() - 1];
 		const int splineOrder = spline.getSplineOrder();
-		const int minKnotIndex = knotResolver.getKnotIndexAtTime(times[0]) - (splineOrder - 1); // get minimal relevant knot's index
+		const int minKnotIndex = knotIndexResolver.getKnotIndexAtTime(times[0]) - (splineOrder - 1) - (times[0] == splineMaxTime ? 1 : 0); // get minimal relevant knot's index //TODO improve: remove this irregularity
 		const int controlVertexIndexOffset = minKnotIndex + fixNFirstRelevantControlVertices;
+		const int numToFitControlVertices = knotIndexResolver.getKnotIndexAtTime(lastTime) - controlVertexIndexOffset + 1 - (lastTime == splineMaxTime ? 1 : 0);//TODO improve: remove this irregularity
+
+		if(numToFitControlVertices <= 0){
+			SM_THROW_DBG(Exception, "No control vertices are left over to be optimized.")
+			return;
+		}
 
 		const typename TSpline::point_t* fixControlVertices[fixNFirstRelevantControlVertices];
 		if(fixNFirstRelevantControlVertices){
 			auto it = spline.getFirstRelevantSegmentByLast(spline.getSegmentIterator(times[0]));
+//			end = ;
 			for(int i = 0; i < fixNFirstRelevantControlVertices; ++i){
 				fixControlVertices[i] = &it->getControlVertex();
+//				if(it == )
 				++it;
 			}
 		}
 
-		const size_t numInterpolationPoints = points.size();
+		const size_t numPoints = points.size();
 
 		// What is the vector coefficient dimension
 		const size_t D = spline.getPointSize();
 
-		// How many coefficients are required for one time segment?
-		const size_t C = spline.getNumControlVertices() - controlVertexIndexOffset; // we are fitting the tail of the spline
-
 		// Now we have to solve an Ax = b linear system to determine the correct coefficient vectors.
-		size_t coefficientDim = C * D;
+		size_t coefficientDim = (size_t) numToFitControlVertices * D;
 
-		const int constraintSize = numInterpolationPoints * D;
+		const int constraintSize = numPoints * D;
 
-		internal::FittingBackendTraits<FittingBackend_> backend;
+		internal::FittingBackendFunctions<FittingBackend_> backend;
 
 		auto A = backend.createA(constraintSize, coefficientDim, D);
 		auto b = backend.createB(constraintSize);
 
 		int brow = 0;
+
 		// Add the position constraints.
-		for(size_t i = 0; i < numInterpolationPoints; i++)
+		for(size_t i = 0; i < numPoints; i++)
 		{
-			int knotIndex = knotResolver.getKnotIndexAtTime(times[i]) - controlVertexIndexOffset;
+			time_t time = times[i];
+			scalar_t weight = weights? weights(i) : scalar_t(1.0);
+			int knotIndex = knotIndexResolver.getKnotIndexAtTime(time) - controlVertexIndexOffset;
 			//TODO optimize : a uniform time spline evaluator could be much faster here!
 			typename TSpline::SplineOrderVector bi = spline.template getEvaluatorAt<1>(times[i]).getLocalBi();
 
-			knotIndex -=  splineOrder - 1; // get first relevant knot's index
-			if(i == numInterpolationPoints - 1){ //TODO improve: remove this irregularity
+			if(weight != scalar_t(1.0)){
+				bi *= weight;
+			}
+
+			knotIndex -= splineOrder - 1; // get first relevant knot's index
+			if(time == splineMaxTime){ //TODO improve: remove this irregularity
 				knotIndex --;
 			}
 
@@ -265,14 +372,17 @@ namespace internal{
 						backend.blockA(A, brow, col, D).diagonal().setConstant(bi[j]);
 				}
 				else{
-					backend.segmentB(b, brow, D) += (*fixControlVertices[fixNFirstRelevantControlVertices + j]) * bi[j];
+					int fixVertexIndex = fixNFirstRelevantControlVertices + col;
+					SM_ASSERT_GE_DBG(std::runtime_error, fixVertexIndex, 0, "BUG in BSplineFitter");
+					SM_ASSERT_LT_DBG(std::runtime_error, fixVertexIndex, fixNFirstRelevantControlVertices, "BUG in BSplineFitter");
+					backend.segmentB(b, brow, D) -= (*fixControlVertices[fixVertexIndex]) * bi[j];
 				}
 			}
 
 			if(knotIndex >= 0)
-				backend.segmentB(b, brow, D) = points[i];
+				backend.segmentB(b, brow, D) = points[i] * weight;
 			else{
-				backend.segmentB(b, brow, D) += points[i];
+				backend.segmentB(b, brow, D) += points[i] * weight;
 			}
 			++brow;
 		}
@@ -284,58 +394,83 @@ namespace internal{
 		if(lambda != 0.0){
 			// Add the motion constraint.
 			point_t W = point_t::Constant(D, lambda);
-			addCurveQuadraticIntegralDiagTo(spline, W, 2, A);
+			auto start = spline.getSegmentIterator(times[0]);
+			auto end = spline.getSegmentIterator(lastTime);
+			const int moveCount = fixNFirstRelevantControlVertices - (splineOrder - 1);
+			const int movedCount = moveIterator(start, moveCount < 0 ? spline.begin() : end, moveCount);
+			const int moveEndCount = splineOrder;
+			moveIterator(end, spline.end(), moveEndCount);
+			if(moveCount - movedCount <= 0){ // did we not reach end?
+				addCurveQuadraticIntegralDiagTo<FittingBackend_>(spline, start, end, movedCount, W, 2, A, b);
+			}
 		}
 
 		// Solve for the coefficient vector.
 		Eigen::VectorXd c = backend.solve(A, b);
 
-		spline.setControlVertices(c, times[0]);
+		spline.setControlVertices(c, times[0], fixNFirstRelevantControlVertices);
 	}
 
 	_TEMPLATE
-	void _CLASS::addCurveQuadraticIntegralDiagTo(const TSpline & spline, const point_t & Wdiag, int derivativeOrder, Eigen::MatrixXd & toMatrix)
+	template <enum FittingBackend FittingBackend_>
+	void _CLASS::addCurveQuadraticIntegralDiagTo(const TSpline & spline, typename TSpline::SegmentConstIterator start, typename TSpline::SegmentConstIterator end, int startIndex, const point_t & Wdiag, int derivativeOrder, typename internal::FittingBackendTraits<FittingBackend_>::Matrix & toMatrix, typename internal::FittingBackendTraits<FittingBackend_>::Vector & toB)
 	{
 		SM_ASSERT_EQ(Exception,Wdiag.rows(), spline.getPointSize(), "Wdiag must be of control point size");
+		SM_ASSERT_EQ(Exception, toMatrix.rows(), toB.rows(), "Wdiag must be of control point size");
 
-		int qiSize = spline.getSplineOrder() * spline.getPointSize();
-		int brow = 0;
-		for(typename TSpline::SegmentConstIterator sIt = spline.begin(), end = spline.end(); sIt != end; sIt++)
-		{
-			addOrSetSegmentQuadraticIntegralDiag(spline, Wdiag, sIt, derivativeOrder, toMatrix.block(brow, brow, qiSize, qiSize), true);
-			brow += spline.getPointSize();
-		}
-	}
+		typedef internal::FittingBackendFunctions<FittingBackend_> Backend;
 
-	// sparse curveQuaddraticIntegral:
-	_TEMPLATE
-	void _CLASS::addCurveQuadraticIntegralDiagTo(const TSpline & spline, const point_t & Wdiag, int derivativeOrder, sparse_block_matrix::SparseBlockMatrix<Eigen::MatrixXd> & toMatrix)
-	{
-		SM_ASSERT_EQ(Exception,Wdiag.rows(), spline.getPointSize(), "Wdiag must be of control point size");
+		const int D = spline.getPointSize();
+		const int blocksInQ = spline.getSplineOrder();
+		SM_ASSERT_EQ(Exception,Wdiag.rows(), D, "Wdiag must be of control point size");
 
 		BOOST_AUTO(qiSize, spline.getSplineOrder() * spline.getPointSize());
 		typedef BOOST_TYPEOF_TPL(qiSize) QiSize;
 		typedef Eigen::Matrix<double, QiSize::VALUE, QiSize::VALUE> Q_T;
-		int brow = 0;
 		Q_T Q((int)qiSize, (int)qiSize);
 
-		int D = spline.getPointSize();
-		int blocksInBlock = spline.getSplineOrder();
-//
-		const bool allocateBlock = true;
-		int s = 0;
-		for(typename TSpline::SegmentConstIterator sIt = spline.begin(), end = spline.end(); sIt != end; sIt++)
+		int blockRow = startIndex;
+		const int blockRows = toMatrix.rows() / D;
+		for(typename TSpline::SegmentConstIterator sIt = start; sIt != end; sIt++)
 		{
-			addOrSetSegmentQuadraticIntegralDiag<Q_T &>(spline, Wdiag, sIt, derivativeOrder, Q, false);
-			brow += spline.getPointSize();
-			// place the DxD blocks in the blocksInBlock x blocksInBlock blocks:
-			for(int i = 0; i < blocksInBlock; i++) {
-				for(int j = 0; j < blocksInBlock; j++) {
-					Eigen::MatrixXd & Qi = *toMatrix.block(s+i, s+j, allocateBlock);
-					Qi += Q.block(i*D,j*D,D,D);
+			if(FittingBackend_ == FittingBackend::DENSE && blockRow >= 0 && blockRow <= blockRows - blocksInQ){ // all splineOrder many diagonal blocks are contained in the toMatrix
+				addOrSetSegmentQuadraticIntegralDiag(spline, Wdiag, sIt, derivativeOrder, Backend::blockA(toMatrix, blockRow, blockRow, D, blocksInQ), true);
+			} else { // we have to assign sub blocks individually
+				addOrSetSegmentQuadraticIntegralDiag<Q_T &>(spline, Wdiag, sIt, derivativeOrder, Q, false);
+				/*
+				 * Q and toMatrix (=:M) (both square) have shifted block index space. i_Q + brow = i_M.
+				 * Lets x denote the coefficients of all non fixed control vertices
+				 * first we need the overlapping region:
+				 * its left most index in M is : max(0, 0 + brow).
+				 * its right most index in M is : min(cols(M) - 1, cols(Q) - 1 + brow).
+				 */
+				const int overlappingBlocksLeftIndex = max(0, blockRow);
+				const int overlappingBlocksRightIndex = min(blockRows, blocksInQ + blockRow) - 1;
+				const int numOverlappingBlocks = overlappingBlocksRightIndex - overlappingBlocksLeftIndex + 1;
+				if(numOverlappingBlocks > 0){
+					Backend::addBlockToBlock(toMatrix, overlappingBlocksLeftIndex, overlappingBlocksLeftIndex, Q, overlappingBlocksLeftIndex - blockRow, overlappingBlocksLeftIndex - blockRow, numOverlappingBlocks, numOverlappingBlocks, D);
+					if(numOverlappingBlocks != blocksInQ){
+						/*
+						 * Now we have to subtract the effect of the fixed control vertices on the acceleration term.
+						 *
+						 * [Q_l  Q_x  Q_r]  * [ c_l; x; c_r] = b_x
+						 * <=> Q_x * x  = b_x - Q_l * c_l - Q_r * c_r
+						 *
+						 * We start with c_r because sIt corresponds to its bottom at the moment.
+						 */
+						auto constantVertexIt = sIt;
+						const int Q_r_LeftColumnIndex = overlappingBlocksRightIndex - blockRow + 1;
+						const int Q_l_RightColumnIndex = - blockRow - 1;
+						for(int i = blocksInQ-1; i >= 0; i--) {
+							if(i >= Q_r_LeftColumnIndex || i <= Q_l_RightColumnIndex){ // then vertex is fixed and we have to subtract its effect on the right hand side
+								Backend::addBlockToBlock(toB, overlappingBlocksLeftIndex, 0, (-Q.block((overlappingBlocksLeftIndex - blockRow) * D, i * D, numOverlappingBlocks * D, D) * constantVertexIt->getControlVertex()).eval(), 0, 0, numOverlappingBlocks, 1, D);
+							}
+							constantVertexIt--;
+						}
+					}
 				}
 			}
-			s++;
+			blockRow ++;
 		}
 	}
 

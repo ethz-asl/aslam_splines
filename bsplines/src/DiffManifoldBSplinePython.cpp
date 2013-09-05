@@ -1,3 +1,4 @@
+#include <functional>
 #include <bsplines/DiffManifoldBSpline.hpp>
 #include <bsplines/EuclideanBSpline.hpp>
 #include <bsplines/UnitQuaternionBSpline.hpp>
@@ -28,7 +29,16 @@ struct BSplineImporter {
 		SM_ASSERT_GE(typename TSpline::Exception, t, bsp->getMinTime(), "The time is out of range.");
 		SM_ASSERT_LE(typename TSpline::Exception, t, bsp->getMaxTime(), "The time is out of range.");
 
-		return bsp->template getEvaluatorAt<Eigen::Dynamic>(t).evalD(derivativeOrder);
+		switch(derivativeOrder){
+			case 0:
+				return bsp->template getEvaluatorAt<0>(t).evalD(derivativeOrder);
+			case 1:
+				return bsp->template getEvaluatorAt<1>(t).evalD(derivativeOrder);
+			case 2:
+				return bsp->template getEvaluatorAt<2>(t).evalD(derivativeOrder);
+			default:
+				return bsp->template getEvaluatorAt<Eigen::Dynamic>(t).evalD(derivativeOrder);
+		}
 	}
 
 	// Function wrappers turn std::pairs into tuples.
@@ -55,6 +65,67 @@ struct BSplineImporter {
 
 		Fitter::initUniformSpline(*bsp, timesVector, interpolationPointsVector, numSegments, lambda);
 	}
+	static void initUniformSplineFromMatrixWithKnotDelta(TSpline * bsp, const Eigen::VectorXd & times, const Eigen::MatrixXd & interpolationPoints, typename TSpline::duration_t delta, double lambda)
+	{
+		const int numPoints = interpolationPoints.cols();
+		const int numTimes= times.size();
+
+		SM_ASSERT_GE(typename TSpline::Exception, numTimes, numPoints, "The there must be as much times as points.");
+		std::vector<typename TSpline::time_t> timesVector(numTimes);
+		for(int i = 0, end = numTimes; i != end; i++){
+			timesVector[i] = times[i];
+		}
+		std::vector<typename TSpline::point_t> interpolationPointsVector(numPoints);
+		for(int i = 0; i != numPoints; i++){
+			interpolationPointsVector[i] = interpolationPoints.col(i);
+		}
+
+		Fitter::initUniformSplineWithKnotDelta(*bsp, timesVector, interpolationPointsVector, delta, lambda);
+	}
+
+
+	static void fitSplineFromMatrix(TSpline * bsp, const Eigen::VectorXd & times, const Eigen::MatrixXd & interpolationPoints, double lambda, int fixNFirstRelevantPoints, const Eigen::VectorXd & weights, bool dense)
+	{
+		const int numPoints = interpolationPoints.cols();
+		const int numTimes= times.size();
+		const int numWeights = weights.size();
+
+		SM_ASSERT_GE(typename TSpline::Exception, numTimes, numPoints, "The there must be as much times as points.");
+
+		if(numWeights){
+			SM_ASSERT_GE(typename TSpline::Exception, numWeights, numTimes, "The there must be no or as much weights as points!");
+		}
+		std::vector<typename TSpline::time_t> timesVector(numTimes);
+		for(int i = 0, end = numTimes; i != end; i++){
+			timesVector[i] = times[i];
+		}
+		std::vector<typename TSpline::point_t> pointsVector(numPoints);
+		for(int i = 0; i != numPoints; i++){
+			pointsVector[i] = interpolationPoints.col(i);
+		}
+
+		Fitter::fitSpline(*bsp, timesVector, pointsVector, lambda, fixNFirstRelevantPoints, numWeights? [&weights](int i){ return weights[i]; } : std::function<double(int)>(), dense  ? FittingBackend::DENSE: FittingBackend::SPARSE);
+	}
+
+	static void extendAndFitSplineFromMatrix(TSpline * bsp, bsplines::DeltaUniformKnotGenerator<typename TSpline::TimePolicy> * knotGenerator, const Eigen::VectorXd & times, const Eigen::MatrixXd & interpolationPoints, double lambda, unsigned char honorCurrentValueCoefficient)
+	{
+		const int numPoints = interpolationPoints.cols();
+		const int numTimes= times.size();
+
+		SM_ASSERT_GE(typename TSpline::Exception, numTimes, numPoints, "The there must be as much times as points.");
+
+		std::vector<typename TSpline::time_t> timesVector(numTimes);
+		for(int i = 0, end = numTimes; i != end; i++){
+			timesVector[i] = times[i];
+		}
+		std::vector<typename TSpline::point_t> pointsVector(numPoints);
+		for(int i = 0; i != numPoints; i++){
+			pointsVector[i] = interpolationPoints.col(i);
+		}
+
+		Fitter::extendAndFitSpline(*bsp, *knotGenerator, timesVector, pointsVector, lambda, honorCurrentValueCoefficient);
+	}
+
 
 	static Eigen::VectorXd getKnotsVector(TSpline * bsp)
 	{
@@ -65,6 +136,17 @@ struct BSplineImporter {
 			times[c++] = it->getKnot();
 		}
 		return times;
+	}
+	
+	static Eigen::MatrixXd getControlVertices(TSpline * bsp)
+	{
+		Eigen::MatrixXd vertices(bsp->getNumControlVertices(), bsp->getDimension());
+
+		typename TSpline::SegmentIterator it = bsp->getAbsoluteBegin();
+		for(int c = 0, end = vertices.rows(); c != end; c++, it++){
+			vertices.row(c) = it->getControlVertex();
+		}
+		return vertices;
 	}
 
 	static class_<Evaluator> importEvaluator(){
@@ -96,7 +178,8 @@ struct BSplineImporter {
 		.def("getKnotsVector", getKnotsVector, "returns the current knot sequence")
 		.def("knots", getKnotsVector, "returns the current knot sequence")
 		.def("getKnotsVector", getKnotsVector, "returns the current knot sequence")
-		//		.def("coefficients", &TSpline::coefficients, "returns the current coefficient matrix", return_value_policy<copy_const_reference>())
+		.def("coefficients", getControlVertices, "get the current control vertices as rows of a matrix")
+		.def("getControlVertices", getControlVertices, "get the current control vertices as rows of a matrix")
 		.def("getMinTime", &TSpline::getMinTime, "The minimum time that the spline is well-defined on")
 		.def("getMaxTime", &TSpline::getMaxTime, "The maximum time that the spline is well-defined on")
 		.def("eval", eval, "Evaluate the spline curve at a point in time")
@@ -106,14 +189,16 @@ struct BSplineImporter {
 		//		.def("localBasisMatrix", &TSpline::localBasisMatrix, "Evaluate the local basis matrix at a point in time")
 		//		.def("localCoefficientMatrix", &TSpline::localCoefficientMatrix, "Get the matrix of locally-active coefficients for a specified time in matrix form")
 		//		.def("localCoefficientVector", &TSpline::localCoefficientVector, "Get the stacked vector of locally-active coefficients for a specified time.")
-		.def("initSpline", &Fitter::initUniformSpline, "Initialize the spline to smooth a set of points")
 		.def("initUniformSpline", &initUniformSplineFromMatrix, "Initialize the spline to smooth a set of points in time")
+		.def("initUniformSplineWithKnotDelta", &initUniformSplineFromMatrixWithKnotDelta, "Initialize the spline to smooth a set of points in time")
+		.def("fitSpline", &fitSplineFromMatrix, "Fit the initialized spline to smooth a set of points in time")
 		//		.def("basisMatrix", &TSpline::basisMatrix, "Get the basis matrix active on the ith time segment.", return_value_policy<copy_const_reference>())
 		.def("timeInterval", &timeInterval, "Returns a tuple with the time interval that the spline is well-defined on.")
 		//		.def("timeInterval", &timeInterval2, "Returns a tuple with the time interval of the ith segment.")
 		.def("getTimeInterval", &timeInterval, "Returns a tuple with the time interval that the spline is well-defined on.")
 		//		.def("getTimeInterval", &timeInterval2, "Returns a tuple with the time interval of the ith segment.")
 		.def("appendSegmentsUniformly", &TSpline::appendSegmentsUniformly, "Adds segments assuming uniform knot spacing.")
+		.def("extendAndFitSpline", &extendAndFitSplineFromMatrix, "Extend and fit the initialized spline to smooth a set of points in time.")
 		//		.def("removeCurveSegment", &TSpline::removeCurveSegment, "removes a curve segment on the left")
 		//		.def("setLocalCoefficientVector", &TSpline::setLocalCoefficientVector, "Sets the local coefficient vector for a specified time")
 		//		.def("localVvCoefficientVectorIndices", &TSpline::localVvCoefficientVectorIndices, "")
@@ -141,8 +226,9 @@ struct BSplineImporter {
 		//		.def("curveQuadraticIntegralSparse", &TSpline::curveQuadraticIntegralSparse, "")
 		//		.def("curveQuadraticIntegralDiagSparse", &TSpline::curveQuadraticIntegralDiagSparse, "")
 		//		.def("coefficientVectorLength", &TSpline::coefficientVectorLength, "")
-		.def("initConstantUniformSpline", &TSpline::initConstantUniformSpline, "initConstantUniformSpline(double t_min, double t_max, int numSegments, const Eigen::VectorXd & constant")
-		.def("initConstantSpline", &TSpline::initConstantUniformSpline, "initConstantSpline(double t_min, double t_max, int numSegments, const Eigen::VectorXd & constant")
+		.def("initConstantUniformSpline", &TSpline::initConstantUniformSpline, "void initConstantUniformSpline(double t_min, double t_max, int numSegments, const Eigen::VectorXd & constant")
+		.def("initConstantSpline",        &TSpline::initConstantUniformSpline, "void initConstantSpline(double t_min, double t_max, int numSegments, const Eigen::VectorXd & constant")
+		.def("initConstantUniformSplineWithKnotDelta", &TSpline::initConstantUniformSplineWithKnotDelta, "DeltaUniformKnotGenerator initConstantUniformSplineWithKnotDelta(double t_min, double t_max, double knotDelta, const Eigen::VectorXd & constant")
 		.def("getNumControlVertices", &TSpline::getNumControlVertices, "")
 		.def("numVvCoefficients", &TSpline::getNumControlVertices, "")
 		;
@@ -163,6 +249,14 @@ struct DynamicOrTemplateInt_to_python_int
 void import_bspline_diff_manifold_python()
 {
 	boost::python::to_python_converter<eigenTools::DynamicOrTemplateInt<Eigen::Dynamic>, DynamicOrTemplateInt_to_python_int>();
+
+	{
+		typedef typename EuclideanBSpline<>::TYPE::TimePolicy TimePolicy;
+		typedef DeltaUniformKnotGenerator<TimePolicy> KnotGenerator;
+		class_<KnotGenerator>("DeltaUniformKnotGenerator", init<int, typename TimePolicy::time_t, typename TimePolicy::duration_t, typename TimePolicy::time_t, bool>())
+				.def("extendBeyondTime", &KnotGenerator::extendBeyondTime)
+				;
+	}
 
 	{
 		typedef EuclideanBSpline<>::TYPE Spline;

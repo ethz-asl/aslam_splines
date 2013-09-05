@@ -27,7 +27,7 @@ namespace bsplines
 {
 
 const unsigned int splineOrder = 4;
-const unsigned int rows = 4;
+const unsigned int rows = 3;
 const double minTime = 0;
 const double maxTime = 1;
 const double duration = maxTime - minTime;

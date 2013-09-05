@@ -13,15 +13,17 @@ namespace bsplines {
 namespace internal{
 
 template<typename Iterator>
-inline void moveIterator(Iterator & it, const Iterator & limit, int steps)
+inline int moveIterator(Iterator & it, const Iterator & limit, int steps)
 {
 	if(steps == 0)
-		return;
+		return 0;
+	int count = 0;
 	if(steps > 0){
 		for (int c = steps; c>0; c--){
 			if(it == limit)
 				break;
 			it++;
+			count ++;
 		}
 	}
 	else{
@@ -29,8 +31,11 @@ inline void moveIterator(Iterator & it, const Iterator & limit, int steps)
 			if(it == limit)
 				break;
 			it--;
+			count --;
 		}
 	}
+
+	return count;
 }
 
 template<typename Iterator>

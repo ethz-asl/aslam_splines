@@ -26,10 +26,11 @@ namespace manifolds {
 			typedef typename Types::point_t point_t;
 			typedef typename Types::tangent_vector_t tangent_vector_t;
 			typedef typename TConfigurationDerived::Manifold Manifold;
-			static inline void update(point_t & point, const tangent_vector_t & vec){
+			static inline void update(const Manifold & manifold, point_t & point, const tangent_vector_t & vec){
 				point_t p (point.rows());
 				Manifold::expAtIdInto(vec, p);
 				point = Manifold::mult(p, point);
+				manifold.projectIntoManifold(point);
 			}
 		};
 	}

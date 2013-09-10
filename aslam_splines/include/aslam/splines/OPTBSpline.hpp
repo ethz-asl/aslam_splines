@@ -45,22 +45,23 @@ namespace internal {
 		typedef SegmentData< ::aslam::splines::DesignVariableSegmentBSplineConf<TDiffManifoldBSplineConfiguration, TDiffManifoldBSplineConfigurationDerived> > this_t;
 
 	public:
+		typedef typename TDiffManifoldBSplineConfiguration::Manifold Manifold;
 		typedef typename TDiffManifoldBSplineConfiguration::Manifold::point_t point_t;
 		typedef typename TDiffManifoldBSplineConfiguration::Manifold::tangent_vector_t tangent_vector_t;
 
 	private:
 		point_t _p_v;
-
-		typename TDiffManifoldBSplineConfiguration::Dimension dimension;
+		typename TDiffManifoldBSplineConfiguration::Dimension _dimension;
+		const Manifold & _manifold;
 
 		enum {
 			Dimension = TDiffManifoldBSplineConfiguration::Dimension::VALUE
 		};
 
 	public:
-		SegmentData(const TDiffManifoldBSplineConfiguration & configuration, const time_t & time, const point_t &point) : parent_t(configuration, time, point), dimension(configuration.getDimension()) {}
+		SegmentData(const TDiffManifoldBSplineConfiguration & configuration, const Manifold & manifold, const time_t & time, const point_t &point) : parent_t(configuration, manifold, time, point), _dimension(configuration.getDimension()), _manifold(manifold) {}
 
-		virtual int minimalDimensionsImplementation() const { return dimension.getValue(); };
+		virtual int minimalDimensionsImplementation() const { return _dimension.getValue(); };
 
 		/// \brief Update the design variable.
 		virtual void updateImplementation(const double * dp, int size){
@@ -69,7 +70,7 @@ namespace internal {
 			}
 			_p_v = this->getControlVertex();
 			Eigen::Map<const tangent_vector_t> dpV(dp, size);
-			manifolds::internal::DiffManifoldPointUpdateTraits<typename TDiffManifoldBSplineConfiguration::ManifoldConf>::update(this->getControlVertex(), dpV);
+			manifolds::internal::DiffManifoldPointUpdateTraits<typename TDiffManifoldBSplineConfiguration::ManifoldConf>::update(_manifold, this->getControlVertex(), dpV);
 		};
 
 		/// \brief Revert the last state update.

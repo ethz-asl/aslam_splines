@@ -73,7 +73,7 @@ namespace bsplines {
 			inline time_t getKnot() const { return _t; }
 			inline time_t getTime() const { return getKnot(); }
 
-			inline SegmentData(const TDiffManifoldBSplineConfiguration & conf, const time_t & t, const point_t & point) : _point(point), _basisMatrix((int)conf.getSplineOrder(), (int)conf.getSplineOrder()), _t(t) {}
+			inline SegmentData(const TDiffManifoldBSplineConfiguration & conf, const typename TDiffManifoldBSplineConfiguration::Manifold & manifold, const time_t & t, const point_t & point) : _point(point), _basisMatrix((int)conf.getSplineOrder(), (int)conf.getSplineOrder()), _t(t) {}
 		protected:
 			point_t _point;
 			basis_matrix_t _basisMatrix;

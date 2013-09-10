@@ -318,7 +318,7 @@ struct SplineEvalRiDTester : public JacobianTester<Eigen::Matrix<double, 1, 1>, 
 template <typename TManifold>
 inline void disturbePointInto(const TManifold & manifold, const typename TManifold::tangent_vector_t & vec, const typename TManifold::point_t & p, typename TManifold::point_t & into){
 	into = p;
-	manifolds::internal::DiffManifoldPointUpdateTraits<typename TManifold::configuration_t>::update(into, vec);
+	manifolds::internal::DiffManifoldPointUpdateTraits<typename TManifold::configuration_t>::update(manifold, into, vec);
 }
 
 template <typename TSpline, int IDerivativeOrder>

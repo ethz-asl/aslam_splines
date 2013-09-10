@@ -97,7 +97,7 @@ struct OPTSplineTester{
 			dv.update(update, IDim);
 
 			point_t opu = op;
-			::manifolds::internal::DiffManifoldPointUpdateTraits<typename TSplineMap::CONF::ManifoldConf>::update(opu, Eigen::Map<const tangent_vector_t>(update, IDim));
+			::manifolds::internal::DiffManifoldPointUpdateTraits<typename TSplineMap::CONF::ManifoldConf>::update(bspline.getManifold(), opu, Eigen::Map<const tangent_vector_t>(update, IDim));
 
 			sm::eigen::assertEqual(opu, p, SM_SOURCE_FILE_POS);
 

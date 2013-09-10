@@ -70,7 +70,7 @@ namespace bsplines {
 
 	_TEMPLATE
 	inline typename _CLASS::segment_data_t _CLASS::createSegmentData(const time_t & time, const point_t & p) const {
-		return segment_data_t(_configuration, time, p);
+		return segment_data_t(_configuration, _manifold, time, p);
 	}
 
 	_TEMPLATE

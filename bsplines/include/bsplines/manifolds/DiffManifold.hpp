@@ -46,6 +46,7 @@ namespace manifolds {
 			enum { Dimension = TConfiguration::Dimension::VALUE, PointSize = TConfiguration::PointSize::VALUE};
 
 			typedef TConfiguration configuration_t;
+			typedef typename TConfiguration::Manifold Manifold;
 			typedef typename TConfiguration::scalar_t scalar_t;
 			typedef Eigen::Matrix<scalar_t, PointSize, 1> point_t;
 			typedef Eigen::Matrix<scalar_t, Dimension, 1> tangent_vector_t;
@@ -62,7 +63,8 @@ namespace manifolds {
 			typedef manifolds::internal::DiffManifoldConfigurationTypeTrait<TConfigurationDerived> Types;
 			typedef typename Types::point_t point_t;
 			typedef typename Types::tangent_vector_t tangent_vector_t;
-			static void update(point_t & point, const tangent_vector_t & vec);
+			typedef typename Types::Manifold Manifold;
+			static void update(const Manifold & manifold, point_t & point, const tangent_vector_t & vec);
 		};
 	}
 

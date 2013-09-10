@@ -208,7 +208,7 @@ namespace bsplines{
 	_TEMPLATE
 	template<int IMaximalDerivativeOrder>
 	inline Eigen::Matrix<double, _CLASS::spline_t::Dimension, _CLASS::spline_t::Dimension> _CLASS::Evaluator<IMaximalDerivativeOrder>::getPhiVectorJacobian(const CalculationCache & cache, int i) const {
-		 return this->_spline.getManifold().LByVec(cache.getLocalPhiVector(i)) * quat2r(quatInv(cache.getLocalControlVertex(i-1)));
+		return this->_spline.getManifold().LByVec(cache.getLocalPhiVector(i)) * quat2r(quatInv(cache.getLocalControlVertex(i-1)));
 	}
 
 

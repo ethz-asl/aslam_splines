@@ -180,7 +180,7 @@ namespace bsplines {
 	{
 		bool columnsMode;
 		int n = controlVertices.size();
-		int D = getDimension();
+		int D = getPointSize();
 
 		if(D == 1){
 			columnsMode = controlVertices.rows() == 1;

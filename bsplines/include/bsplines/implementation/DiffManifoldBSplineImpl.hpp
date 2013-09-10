@@ -199,18 +199,20 @@ namespace bsplines {
 			}
 		}
 
+		auto & manifold = this->getManifold();
+
 		std::function<void (int, point_t &)> vertexManipulator;
 		if(D == 1){
 			if(columnsMode)
-				vertexManipulator = [&controlVertices](int i, point_t & v) { v = controlVertices.col(i); };
+				vertexManipulator = [&controlVertices, &manifold](int i, point_t & v) { v = controlVertices.col(i); manifold.projectIntoManifold(v);};
 			else
-				vertexManipulator = [&controlVertices](int i, point_t & v) { v = controlVertices.row(i); };
+				vertexManipulator = [&controlVertices, &manifold](int i, point_t & v) { v = controlVertices.row(i); manifold.projectIntoManifold(v); };
 		}
 		else {
 			if(columnsMode)
-				vertexManipulator = [&controlVertices, D](int i, point_t & v) { v = controlVertices.block(0, i * D, 1, D).transpose(); };
+				vertexManipulator = [&controlVertices, D, &manifold](int i, point_t & v) { v = controlVertices.block(0, i * D, 1, D).transpose(); manifold.projectIntoManifold(v); };
 			else
-				vertexManipulator = [&controlVertices, D](int i, point_t & v) { v = controlVertices.block(i * D, 0, D, 1); };
+				vertexManipulator = [&controlVertices, D, &manifold](int i, point_t & v) { v = controlVertices.block(i * D, 0, D, 1); manifold.projectIntoManifold(v); };
 		}
 		manipulateControlVertices(vertexManipulator, n, startTime, offset);
 	}

@@ -68,9 +68,6 @@ namespace manifolds {
 
 	template <typename TConfigurationDerived>
 	class DiffManifold<DiffManifoldConfigurationBase, TConfigurationDerived> {
-	protected:
-		TConfigurationDerived _configuration;
-		typedef DiffManifold<TConfigurationDerived, TConfigurationDerived> DERIVED;
 	public:
 		typedef internal::DiffManifoldConfigurationTypeTrait<TConfigurationDerived> Types;
 		enum { Dimension = Types::Dimension, PointSize = Types::PointSize};
@@ -96,6 +93,11 @@ namespace manifolds {
 		void projectIntoManifold(point_t & pt) const { }
 		void randomizePoint(point_t & pt) const { pt = point_t::random(getPointSize()); }
 		point_t getRandomPoint() const { point_t p(getPointSize());  DERIVED::randomizePoint(p); return p; }
+	protected:
+		TConfigurationDerived _configuration;
+		typedef DiffManifold<TConfigurationDerived, TConfigurationDerived> DERIVED;
+		inline DERIVED & getDerived() { return static_cast<DERIVED&>(*this); }
+		inline const DERIVED & getDerived() const { return *static_cast<const DERIVED*>(this); }
 	};
 }
 

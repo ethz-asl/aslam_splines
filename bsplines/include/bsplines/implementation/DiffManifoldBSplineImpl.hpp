@@ -274,7 +274,7 @@ namespace bsplines {
 		internal::moveIterator(it, absBegin, -(getSplineOrder()));
 		SM_ASSERT_TRUE(Exception, currentValidEnd == it, "Append may only be called on a tail slice.");
 
-		unsigned int j;
+		int j;
 		for(j = 0; ; j++) {
 			if(numSegments >= 0) {
 				if(j >= numSegments)

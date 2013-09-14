@@ -148,23 +148,15 @@ std::vector<typename _CLASS::dv_t *> _CLASS::getDesignVariables(time_t tk) {
 }
 
 _TEMPLATE
-void _CLASS::addSegment(time_t t, const point_t & p) {
-//TODO	_bspline.addCurveSegment(t, p);
-//	_designVariables.push_back(
-//			new _CLASS::dv_t(
-//					_bspline.fixedSizeVvCoefficientVector<D>(
-//							_bspline.numVvCoefficients()
-//									- 1)));
-}
+typename _CLASS::time_t _CLASS::appendSegments(KnotGenerator<time_t> & knotGenerator, int numSegments, const point_t * value) {
+	SegmentIterator i = this->end();
 
-_TEMPLATE
-void _CLASS::addSegment2(time_t t, const point_t & p, double lambda) {
-//TODO	_bspline.addCurveSegment2(t, p, lambda);
-//	_designVariables.push_back(
-//			new _CLASS::dv_t(
-//					_bspline.fixedSizeVvCoefficientVector<D>(
-//							_bspline.numVvCoefficients()
-//									- 1)));
+	time_t t = parent_t::appendSegments(knotGenerator, numSegments, value);
+	for(SegmentIterator end = this->end(); i != end; i++)
+	{
+		_designVariables.push_back((dv_t* )& i->getDesignVariable());
+	}
+	return t;
 }
 
 _TEMPLATE

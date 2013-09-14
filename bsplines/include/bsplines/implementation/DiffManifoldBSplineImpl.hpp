@@ -319,7 +319,7 @@ namespace bsplines {
 
 		auto knotGenerator = DeltaUniformKnotGenerator<TimePolicy>(getSplineOrder(), beforeAbsEndKnot, beyondThisTime, computeDuration(beforeAbsEndKnot, atEndKnot), true);
 		knotGenerator.jumpOverNextKnots(2);
-		return appendSegments(knotGenerator, numSegments, value);
+		return getDerived().appendSegments(knotGenerator, numSegments, value);
 	}
 
 

@@ -314,3 +314,21 @@ TEST(OPTBSplineTestSuite, testPoseErrorWithOPTSplines)
 	}
 }
 
+TEST(OPTBSplineTestSuite, testAppendingUpdatesDesignVariables)
+{
+	try {
+		OPTBSpline<EuclideanBSpline<3, 2>::CONF>::BSpline testSpline;
+
+		auto zero = Eigen::Vector2d::Zero();
+		testSpline.initConstantUniformSpline(0, 1, 2, zero);
+		const int before = testSpline.getDesignVariables().size();
+		testSpline.appendSegmentsUniformly(1);
+
+		ASSERT_EQ(before + 1, testSpline.getDesignVariables().size());
+	}
+	catch(const std::exception & e)
+	{
+		FAIL() << e.what();
+	}
+}
+

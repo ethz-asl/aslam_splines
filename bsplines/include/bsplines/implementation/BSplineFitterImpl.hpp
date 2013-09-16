@@ -241,8 +241,15 @@ namespace internal{
 				return b.segment(row * D, D);
 			}
 			template <typename DERIVED, typename DERIVED2>
-			inline static void addBlockToBlock(Eigen::MatrixBase<DERIVED> & A, int aRow, int aCol, const Eigen::MatrixBase<DERIVED2> & Q, int qRow, int qCol, int rows, int cols, int D){
-				A.block(aRow * D, aCol * D, rows * D, cols * D) += Q.block(qRow * D, qCol * D, rows * D, cols * D);
+			inline static void addBlockToBlock(Eigen::MatrixBase<DERIVED> & A, int aRow, int aCol, const Eigen::MatrixBase<DERIVED2> & Q, int qRow, int qCol, int rows, int cols, int D, bool segmentInRowVector){
+				rows *= D;
+				if(segmentInRowVector){
+					cols = 1;
+				}
+				else{
+					cols *= D;
+				}
+				A.block(aRow * D, aCol * D, rows, cols) += Q.block(qRow * D, qCol * D, rows, cols);
 			}
 
 			inline static Eigen::VectorXd solve(Matrix & A, Vector & b){
@@ -280,10 +287,10 @@ namespace internal{
 				return *b.block(row, 0, allocateBlock);
 			}
 			template <typename DERIVED>
-			inline static void addBlockToBlock(Matrix & A, int aRow, int aCol, const Eigen::MatrixBase<DERIVED> & Q, int qRow, int qCol, int rows, int cols, int D){
+			inline static void addBlockToBlock(Matrix & A, int aRow, int aCol, const Eigen::MatrixBase<DERIVED> & Q, int qRow, int qCol, int rows, int cols, int D, bool segmentInRowVector){
 				for(int i = 0; i < rows; ++i){
 					for(int j = 0; j < cols; ++j){
-						*A.block(aRow + i, aCol + j, true) += Q.block((qRow + i) * D, (qCol + j) * D, D, D);
+						*A.block(aRow + i, aCol + j, true) += Q.block((qRow + i) * D, (qCol + j) * D, D, segmentInRowVector ? 1 : D);
 					}
 				}
 			}
@@ -454,7 +461,7 @@ namespace internal{
 				const int overlappingBlocksRightIndex = min(blockRows, blocksInQ + blockRow) - 1;
 				const int numOverlappingBlocks = overlappingBlocksRightIndex - overlappingBlocksLeftIndex + 1;
 				if(numOverlappingBlocks > 0){
-					Backend::addBlockToBlock(toMatrix, overlappingBlocksLeftIndex, overlappingBlocksLeftIndex, Q, overlappingBlocksLeftIndex - blockRow, overlappingBlocksLeftIndex - blockRow, numOverlappingBlocks, numOverlappingBlocks, D);
+					Backend::addBlockToBlock(toMatrix, overlappingBlocksLeftIndex, overlappingBlocksLeftIndex, Q, overlappingBlocksLeftIndex - blockRow, overlappingBlocksLeftIndex - blockRow, numOverlappingBlocks, numOverlappingBlocks, D, false);
 					if(numOverlappingBlocks != blocksInQ){
 						/*
 						 * Now we have to subtract the effect of the fixed control vertices on the acceleration term.
@@ -469,7 +476,7 @@ namespace internal{
 						const int Q_l_RightColumnIndex = - blockRow - 1;
 						for(int i = blocksInQ-1; i >= 0; i--) {
 							if(i >= Q_r_LeftColumnIndex || i <= Q_l_RightColumnIndex){ // then vertex is fixed and we have to subtract its effect on the right hand side
-								Backend::addBlockToBlock(toB, overlappingBlocksLeftIndex, 0, (-Q.block((overlappingBlocksLeftIndex - blockRow) * D, i * D, numOverlappingBlocks * D, D) * constantVertexIt->getControlVertex()).eval(), 0, 0, numOverlappingBlocks, 1, D);
+								Backend::addBlockToBlock(toB, overlappingBlocksLeftIndex, 0, (-Q.block((overlappingBlocksLeftIndex - blockRow) * D, i * D, numOverlappingBlocks * D, D) * constantVertexIt->getControlVertex()).eval(), 0, 0, numOverlappingBlocks, 1, D, true);
 							}
 							constantVertexIt--;
 						}

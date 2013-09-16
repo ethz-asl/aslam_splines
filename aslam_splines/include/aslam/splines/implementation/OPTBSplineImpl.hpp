@@ -51,7 +51,7 @@ typename _CLASS::dv_t * _CLASS::designVariable(
 
 _TEMPLATE
 const std::vector<typename _CLASS::dv_t *> & _CLASS::getDesignVariables() {
-  return _designVariables;
+	return _designVariables;
 }
 
 _TEMPLATE
@@ -79,7 +79,7 @@ namespace internal {
 	};
 
 	template <typename TJacobian, int IPointSize, int IDimension>
-	struct AddJac<TJacobian, IPointSize, IDimension, true>  {
+	struct AddJac<TJacobian, IPointSize, IDimension, true> {
 		static inline void addJac(TJacobian & J, const int col, const DesignVariable * designVariable, JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule, int pointSize, int dimension){
 			addJacImpl(designVariable, outJacobians, applyChainRule, J.block(0,col, pointSize, dimension));
 		}
@@ -191,7 +191,7 @@ OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::bsplines::DiffManifoldBSpline
 OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline< ::bsplines::EuclideanBSplineConfiguration< ::manifolds::EuclideanSpaceConf<>, 2> >;
 
 
-OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::bsplines::DiffManifoldBSpline< ::bsplines::UnitQuaternionBSplineConfiguration<  > >;
+OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::bsplines::DiffManifoldBSpline< ::bsplines::UnitQuaternionBSplineConfiguration< > >;
 OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::DesignVariableSegmentBSplineConf< ::bsplines::UnitQuaternionBSplineConfiguration< > >;
 OPTBSPLINEIMPL_HPP_EXTERN_KEYWORD template class ::aslam::splines::OPTBSpline< ::bsplines::UnitQuaternionBSplineConfiguration< > >;
 

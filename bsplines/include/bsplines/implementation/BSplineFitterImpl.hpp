@@ -115,9 +115,12 @@ namespace internal{
 		SM_ASSERT_EQ(Exception, times.size(), numPoints, "The number of times and the number of points must be equal");
 		internal::checkTimesBounds<Exception>(times);
 
+		auto lastTime = times[numPoints - 1];
+		SM_ASSERT_GE(Exception, times[0], spline.getMinTime(), "The values in times may not exceed the time domain of the spline.");
+		SM_ASSERT_LE(Exception, lastTime, spline.getMaxTime(), "The values in times may not exceed the time domain of the spline.");
+
 		internal::MapKnotIndexResolver<time_t> mapResolver;
 		int i = 0;
-		auto lastTime = times[numPoints - 1];
 		for(auto it = spline.getFirstRelevantSegmentByLast(spline.getSegmentIterator(times[0])), end = spline.getAbsoluteEnd(); it != end; ++it){
 			time_t nextKnot = it->getKnot();
 			if(nextKnot > lastTime) break;

@@ -2,10 +2,15 @@ from scipy import integrate
 from pylab import arange, array, show, plot, axis
 import bsplines
 
-s = bsplines.EuclideanBSpline(4, 1)
+splineOrder = 4;
+s = bsplines.EuclideanBSpline(splineOrder, 1)
 
 maxTime = 9
 minTime = 0
+
+pos = maxTime;
+lamb = 0.00001
+goal = 1.0
 
 knotGenerator = s.initConstantUniformSplineWithKnotDelta(minTime, maxTime, 1, array([0]));
 
@@ -22,10 +27,6 @@ def getAcceleration(s):
 
 plotSpline(s)
 print "AccelerationIntegral:\n", getAcceleration(s)
-
-pos = maxTime;
-lamb = 0.00001
-goal = 1.0
 
 def calcFit():
     goalDist = s.eval(pos)[0] - goal

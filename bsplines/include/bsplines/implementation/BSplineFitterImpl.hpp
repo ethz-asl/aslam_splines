@@ -177,15 +177,18 @@ namespace internal{
 
 			std::vector<time_t> newTimes;
 			std::vector<point_t> newPoints;
+			const time_t minTime = spline.getMinTime();
 
 			const int relevantOldVCs = internal::getNumberOfRelevantControlVertices<TSpline>(spline, times[0], oldMaxTime,
-				[&spline, &weights, &newTimes, &newPoints, &baseWeight](typename TSpline::SegmentIterator it)
+				[&](typename TSpline::SegmentIterator it)
 				{
 					it++;
 					time_t t(it->getKnot());
-					newTimes.push_back(t);
-					newPoints.push_back(spline.template getEvaluatorAt<0>(t).eval());
-					weights.push_back(baseWeight);
+					if(t >= minTime){
+						newTimes.push_back(t);
+						newPoints.push_back(spline.template getEvaluatorAt<0>(t).eval());
+						weights.push_back(baseWeight); //TODO improve: normalize the weight base on the amount of points given per segment.
+					}
 				}
 			);
 			//TODO optimize: use better ways to concatenate times and points.

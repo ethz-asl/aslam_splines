@@ -34,7 +34,7 @@ def calcFit():
     return goalDist*goalDist - lamb * a
 
 
-s.fitSpline(array([pos]), array([[goal]]), lamb, 0, array([]), False)
+s.fitSpline(array([pos]), array([[goal]]), lamb, 0, array([]))
 
 plotSpline(s)
 print "Value:\n", s.eval(pos);

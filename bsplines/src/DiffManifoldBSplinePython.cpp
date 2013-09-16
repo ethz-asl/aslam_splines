@@ -65,7 +65,8 @@ struct BSplineImporter {
 
 		Fitter::initUniformSpline(*bsp, timesVector, interpolationPointsVector, numSegments, lambda);
 	}
-	static void initUniformSplineFromMatrixWithKnotDelta(TSpline * bsp, const Eigen::VectorXd & times, const Eigen::MatrixXd & interpolationPoints, typename TSpline::duration_t delta, double lambda)
+
+	static DeltaUniformKnotGenerator<typename TSpline::TimePolicy> initUniformSplineFromMatrixWithKnotDelta(TSpline * bsp, const Eigen::VectorXd & times, const Eigen::MatrixXd & interpolationPoints, typename TSpline::duration_t delta, double lambda)
 	{
 		const int numPoints = interpolationPoints.cols();
 		const int numTimes= times.size();
@@ -80,11 +81,11 @@ struct BSplineImporter {
 			interpolationPointsVector[i] = interpolationPoints.col(i);
 		}
 
-		Fitter::initUniformSplineWithKnotDelta(*bsp, timesVector, interpolationPointsVector, delta, lambda);
+		return Fitter::initUniformSplineWithKnotDelta(*bsp, timesVector, interpolationPointsVector, delta, lambda);
 	}
 
 
-	static void fitSplineFromMatrix(TSpline * bsp, const Eigen::VectorXd & times, const Eigen::MatrixXd & interpolationPoints, double lambda, int fixNFirstRelevantPoints, const Eigen::VectorXd & weights, bool dense)
+	static void fitSplineFromMatrix(TSpline * bsp, const Eigen::VectorXd & times, const Eigen::MatrixXd & interpolationPoints, double lambda, int fixNFirstRelevantPoints, const Eigen::VectorXd & weights)
 	{
 		const int numPoints = interpolationPoints.cols();
 		const int numTimes= times.size();
@@ -104,10 +105,10 @@ struct BSplineImporter {
 			pointsVector[i] = interpolationPoints.col(i);
 		}
 
-		Fitter::fitSpline(*bsp, timesVector, pointsVector, lambda, fixNFirstRelevantPoints, numWeights? [&weights](int i){ return weights[i]; } : std::function<double(int)>(), dense  ? FittingBackend::DENSE: FittingBackend::SPARSE);
+		Fitter::fitSpline(*bsp, timesVector, pointsVector, lambda, fixNFirstRelevantPoints, numWeights? [&weights](int i){ return weights[i]; } : std::function<double(int)>());
 	}
 
-	static void extendAndFitSplineFromMatrix(TSpline * bsp, bsplines::DeltaUniformKnotGenerator<typename TSpline::TimePolicy> * knotGenerator, const Eigen::VectorXd & times, const Eigen::MatrixXd & interpolationPoints, double lambda, unsigned char honorCurrentValueCoefficient)
+	static void extendAndFitSplineFromMatrix(TSpline * bsp, bsplines::DeltaUniformKnotGenerator<typename TSpline::TimePolicy> & knotGenerator, const Eigen::VectorXd & times, const Eigen::MatrixXd & interpolationPoints, double lambda, unsigned char honorCurrentValueCoefficient)
 	{
 		const int numPoints = interpolationPoints.cols();
 		const int numTimes= times.size();
@@ -123,7 +124,7 @@ struct BSplineImporter {
 			pointsVector[i] = interpolationPoints.col(i);
 		}
 
-		Fitter::extendAndFitSpline(*bsp, *knotGenerator, timesVector, pointsVector, lambda, honorCurrentValueCoefficient);
+		Fitter::extendAndFitSpline(*bsp, knotGenerator, timesVector, pointsVector, lambda, honorCurrentValueCoefficient);
 	}
 
 

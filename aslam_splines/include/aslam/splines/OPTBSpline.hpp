@@ -42,7 +42,7 @@ namespace internal {
 	struct MinimalDifferenceTraits : public MinimalDifferenceTraits<typename ManifoldConf_::ParentConf, ConfigurationDerived_> {
 	};
 	template <typename ConfigurationDerived_>
-	struct MinimalDifferenceTraits<::manifolds::DiffManifoldConfigurationBase, ConfigurationDerived_> {
+	struct MinimalDifferenceTraits< ::manifolds::DiffManifoldConfigurationBase, ConfigurationDerived_> {
 		typedef typename manifolds::internal::DiffManifoldConfigurationTypeTrait<ConfigurationDerived_>::Manifold Manifold;
 
 		inline static void minimalDifference(const Manifold &, const Eigen::MatrixXd& xHat, const typename Manifold::point_t & to, Eigen::VectorXd& outDifference) {

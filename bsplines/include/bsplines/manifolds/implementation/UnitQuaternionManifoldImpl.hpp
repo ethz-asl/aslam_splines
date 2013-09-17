@@ -106,7 +106,7 @@ bool _CLASS::isInManifold(const point_t & pt)
 _TEMPLATE
 void _CLASS::projectIntoManifold(point_t & pt)
 {
-	SM_ASSERT_GT_DBG(std::runtime_error, pt.norm(), 1E-3, "This quaternion is cannot be projected into the unit quaternions!");
+	SM_ASSERT_GT_DBG(std::runtime_error, pt.norm(), 1E-3, "This quaternion cannot be projected into the unit quaternions!");
 	pt /= pt.norm();
 }
 

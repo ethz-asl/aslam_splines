@@ -38,6 +38,21 @@ namespace aslam {
 
 namespace bsplines {
 namespace internal {
+	template <typename ManifoldConf_, typename ConfigurationDerived_ = ManifoldConf_>
+	struct MinimalDifferenceTraits : public MinimalDifferenceTraits<typename ManifoldConf_::ParentConf, ConfigurationDerived_> {
+	};
+	template <typename ConfigurationDerived_>
+	struct MinimalDifferenceTraits<::manifolds::DiffManifoldConfigurationBase, ConfigurationDerived_> {
+		typedef typename manifolds::internal::DiffManifoldConfigurationTypeTrait<ConfigurationDerived_>::Manifold Manifold;
+
+		inline static void minimalDifference(const Manifold &, const Eigen::MatrixXd& xHat, const typename Manifold::point_t & to, Eigen::VectorXd& outDifference) {
+			SM_THROW(aslam::UnsupportedOperationException, "Minimal differences not implemented for this manifold. Pleas specialize bsplines::internal::MinimalDifferenceTraits");
+		};
+		inline static void minimalDifferenceAndJacobian(const Manifold &, const Eigen::MatrixXd& xHat, const typename Manifold::point_t & to, Eigen::VectorXd& outDifference, Eigen::MatrixXd& outJacobian) {
+			SM_THROW(aslam::UnsupportedOperationException, "Minimal differences not implemented for this manifold. Pleas specialize bsplines::internal::MinimalDifferenceTraits");
+		};
+	};
+
 	template <typename TDiffManifoldBSplineConfiguration, typename TDiffManifoldBSplineConfigurationDerived>
 	struct SegmentData< ::aslam::splines::DesignVariableSegmentBSplineConf<TDiffManifoldBSplineConfiguration, TDiffManifoldBSplineConfigurationDerived> > : public SegmentData<TDiffManifoldBSplineConfigurationDerived>, aslam::backend::DesignVariable{
 	private:
@@ -70,7 +85,7 @@ namespace internal {
 			}
 			_p_v = this->getControlVertex();
 			Eigen::Map<const tangent_vector_t> dpV(dp, size);
-			manifolds::internal::DiffManifoldPointUpdateTraits<typename TDiffManifoldBSplineConfiguration::ManifoldConf>::update(_manifold, this->getControlVertex(), dpV);
+			manifolds::internal::DiffManifoldPointUpdateTraits<typename Manifold::configuration_t>::update(_manifold, this->getControlVertex(), dpV);
 		};
 
 		/// \brief Revert the last state update.
@@ -89,6 +104,12 @@ namespace internal {
 
 		inline aslam::backend::DesignVariable & getDesignVariable(){ return *this; }
 		inline const aslam::backend::DesignVariable & getDesignVariable() const { return *this; }
+
+		/// Computes the minimal distance in tangent space between the current value of the DV and xHat
+		virtual void minimalDifferenceImplementation(const Eigen::MatrixXd& xHat, Eigen::VectorXd& outDifference) const;
+
+		/// Computes the minimal distance in tangent space between the current value of the DV and xHat and the jacobian
+		virtual void minimalDifferenceAndJacobianImplementation(const Eigen::MatrixXd& xHat, Eigen::VectorXd& outDifference, Eigen::MatrixXd& outJacobian) const;
 	};
 }
 

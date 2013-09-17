@@ -11,6 +11,7 @@
 #include "aslam/backend/JacobianContainer.hpp"
 #include "boost/typeof/typeof.hpp"
 #include "bsplines/DiffManifoldBSpline.hpp"
+#include "bsplines/manifolds/LieGroup.hpp"
 
 using namespace aslam::backend;
 
@@ -18,11 +19,6 @@ namespace bsplines {
 
 #define _TEMPLATE template<typename TModifiedConf, typename TModifiedDerivedConf>
 #define _CLASS DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModifiedConf, TModifiedDerivedConf>, aslam::splines::DesignVariableSegmentBSplineConf<TModifiedDerivedConf> >
-
-//_TEMPLATE
-//_CLASS::~OPTBSpline() {
-//
-//}
 
 _TEMPLATE
 void _CLASS::init() {
@@ -60,10 +56,34 @@ _CLASS::ExpressionFactory<IMaxDerivativeOrder>::ExpressionFactory(const spline_t
 }
 
 namespace internal {
+	template<typename ConfigurationDerived_, int IDimension, int IPointSize, typename TScalar>
+	struct MinimalDifferenceTraits<manifolds::LieGroupConf<IDimension, IPointSize, TScalar>, ConfigurationDerived_> {
+		typedef typename manifolds::internal::DiffManifoldConfigurationTypeTrait<ConfigurationDerived_>::Manifold Manifold;
+		inline static void minimalDifference(const Manifold & manifold, const Eigen::MatrixXd& xHat, const typename Manifold::point_t & to, Eigen::VectorXd& outDifference) {
+			outDifference = manifold.log(xHat, to);
+		};
+
+		inline static void minimalDifferenceAndJacobian(const Manifold & manifold, const Eigen::MatrixXd& xHat, const typename Manifold::point_t & to, Eigen::VectorXd& outDifference, Eigen::MatrixXd& outJacobian) {
+			minimalDifference(manifold, xHat, to, outDifference);
+			outJacobian = manifold.dlog(xHat, to);
+		};
+	};
+
+
+	template <typename TDiffManifoldBSplineConfiguration, typename TDiffManifoldBSplineConfigurationDerived>
+	inline void SegmentData< ::aslam::splines::DesignVariableSegmentBSplineConf<TDiffManifoldBSplineConfiguration, TDiffManifoldBSplineConfigurationDerived> >::minimalDifferenceImplementation(const Eigen::MatrixXd& xHat, Eigen::VectorXd& outDifference) const {
+		SM_ASSERT_TRUE(aslam::InvalidArgumentException, (xHat.rows() == _manifold.getPointSize()) && (xHat.cols() == 1), "xHat has incompatible dimensions");
+		MinimalDifferenceTraits<typename Manifold::configuration_t>::minimalDifference(_manifold, xHat, this->getControlVertex(), outDifference);
+	}
+
+	template <typename TDiffManifoldBSplineConfiguration, typename TDiffManifoldBSplineConfigurationDerived>
+	inline void SegmentData< ::aslam::splines::DesignVariableSegmentBSplineConf<TDiffManifoldBSplineConfiguration, TDiffManifoldBSplineConfigurationDerived> >::minimalDifferenceAndJacobianImplementation(const Eigen::MatrixXd& xHat, Eigen::VectorXd& outDifference, Eigen::MatrixXd& outJacobian) const {
+		MinimalDifferenceTraits<typename Manifold::configuration_t>::minimalDifferenceAndJacobian(_manifold, xHat, this->getControlVertex(), outDifference, outJacobian);
+	}
+
 	template <typename TDerived>
 	inline void addJacImpl(const DesignVariable * designVariable, JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule, const Eigen::MatrixBase<TDerived> & block){
 		if(applyChainRule){
-			//TODO discuss: why not const DesignVariable * in add ?
 			outJacobians.add(const_cast<DesignVariable *>(designVariable), (*applyChainRule) * block);
 		}
 		else{
@@ -146,6 +166,7 @@ std::vector<typename _CLASS::dv_t *> _CLASS::getDesignVariables(time_t tk) {
 	}
 	return dvs;
 }
+
 
 _TEMPLATE
 typename _CLASS::time_t _CLASS::appendSegments(KnotGenerator<time_t> & knotGenerator, int numSegments, const point_t * value) {

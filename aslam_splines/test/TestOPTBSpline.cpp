@@ -5,6 +5,7 @@
  *      Author: hannes
  */
 
+#include <type_traits>
 #include <sm/eigen/gtest.hpp>
 #include <sm/eigen/NumericalDiff.hpp>
 #include <sm/kinematics/Transformation.hpp>
@@ -69,10 +70,11 @@ struct OPTSplineTester{
 	typedef typename OPTBSpline<typename TSplineMap::CONF>::BSpline TestBSpline;
 	typedef typename TestBSpline::point_t point_t;
 	typedef typename TestBSpline::tangent_vector_t tangent_vector_t;
+	typedef typename TestBSpline::scalar_t scalar_t;
 
+	constexpr static scalar_t eps = std::numeric_limits<scalar_t>::epsilon();
 
 	void static testCompilationAndExpressions(){
-
 		TestBSpline bspline(createConf<typename TSplineMap::CONF, ISplineOrder, IDim>()), bsplineCopyAssign(createConf<typename TSplineMap::CONF, ISplineOrder, IDim>()), bsplineCopyConstruct(bspline);
 		bsplineCopyAssign = bspline;
 
@@ -152,6 +154,29 @@ struct OPTSplineTester{
 				}
 			}
 		}
+
+		testMinimalDifference();
+	}
+
+	static void testMinimalDifference(){
+		typedef TestBSpline Spline;
+		typedef typename Spline::point_t point_t;
+
+		Spline testSpline(createConf<typename TSplineMap::CONF, ISplineOrder, IDim>());
+		auto manifold = testSpline.getManifold();
+
+		Eigen::VectorXd inputVector = Eigen::VectorXd::Random(manifold.getDimension());
+		point_t identity = manifold.getIdentity(), other = manifold.expAtId(inputVector);
+
+		testSpline.initConstantUniformSpline(0, 1, 2, identity);
+		auto dv = testSpline.getDesignVariables()[0];
+		Eigen::MatrixXd matrix;
+		dv->getParameters(matrix);
+		sm::eigen::assertEqual(matrix, identity, SM_SOURCE_FILE_POS);
+
+		Eigen::VectorXd vector;
+		dv->minimalDifference(other, vector);
+		sm::eigen::assertNear(vector, -inputVector, eps, SM_SOURCE_FILE_POS);
 	}
 };
 

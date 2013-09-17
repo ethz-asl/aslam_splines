@@ -35,6 +35,7 @@ namespace manifolds {
 		};
 	}
 
+	//TODO improve names / hierarchy : this is LieGroup is more a LieGroup with an affine connection (because it has geometric exp, log). This is quite unclean. It would be better to have an additional affine connection type attached to it somehow.
 
 	template <int IDimension, int IPointSize, typename TScalar, typename TConfigurationDerived>
 	class DiffManifold<LieGroupConf<IDimension, IPointSize, TScalar>, TConfigurationDerived> : public DiffManifold<typename LieGroupConf<IDimension, IPointSize, TScalar>::ParentConf, TConfigurationDerived> {

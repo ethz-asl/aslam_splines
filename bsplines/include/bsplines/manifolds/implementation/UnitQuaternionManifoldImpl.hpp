@@ -76,8 +76,8 @@ inline Eigen::Matrix3d _CLASS::LByVec(const tangent_vector_t & vec){
 
 _TEMPLATE
 void _CLASS::dlogInto(const point_t & from, const point_t & to, dmatrix_transposed_t & result) const {
-	auto fromInv = quatInv(from);
-	result = ::sm::kinematics::quatLogJacobian2(qplus(fromInv, to)) * quatPlus(fromInv);
+	auto fromInv = ::sm::kinematics::quatInv(from);
+	result = ::sm::kinematics::quatLogJacobian2(::sm::kinematics::qplus(fromInv, to)) * ::sm::kinematics::quatPlus(fromInv);
 }
 
 _TEMPLATE

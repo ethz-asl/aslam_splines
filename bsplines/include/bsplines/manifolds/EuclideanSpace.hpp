@@ -43,12 +43,16 @@ namespace manifolds {
 		void getIdentityInto(point_t & pt) const;
 		void randomizePoint(point_t & pt) const;
 
-		static void multInto(const point_t & a, const point_t & b, point_t & result);
-		static void logInto(const point_t & from, const point_t & to, tangent_vector_t & result);
-		static void expInto(const point_t & point, const tangent_vector_t & vec, point_t & result);
-		static void expAtIdInto(const tangent_vector_t & vec, point_t & result);
-		void dexpAtIdInto(const tangent_vector_t & vec, dmatrix_t & result) const;
-		void dexpInto(const point_t & from, const tangent_vector_t & vec, dmatrix_t & result) const;
+		inline static void multInto(const point_t & a, const point_t & b, point_t & result);
+		inline static void logInto(const point_t & from, const point_t & to, tangent_vector_t & result);
+		inline static void logAtIdInto(const point_t & to, tangent_vector_t & result);
+		inline void dlogInto(const point_t & point, const tangent_vector_t & vec, dmatrix_t & result) const;
+		inline void dlogAtIdInto(const tangent_vector_t & vec, dmatrix_t & result) const;
+
+		inline static void expInto(const point_t & point, const tangent_vector_t & vec, point_t & result);
+		inline static void expAtIdInto(const tangent_vector_t & vec, point_t & result);
+		inline void dexpAtIdInto(const tangent_vector_t & vec, dmatrix_t & result) const;
+		inline void dexpInto(const point_t & from, const tangent_vector_t & vec, dmatrix_t & result) const;
 	};
 }
 

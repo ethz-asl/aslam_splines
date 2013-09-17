@@ -52,6 +52,14 @@ inline typename _CLASS::dmatrix_t _CLASS::dexpAtId(const tangent_vector_t & vec)
 }
 
 _TEMPLATE
+inline typename _CLASS::dmatrix_t _CLASS::dexp(const point_t & point, const tangent_vector_t & vec) const
+{
+	dmatrix_t result((int)this->getPointSize(), (int)this->getDimension());
+	this->getDerived().dexpInto(point, vec, result);
+	return result;
+}
+
+_TEMPLATE
 inline typename _CLASS::tangent_vector_t _CLASS::log(const point_t & from, const point_t & to) const
 {
 	tangent_vector_t v(this->getDimension());
@@ -72,6 +80,14 @@ inline typename _CLASS::dlog_matrix_t _CLASS::dlogAtId(const point_t & to) const
 {
 	dlog_matrix_t result(this->getDimension(), this->getDimension());
 	this->getDerived().dlogAtIdInto(to, result);
+	return result;
+}
+
+_TEMPLATE
+inline typename _CLASS::dlog_matrix_t _CLASS::dlog(const point_t & from, const point_t & to) const
+{
+	dlog_matrix_t result(this->getDimension(), this->getDimension());
+	this->getDerived().dlogInto(from, to, result);
 	return result;
 }
 

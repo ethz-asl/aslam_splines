@@ -94,7 +94,7 @@ namespace manifolds {
 		bool isInManifold(const point_t & pt) const { return true; }
 		void projectIntoManifold(point_t & pt) const { }
 		void randomizePoint(point_t & pt) const { pt = point_t::random(getPointSize()); }
-		point_t getRandomPoint() const { point_t p(getPointSize());  DERIVED::randomizePoint(p); return p; }
+		point_t getRandomPoint() const { point_t p(getPointSize());  getDerived().randomizePoint(p); return p; }
 	protected:
 		TConfigurationDerived _configuration;
 		typedef DiffManifold<TConfigurationDerived, TConfigurationDerived> DERIVED;

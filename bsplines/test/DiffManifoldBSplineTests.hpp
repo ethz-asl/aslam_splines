@@ -7,6 +7,7 @@
 #include <bsplines/EuclideanBSpline.hpp>
 #include <bsplines/UnitQuaternionBSpline.hpp>
 #include <bsplines/BSplineFitter.hpp>
+#include <bsplines/NsecTimePolicy.hpp>
 
 #include <iostream>
 
@@ -40,6 +41,7 @@ typedef EuclideanBSpline<>::TYPE TestSplineDD;
 typedef EuclideanBSpline<splineOrder, Eigen::Dynamic>::TYPE TestSplineSD;
 typedef EuclideanBSpline<Eigen::Dynamic, rows>::TYPE TestSplineDS;
 typedef EuclideanBSpline<splineOrder, rows>::TYPE TestSpline;
+typedef EuclideanBSpline<splineOrder, rows, NsecTimePolicy>::TYPE TestSplineNsecTime;
 
 typedef UnitQuaternionBSpline<>::TYPE UQTestSplineD;
 typedef UnitQuaternionBSpline<splineOrder>::TYPE UQTestSpline;
@@ -514,6 +516,97 @@ template <typename TSpline, typename Container>
 void setControlVerticesFromContainer(TSpline & spline, const Container & controlVertices){
 	auto it = controlVertices.begin();
 	spline.manipulateControlVertices([&it, &controlVertices, &spline](int, typename TSpline::point_t & vertex){ vertex = *it; it++;}, controlVertices.size());
+}
+
+
+
+template<typename TSpline>
+void testDiffManifoldBSplineFitting(int numberOfSegments, double tolerance = 1E-9)
+{
+	typedef TSpline TestSpline;
+	typedef typename TestSpline::time_t time_t;
+
+	const time_t minTime = 0, duration = TSpline::TimePolicy::getOne(), maxTime = minTime + duration;
+
+	const int numberOfInterpolationPoints = numberOfSegments * 2 + 3;
+
+	Eigen::Matrix<time_t, Eigen::Dynamic, 1> times = Eigen::Matrix<time_t, Eigen::Dynamic, 1>::LinSpaced(numberOfInterpolationPoints, minTime, maxTime);
+	const double lambda = 0.1;
+
+	TestSpline rbspline(splineOrder);
+	TestSpline rbspline2(splineOrder);
+
+	auto identity = rbspline.getManifold().getIdentity();
+
+	std::vector<time_t> timesV;
+	std::vector<typename TestSpline::point_t> interpolationPointsV;
+
+	const auto & manifold = rbspline.getManifold();
+	auto p = manifold.getIdentity();
+	for(int i = 0; i < numberOfInterpolationPoints; i ++){
+		timesV.push_back((time_t)times[i]);
+		p = manifold.exp(p, TestSpline::tangent_vector_t::Random(manifold.getDimension()));
+		interpolationPointsV.push_back(p);
+	}
+
+	BSplineFitter<TestSpline>::initUniformSplineWithKnotDelta(rbspline, timesV, interpolationPointsV, duration / numberOfSegments, lambda);
+	auto knotGeneratorOrg = rbspline2.initConstantUniformSplineWithKnotDelta(minTime, maxTime, duration / numberOfSegments, identity);
+	decltype(knotGeneratorOrg) knotGenerator;
+	knotGenerator = knotGeneratorOrg; // test knotGenerator copying.
+
+	ASSERT_EQ(rbspline2.getNumValidTimeSegments(), numberOfSegments);
+	BSplineFitter<TestSpline>::fitSpline(rbspline2, timesV, interpolationPointsV, lambda);
+
+	for(unsigned int i = 0; i <= numberOfTimeSteps; i ++) {
+		time_t t = minTime + duration / numberOfTimeSteps * (time_t) i;
+		Eigen::VectorXd rval = rbspline.template getEvaluatorAt<0>(t).eval();
+		Eigen::VectorXd rval2 = rbspline2.template getEvaluatorAt<0>(t).eval();
+		sm::eigen::assertEqual(rval, rval2, SM_SOURCE_FILE_POS, "");
+	}
+
+	timesV.clear();
+	timesV.push_back(maxTime);
+
+	interpolationPointsV.clear();
+	typename TestSpline::point_t goal;
+	typename TestSpline::tangent_vector_t translation(rbspline.getManifold().getDimension());
+	translation.setZero();
+	const double goalDist = 0.1;
+	translation[0] = goalDist;
+	rbspline.getManifold().expInto(p, translation, goal);
+	interpolationPointsV.push_back(goal);
+
+	BSplineFitter<TestSpline>::fitSpline(rbspline2, timesV, interpolationPointsV, 0, 0, std::function<double(int)>(), FittingBackend::DENSE, true);
+
+	sm::eigen::assertNear(goal, rbspline2.template getEvaluatorAt<0>(maxTime).eval(), tolerance, SM_SOURCE_FILE_POS, "");
+	time_t newMaxTime = maxTime + duration / numberOfSegments;
+	timesV.push_back(newMaxTime);
+	interpolationPointsV.push_back(goal);
+
+	ASSERT_EQ(rbspline2.getMaxTime(), maxTime);
+	BSplineFitter<TestSpline>::extendAndFitSpline(rbspline2, knotGenerator, timesV, interpolationPointsV, 0, 0, FittingBackend::DENSE, true);
+	ASSERT_EQ(rbspline2.getMaxTime(), newMaxTime);
+
+	sm::eigen::assertNear(goal, rbspline2.template getEvaluatorAt<0>(maxTime).eval(), tolerance, SM_SOURCE_FILE_POS, "");
+	sm::eigen::assertNear(goal, rbspline2.template getEvaluatorAt<0>(newMaxTime).eval(), tolerance, SM_SOURCE_FILE_POS, "");
+
+	interpolationPointsV[0] = p;
+	BSplineFitter<TestSpline>::extendAndFitSpline(rbspline2, knotGenerator, timesV, interpolationPointsV, 0, 100, FittingBackend::DENSE, true);
+
+	ASSERT_EQ(rbspline2.getMaxTime(), newMaxTime);
+	sm::eigen::assertNear(goal, rbspline2.template getEvaluatorAt<0>(maxTime).eval(), tolerance, SM_SOURCE_FILE_POS, "");
+	sm::eigen::assertNear(goal, rbspline2.template getEvaluatorAt<0>(newMaxTime).eval(), tolerance, SM_SOURCE_FILE_POS, "");
+
+	BSplineFitter<TestSpline>::extendAndFitSpline(rbspline2, knotGenerator, timesV, interpolationPointsV, 0, 50, FittingBackend::DENSE, true);
+
+	sm::eigen::assertNear(p, rbspline2.template getEvaluatorAt<0>(maxTime).eval(), goalDist * 0.7, SM_SOURCE_FILE_POS, "");
+	sm::eigen::assertNear(goal, rbspline2.template getEvaluatorAt<0>(maxTime).eval(), goalDist * 0.7, SM_SOURCE_FILE_POS, "");
+	sm::eigen::assertNear(goal, rbspline2.template getEvaluatorAt<0>(newMaxTime).eval(), tolerance, SM_SOURCE_FILE_POS, "");
+
+	BSplineFitter<TestSpline>::extendAndFitSpline(rbspline2, knotGenerator, timesV, interpolationPointsV, 0, 0, FittingBackend::DENSE, true);
+
+	sm::eigen::assertNear(p, rbspline2.template getEvaluatorAt<0>(maxTime).eval(), tolerance, SM_SOURCE_FILE_POS, "");
+	sm::eigen::assertNear(goal, rbspline2.template getEvaluatorAt<0>(newMaxTime).eval(), tolerance, SM_SOURCE_FILE_POS, "");
 }
 
 }// namespace bsplines

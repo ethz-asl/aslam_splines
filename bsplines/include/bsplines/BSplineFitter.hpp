@@ -68,7 +68,7 @@ public :
 	 * @param weights a function mapping an time point pairs' index to its weight. The empty function is semantically equivalently treated as returning always 1.0.
 	 * @param fittingBackend the fitting backend. Usually one wants FittingBackend::SPARSE.
 	 */
-	static void fitSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, int fixNFirstRelevantControlVertices = 0, std::function<scalar_t(int i) > weights = std::function<scalar_t(int i) >(), FittingBackend fittingBackend = FittingBackend::DEFAULT);
+	static void fitSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, int fixNFirstRelevantControlVertices = 0, std::function<scalar_t(int i) > weights = std::function<scalar_t(int i) >(), FittingBackend fittingBackend = FittingBackend::DEFAULT, const bool calculateControlVertexOffsets = false);
 	/**
 	 * Extends (adding knots and control vertices) a spline as necessary to be valid in the whole times range and then fits the spline to the time point pairs given by times and points.
 	 * @param spline the spline
@@ -79,13 +79,13 @@ public :
 	 * @param honorCurrentValuePercentage The current spline's value is considered according to honorCurrentValueCoefficient (0 = ignore current value, 100 = ignore points where the spline is already defined).
 	 * @param fittingBackend the fitting backend. Usually one wants FittingBackend::SPARSE.
 	 */
-	static void extendAndFitSpline(TSpline & spline, KnotGenerator<time_t> & knotGenerator, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, unsigned char honorCurrentValuePercentage, FittingBackend fittingBackend = FittingBackend::DEFAULT);
+	static void extendAndFitSpline(TSpline & spline, KnotGenerator<time_t> & knotGenerator, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, unsigned char honorCurrentValuePercentage, FittingBackend fittingBackend = FittingBackend::DEFAULT, const bool calculateControlVertexOffsets = false);
 
 private:
-	static void calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotIndexResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, std::function<scalar_t(int i) > weights, double lambda, int fixNFirstRelevantControlVertices = 0, FittingBackend fittingBackend = FittingBackend::DEFAULT);
 	int getNumberOfRelevantControlVertices(const std::vector<time_t>& times, const time_t& upToTime, TSpline& spline, int fixFirstVertices);
+	static void calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotIndexResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, std::function<scalar_t(int i) > weights, double lambda, int fixNFirstRelevantControlVertices = 0, FittingBackend fittingBackend = FittingBackend::DEFAULT, const bool calculateControlVertexOffsets = false);
 	template<enum FittingBackend FittingBackend_>
-	static void calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotIndexResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, std::function<scalar_t(int i) > weights, double lambda, int fixNFirstRelevantControlVertices = 0);
+	static void calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotIndexResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, std::function<scalar_t(int i) > weights, double lambda, int fixNFirstRelevantControlVertices = 0, const bool calculateControlVertexOffsets = false);
 
 	template<enum FittingBackend FittingBackend_>
 	static void addCurveQuadraticIntegralDiagTo(const TSpline & spline, typename TSpline::SegmentConstIterator start, typename TSpline::SegmentConstIterator end, int startIndex, const point_t & Wdiag, int derivativeOrder, typename internal::FittingBackendTraits<FittingBackend_>::Matrix & toMatrix, typename internal::FittingBackendTraits<FittingBackend_>::Vector & toB);

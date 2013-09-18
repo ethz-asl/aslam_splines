@@ -425,78 +425,20 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineInitialization)
 }
 
 
-TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineFitting)
+TEST(EuclideanBSplineTestSuite, testDiffManifoldBSplineFitting)
 {
-	const int numberOfSegments = 2;
-	const int numberOfInterpolationPoints = numberOfSegments * 2 + 3;
-
-	Eigen::VectorXd times = Eigen::VectorXd::LinSpaced(numberOfInterpolationPoints, minTime, maxTime);
-	Eigen::MatrixXd interpolationPoints = Eigen::MatrixXd::Random(rows, numberOfInterpolationPoints);
-	const double lambda = 0.1;
-
-	std::vector<TestSpline::time_t> timesV;
-	std::vector<TestSpline::point_t> interpolationPointsV;
-	for(int i = 0; i < numberOfInterpolationPoints; i ++){
-		timesV.push_back((double)times[i]);
-		interpolationPointsV.push_back(interpolationPoints.col(i));
-	}
-
-	TestSpline rbspline(splineOrder, rows);
-	TestSpline rbspline2(splineOrder, rows);
-
-	BSplineFitter<TestSpline>::initUniformSpline(rbspline, timesV, interpolationPointsV, numberOfSegments, lambda);
-	auto knotGenerator = rbspline2.initConstantUniformSplineWithKnotDelta(minTime, maxTime, duration / numberOfSegments, zero);
-	BSplineFitter<TestSpline>::fitSpline(rbspline2, timesV, interpolationPointsV, lambda);
-
-	for(unsigned int i = 0; i <= numberOfTimeSteps; i ++) {
-		double t = minTime + duration * ((double) i / numberOfTimeSteps);
-		Eigen::VectorXd rval = rbspline.getEvaluatorAt<0>(t).eval();
-		Eigen::VectorXd rval2 = rbspline2.getEvaluatorAt<0>(t).eval();
-		sm::eigen::assertEqual(rval, rval2, SM_SOURCE_FILE_POS, "");
-	}
-
-	timesV.clear();
-	timesV.push_back(maxTime);
-	interpolationPointsV.clear();
-	TestSpline::point_t goal(rows);
-	goal.setZero();
-	goal[0] = 1;
-	interpolationPointsV.push_back(goal);
-
-	BSplineFitter<TestSpline>::fitSpline(rbspline2, timesV, interpolationPointsV, 0, 0, std::function<double(int)>(), FittingBackend::DENSE);
-
-	sm::eigen::assertNear(goal, rbspline2.getEvaluatorAt<0>(maxTime).eval(), 1E-9, SM_SOURCE_FILE_POS, "");
-
-	timesV.push_back(maxTime * 2);
-	interpolationPointsV.push_back(goal);
-
-	ASSERT_EQ(rbspline2.getMaxTime(), maxTime);
-	BSplineFitter<TestSpline>::extendAndFitSpline(rbspline2, knotGenerator, timesV, interpolationPointsV, 0, 0, FittingBackend::DENSE);
-	ASSERT_EQ(rbspline2.getMaxTime(), maxTime * 2);
-
-	sm::eigen::assertNear(goal, rbspline2.getEvaluatorAt<0>(maxTime).eval(), 1E-9, SM_SOURCE_FILE_POS, "");
-	sm::eigen::assertNear(goal, rbspline2.getEvaluatorAt<0>(maxTime * 2).eval(), 1E-9, SM_SOURCE_FILE_POS, "");
-
-	interpolationPointsV[0] = zero;
-	BSplineFitter<TestSpline>::extendAndFitSpline(rbspline2, knotGenerator, timesV, interpolationPointsV, 0, 100, FittingBackend::DENSE);
-
-	ASSERT_EQ(rbspline2.getMaxTime(), maxTime * 2);
-	sm::eigen::assertNear(goal, rbspline2.getEvaluatorAt<0>(maxTime).eval(), 1E-9, SM_SOURCE_FILE_POS, "");
-	sm::eigen::assertNear(goal, rbspline2.getEvaluatorAt<0>(maxTime * 2).eval(), 1E-9, SM_SOURCE_FILE_POS, "");
-
-	BSplineFitter<TestSpline>::extendAndFitSpline(rbspline2, knotGenerator, timesV, interpolationPointsV, 0, 50, FittingBackend::DENSE);
-
-	sm::eigen::assertNear(zero, rbspline2.getEvaluatorAt<0>(maxTime).eval(), 0.7, SM_SOURCE_FILE_POS, "");
-	sm::eigen::assertNear(goal, rbspline2.getEvaluatorAt<0>(maxTime).eval(), 0.7, SM_SOURCE_FILE_POS, "");
-	sm::eigen::assertNear(goal, rbspline2.getEvaluatorAt<0>(maxTime * 2).eval(), 1E-9, SM_SOURCE_FILE_POS, "");
-
-	BSplineFitter<TestSpline>::extendAndFitSpline(rbspline2, knotGenerator, timesV, interpolationPointsV, 0, 0, FittingBackend::DENSE);
-
-	sm::eigen::assertNear(zero, rbspline2.getEvaluatorAt<0>(maxTime).eval(), 1E-9, SM_SOURCE_FILE_POS, "");
-	sm::eigen::assertNear(goal, rbspline2.getEvaluatorAt<0>(maxTime * 2).eval(), 1E-9, SM_SOURCE_FILE_POS, "");
+	testDiffManifoldBSplineFitting<TestSpline>(splineOrder);
+	testDiffManifoldBSplineFitting<TestSpline>(splineOrder * 2);
 }
 
-TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineFittingDenseSparseAgree)
+TEST(EuclideanBSplineTestSuite, testDiffManifoldBSplineFittingNsecTime)
+{
+	testDiffManifoldBSplineFitting<TestSplineNsecTime>(splineOrder);
+	testDiffManifoldBSplineFitting<TestSplineNsecTime>(splineOrder * 2);
+}
+
+
+TEST(EuclideanBSplineTestSuite, testDiffManifoldBSplineFittingDenseSparseAgree)
 {
 	const int numberOfSegments = 1;
 	const int numberOfInterpolationPoints = numberOfSegments * 2 + 3;

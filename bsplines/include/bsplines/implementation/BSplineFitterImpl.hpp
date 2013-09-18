@@ -109,7 +109,7 @@ namespace internal{
 	}
 
 	_TEMPLATE
-	void _CLASS::fitSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, int fixNFirstRelevantControlVertices, std::function<scalar_t(int i) > weights, FittingBackend fittingBackend){
+	void _CLASS::fitSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, int fixNFirstRelevantControlVertices, std::function<scalar_t(int i) > weights, FittingBackend fittingBackend, const bool calculateControlVertexOffsets){
 		const size_t numPoints = points.size();
 		SM_ASSERT_GE(Exception, numPoints, 1, "The must be at least one time point pair!");
 		SM_ASSERT_EQ(Exception, times.size(), numPoints, "The number of times and the number of points must be equal");
@@ -128,7 +128,7 @@ namespace internal{
 			mapResolver.knots.insert(std::make_pair(nextKnot, i++));
 		}
 
-		calcFittedControlVertices(spline, mapResolver, times, points, weights, lambda, fixNFirstRelevantControlVertices, fittingBackend);
+		calcFittedControlVertices(spline, mapResolver, times, points, weights, lambda, fixNFirstRelevantControlVertices, fittingBackend, calculateControlVertexOffsets);
 	}
 
 namespace internal{
@@ -144,7 +144,7 @@ namespace internal{
 }
 
 	_TEMPLATE
-	void _CLASS::extendAndFitSpline(TSpline & spline, KnotGenerator<time_t> & knotGenerator, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, unsigned char honorCurrentValuePercentage, FittingBackend fittingBackend){
+	void _CLASS::extendAndFitSpline(TSpline & spline, KnotGenerator<time_t> & knotGenerator, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, unsigned char honorCurrentValuePercentage, FittingBackend fittingBackend, const bool calculateControlVertexOffsets){
 		const size_t numPoints = points.size();
 		SM_ASSERT_TRUE(Exception, knotGenerator.supportsAppending(), "The knot generator must support appending!");
 		SM_ASSERT_GE(Exception, numPoints, 1, "The must be at least one time point pair!");
@@ -173,7 +173,7 @@ namespace internal{
 			else{// ignore former values
 				fixFirstVertices = 0;
 			}
-			fitSpline(spline, times, points, lambda, fixFirstVertices, std::function<scalar_t(int i) >(), fittingBackend);
+			fitSpline(spline, times, points, lambda, fixFirstVertices, std::function<scalar_t(int i) >(), fittingBackend, calculateControlVertexOffsets);
 		}else{
 			vector<scalar_t> weights;
 			scalar_t baseWeight = scalar_t(honorCurrentValuePercentage) / scalar_t(100 - honorCurrentValuePercentage);
@@ -203,18 +203,18 @@ namespace internal{
 			newPoints.resize(points.size() + relevantOldVCs);
 			copy(points.begin(), points.end(), newPoints.begin() + relevantOldVCs);
 
-			fitSpline(spline, newTimes, newPoints, lambda, 0, [relevantOldVCs, &weights](int i){ return i < relevantOldVCs ? weights[i]: scalar_t(1.0);}, fittingBackend);
+			fitSpline(spline, newTimes, newPoints, lambda, 0, [relevantOldVCs, &weights](int i){ return i < relevantOldVCs ? weights[i]: scalar_t(1.0);}, fittingBackend, calculateControlVertexOffsets);
 		}
 	}
 
 	_TEMPLATE
-	void _CLASS::calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotIndexResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, std::function<scalar_t(int i) > weights, double lambda, int fixNFirstRelevantControlVertices, FittingBackend fittingBackend){
+	void _CLASS::calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotIndexResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, std::function<scalar_t(int i) > weights, double lambda, int fixNFirstRelevantControlVertices, FittingBackend fittingBackend, const bool calculateControlVertexOffsets){
 		switch(fittingBackend){
 			case FittingBackend::DENSE:
-				calcFittedControlVertices<FittingBackend::DENSE>(spline, knotIndexResolver, times, points, weights, lambda, fixNFirstRelevantControlVertices);
+				calcFittedControlVertices<FittingBackend::DENSE>(spline, knotIndexResolver, times, points, weights, lambda, fixNFirstRelevantControlVertices, calculateControlVertexOffsets);
 				break;
 			case FittingBackend::SPARSE:
-				calcFittedControlVertices<FittingBackend::SPARSE>(spline, knotIndexResolver, times, points, weights, lambda, fixNFirstRelevantControlVertices);
+				calcFittedControlVertices<FittingBackend::SPARSE>(spline, knotIndexResolver, times, points, weights, lambda, fixNFirstRelevantControlVertices, calculateControlVertexOffsets);
 				break;
 		}
 	}
@@ -318,8 +318,13 @@ namespace internal{
 
 	_TEMPLATE
 	template <enum FittingBackend FittingBackend_>
-	void _CLASS::calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotIndexResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, std::function<scalar_t(int i) > weights, double lambda, int fixNFirstRelevantControlVertices)
+	void _CLASS::calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotIndexResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, std::function<scalar_t(int i) > weights, double lambda, int fixNFirstRelevantControlVertices, const bool calculateControlVertexOffsets)
 	{
+		if(calculateControlVertexOffsets){
+			//TODO implement : support calculateControlVertexOffsets in addCurveQuadraticIntegralDiagTo and revove this check!
+			SM_ASSERT_EQ(Exception, 0.0, lambda, "control vertex offsets aren't supported together with lambda != 0, yet!");
+		}
+
 		SM_ASSERT_GE_DBG(Exception, fixNFirstRelevantControlVertices, 0, "fixNFirstRelevantControlVertices must be nonnegative.");
 		const time_t splineMaxTime = spline.getMaxTime(), lastTime = times[times.size() - 1];
 		const int splineOrder = spline.getSplineOrder();
@@ -332,13 +337,12 @@ namespace internal{
 			return;
 		}
 
-		const typename TSpline::point_t* fixControlVertices[fixNFirstRelevantControlVertices];
-		if(fixNFirstRelevantControlVertices){
+		const int capturedCurrentControlVertices = calculateControlVertexOffsets ? fixNFirstRelevantControlVertices + numToFitControlVertices : fixNFirstRelevantControlVertices;
+		const typename TSpline::point_t* currentControlVertices[capturedCurrentControlVertices];
+		if(capturedCurrentControlVertices){
 			auto it = spline.getFirstRelevantSegmentByLast(spline.getSegmentIterator(times[0]));
-//			end = ;
-			for(int i = 0; i < fixNFirstRelevantControlVertices; ++i){
-				fixControlVertices[i] = &it->getControlVertex();
-//				if(it == )
+			for(int i = 0; i < capturedCurrentControlVertices; ++i){
+				currentControlVertices[i] = &it->getControlVertex();
 				++it;
 			}
 		}
@@ -384,15 +388,15 @@ namespace internal{
 					if(bi[j] != 0.0)
 						backend.blockA(A, brow, col, D).diagonal().setConstant(bi[j]);
 				}
-				else{
-					int fixVertexIndex = fixNFirstRelevantControlVertices + col;
-					SM_ASSERT_GE_DBG(std::runtime_error, fixVertexIndex, 0, "BUG in BSplineFitter");
-					SM_ASSERT_LT_DBG(std::runtime_error, fixVertexIndex, fixNFirstRelevantControlVertices, "BUG in BSplineFitter");
-					backend.segmentB(b, brow, D) -= (*fixControlVertices[fixVertexIndex]) * bi[j];
+				if(col < 0 || calculateControlVertexOffsets){
+					int vertexIndex = fixNFirstRelevantControlVertices + col;
+					SM_ASSERT_GE_DBG(std::runtime_error, vertexIndex, 0, "BUG in BSplineFitter");
+					SM_ASSERT_LT_DBG(std::runtime_error, vertexIndex, capturedCurrentControlVertices, "BUG in BSplineFitter");
+					backend.segmentB(b, brow, D) -= (*currentControlVertices[vertexIndex]) * bi[j];
 				}
 			}
 
-			if(knotIndex >= 0)
+			if(knotIndex >= 0 && ! calculateControlVertexOffsets)
 				backend.segmentB(b, brow, D) = points[i] * weight;
 			else{
 				backend.segmentB(b, brow, D) += points[i] * weight;
@@ -421,7 +425,16 @@ namespace internal{
 		// Solve for the coefficient vector.
 		Eigen::VectorXd c = backend.solve(A, b);
 
-		spline.setControlVertices(c, times[0], fixNFirstRelevantControlVertices);
+		if(calculateControlVertexOffsets){
+			const auto & manifold = spline.getManifold();
+			spline.manipulateControlVertices([&c, D, &manifold](int i, point_t & v) {
+					v += c.block(i * D, 0, D, 1);
+					manifold.projectIntoManifold(v);
+				}, numToFitControlVertices, times[0], fixNFirstRelevantControlVertices);
+		}
+		else{
+			spline.setControlVertices(c, times[0], fixNFirstRelevantControlVertices);
+		}
 	}
 
 	_TEMPLATE

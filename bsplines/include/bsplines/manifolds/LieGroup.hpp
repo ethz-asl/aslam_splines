@@ -42,7 +42,7 @@ namespace manifolds {
 				auto invertedXHat = manifold.invert(xHat);
 				auto quot = manifold.mult(to, invertedXHat);
 				outDifference = manifold.logAtId(quot);
-				outJacobian = manifold.dlogAtId(quot) * manifold.dMultL(invertedXHat, true);
+				outJacobian = manifold.dlogAtId(quot) * manifold.dMultL(quot, true) * manifold.dexpAtId(Manifold::tangent_vector_t::Zero(manifold.getDimension()));  //TODO optimize : this is quite slow (V matrix not directly used)
 			};
 		};
 	}

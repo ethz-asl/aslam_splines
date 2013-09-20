@@ -74,7 +74,7 @@ struct OPTSplineTester{
 
 	constexpr static scalar_t eps = std::numeric_limits<scalar_t>::epsilon();
 
-	void static testCompilationAndExpressions(){
+	void static testExpressions(){
 		TestBSpline bspline(createConf<typename TSplineMap::CONF, ISplineOrder, IDim>()), bsplineCopyAssign(createConf<typename TSplineMap::CONF, ISplineOrder, IDim>()), bsplineCopyConstruct(bspline);
 		bsplineCopyAssign = bspline;
 
@@ -164,19 +164,19 @@ struct OPTSplineTester{
 
 		Spline testSpline(createConf<typename TSplineMap::CONF, ISplineOrder, IDim>());
 		auto manifold = testSpline.getManifold();
+		testSpline.initConstantUniformSpline(0, 1, 2, manifold.getDefaultPoint());
+		DesignVariable* dv = testSpline.getDesignVariables()[0];
 
-		Eigen::VectorXd inputVector = Eigen::VectorXd::Random(manifold.getDimension());
-		point_t identity = manifold.getIdentity(), other = manifold.expAtId(inputVector);
+		for(int i = 0; i < 1; i ++){
+			point_t startPoint = manifold.getRandomPoint();
+			Eigen::VectorXd updateVector = Eigen::VectorXd::Random(manifold.getDimension());
 
-		testSpline.initConstantUniformSpline(0, 1, 2, identity);
-		auto dv = testSpline.getDesignVariables()[0];
-		Eigen::MatrixXd matrix;
-		dv->getParameters(matrix);
-		sm::eigen::assertEqual(matrix, identity, SM_SOURCE_FILE_POS);
-
-		Eigen::VectorXd vector;
-		dv->minimalDifference(other, vector);
-		sm::eigen::assertNear(vector, -inputVector, eps, SM_SOURCE_FILE_POS);
+			dv->setParameters(startPoint);
+			dv->update(&updateVector[0], updateVector.size());
+			Eigen::VectorXd vector;
+			dv->minimalDifference(startPoint, vector);
+			sm::eigen::assertNear(vector, updateVector, eps * 2, SM_SOURCE_FILE_POS);
+		}
 	}
 };
 
@@ -222,39 +222,39 @@ struct OPTSplineSpecializationTester<UnitQuaternionBSpline<IEigenSplineOrder>, I
 	}
 };
 
-TEST(OPTBSplineTestSuite, testCompilationAndExpressionsEuclidean)
+TEST(OPTBSplineTestSuite, testExpressionsEuclidean)
 {
-	OPTSplineTester<EuclideanBSpline<2, Eigen::Dynamic>, 2, 3>::testCompilationAndExpressions();
-	OPTSplineTester<EuclideanBSpline<3, 2>, 3, 2>::testCompilationAndExpressions();
-	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 3, 2>::testCompilationAndExpressions();
-	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 4, 2>::testCompilationAndExpressions();
-	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 5, 2>::testCompilationAndExpressions();
-	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 6, 2>::testCompilationAndExpressions();
+	OPTSplineTester<EuclideanBSpline<2, Eigen::Dynamic>, 2, 3>::testExpressions();
+	OPTSplineTester<EuclideanBSpline<3, 2>, 3, 2>::testExpressions();
+	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 3, 2>::testExpressions();
+	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 4, 2>::testExpressions();
+	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 5, 2>::testExpressions();
+	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 6, 2>::testExpressions();
 }
 
-TEST(OPTBSplineTestSuite, testCompilationAndExpressionsUnitQuaternionStaticOrder2)
+TEST(OPTBSplineTestSuite, testExpressionsUnitQuaternionStaticOrder2)
 {
-	OPTSplineTester<UnitQuaternionBSpline<2>, 2, 3>::testCompilationAndExpressions();
+	OPTSplineTester<UnitQuaternionBSpline<2>, 2, 3>::testExpressions();
 }
 
-TEST(OPTBSplineTestSuite, testCompilationAndExpressionsUnitQuaternionDynamicOrder2)
+TEST(OPTBSplineTestSuite, testExpressionsUnitQuaternionDynamicOrder2)
 {
-	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 2, 3>::testCompilationAndExpressions();
+	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 2, 3>::testExpressions();
 }
 
-TEST(OPTBSplineTestSuite, testCompilationAndExpressionsUnitQuaternionDynamicOrder3)
+TEST(OPTBSplineTestSuite, testExpressionsUnitQuaternionDynamicOrder3)
 {
-	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 3, 3>::testCompilationAndExpressions();
+	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 3, 3>::testExpressions();
 }
 
-TEST(OPTBSplineTestSuite, testCompilationAndExpressionsUnitQuaternionDynamicOrder4)
+TEST(OPTBSplineTestSuite, testExpressionsUnitQuaternionDynamicOrder4)
 {
-	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 4, 3>::testCompilationAndExpressions();
+	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 4, 3>::testExpressions();
 }
 
-TEST(OPTBSplineTestSuite, testCompilationAndExpressionsUnitQuaternionDynamicOrder5)
+TEST(OPTBSplineTestSuite, testExpressionsUnitQuaternionDynamicOrder5)
 {
-	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 5, 3>::testCompilationAndExpressions();
+	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 5, 3>::testExpressions();
 }
 
 TEST(OPTBSplineTestSuite, testPoseErrorWithOPTSplines)

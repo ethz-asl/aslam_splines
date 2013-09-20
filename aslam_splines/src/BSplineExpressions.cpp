@@ -70,7 +70,7 @@ namespace aslam {
 
         }
 
-        Eigen::Matrix3d BSplineRotationExpressionNode::toRotationMatrixImplementation()
+        Eigen::Matrix3d BSplineRotationExpressionNode::toRotationMatrixImplementation() const
         {
             return _spline->orientation(_time);
         }
@@ -129,7 +129,7 @@ namespace aslam {
 
         }
 
-        Eigen::Vector3d BSplinePositionExpressionNode::toEuclideanImplementation()
+        Eigen::Vector3d BSplinePositionExpressionNode::toEuclideanImplementation() const
         {
 
             return _spline->eval(_time).head<3>();
@@ -188,7 +188,7 @@ namespace aslam {
 
         }
 
-        Eigen::Vector3d BSplineVelocityExpressionNode::toEuclideanImplementation()
+        Eigen::Vector3d BSplineVelocityExpressionNode::toEuclideanImplementation() const
         {
 
             return _spline->evalD(_time,1).head<3>();
@@ -248,7 +248,7 @@ namespace aslam {
 
         }
 
-        Eigen::Vector3d BSplineAccelerationExpressionNode::toEuclideanImplementation()
+        Eigen::Vector3d BSplineAccelerationExpressionNode::toEuclideanImplementation() const
         {
 
             return _spline->evalD(_time,2).head<3>();
@@ -305,7 +305,7 @@ namespace aslam {
     }
 
     Eigen::Vector3d BSplineAccelerationBodyFrameExpressionNode::
-        toEuclideanImplementation() {
+        toEuclideanImplementation() const {
         return _spline->linearAccelerationBodyFrame(_time);
     }
 
@@ -356,7 +356,7 @@ namespace aslam {
 
         }
 
-        Eigen::Vector3d BSplineAngularVelocityBodyFrameExpressionNode::toEuclideanImplementation()
+        Eigen::Vector3d BSplineAngularVelocityBodyFrameExpressionNode::toEuclideanImplementation() const
         {
 
             return _spline->angularVelocityBodyFrame(_time);
@@ -569,7 +569,7 @@ namespace aslam {
 
         }
 
-        Eigen::Vector3d BSplineEuclideanExpressionNode::toEuclideanImplementation()
+        Eigen::Vector3d BSplineEuclideanExpressionNode::toEuclideanImplementation() const
         {
             return _spline->evalD(_time, _order);
         }
@@ -624,7 +624,7 @@ BSplineAngularAccelerationBodyFrameExpressionNode::~BSplineAngularAccelerationBo
 
 }
 
-Eigen::Vector3d BSplineAngularAccelerationBodyFrameExpressionNode::toEuclideanImplementation()
+Eigen::Vector3d BSplineAngularAccelerationBodyFrameExpressionNode::toEuclideanImplementation() const
 {
 
 return _spline->angularAccelerationBodyFrame(_time);

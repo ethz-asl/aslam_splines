@@ -38,21 +38,6 @@ namespace aslam {
 
 namespace bsplines {
 namespace internal {
-	template <typename ManifoldConf_, typename ConfigurationDerived_ = ManifoldConf_>
-	struct MinimalDifferenceTraits : public MinimalDifferenceTraits<typename ManifoldConf_::ParentConf, ConfigurationDerived_> {
-	};
-	template <typename ConfigurationDerived_>
-	struct MinimalDifferenceTraits< ::manifolds::DiffManifoldConfigurationBase, ConfigurationDerived_> {
-		typedef typename manifolds::internal::DiffManifoldConfigurationTypeTrait<ConfigurationDerived_>::Manifold Manifold;
-
-		inline static void minimalDifference(const Manifold &, const Eigen::MatrixXd& xHat, const typename Manifold::point_t & to, Eigen::VectorXd& outDifference) {
-			SM_THROW(aslam::UnsupportedOperationException, "Minimal differences not implemented for this manifold. Pleas specialize bsplines::internal::MinimalDifferenceTraits");
-		};
-		inline static void minimalDifferenceAndJacobian(const Manifold &, const Eigen::MatrixXd& xHat, const typename Manifold::point_t & to, Eigen::VectorXd& outDifference, Eigen::MatrixXd& outJacobian) {
-			SM_THROW(aslam::UnsupportedOperationException, "Minimal differences not implemented for this manifold. Pleas specialize bsplines::internal::MinimalDifferenceTraits");
-		};
-	};
-
 	template <typename TDiffManifoldBSplineConfiguration, typename TDiffManifoldBSplineConfigurationDerived>
 	struct SegmentData< ::aslam::splines::DesignVariableSegmentBSplineConf<TDiffManifoldBSplineConfiguration, TDiffManifoldBSplineConfigurationDerived> > : public SegmentData<TDiffManifoldBSplineConfigurationDerived>, aslam::backend::DesignVariable{
 	private:
@@ -67,6 +52,7 @@ namespace internal {
 	private:
 		point_t _p_v;
 		typename TDiffManifoldBSplineConfiguration::Dimension _dimension;
+		typedef typename manifolds::internal::DiffManifoldPointUpdateTraits<typename Manifold::configuration_t> UpdateTraits;
 		const Manifold & _manifold;
 
 		enum {
@@ -85,7 +71,7 @@ namespace internal {
 			}
 			_p_v = this->getControlVertex();
 			Eigen::Map<const tangent_vector_t> dpV(dp, size);
-			manifolds::internal::DiffManifoldPointUpdateTraits<typename Manifold::configuration_t>::update(_manifold, this->getControlVertex(), dpV);
+			UpdateTraits::update(_manifold, this->getControlVertex(), dpV);
 		};
 
 		/// \brief Revert the last state update.

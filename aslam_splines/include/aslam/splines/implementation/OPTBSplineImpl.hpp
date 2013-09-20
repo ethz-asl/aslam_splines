@@ -56,29 +56,14 @@ _CLASS::ExpressionFactory<IMaxDerivativeOrder>::ExpressionFactory(const spline_t
 }
 
 namespace internal {
-	template<typename ConfigurationDerived_, int IDimension, int IPointSize, typename TScalar>
-	struct MinimalDifferenceTraits<manifolds::LieGroupConf<IDimension, IPointSize, TScalar>, ConfigurationDerived_> {
-		typedef typename manifolds::internal::DiffManifoldConfigurationTypeTrait<ConfigurationDerived_>::Manifold Manifold;
-		inline static void minimalDifference(const Manifold & manifold, const Eigen::MatrixXd& xHat, const typename Manifold::point_t & to, Eigen::VectorXd& outDifference) {
-			outDifference = manifold.log(xHat, to);
-		};
-
-		inline static void minimalDifferenceAndJacobian(const Manifold & manifold, const Eigen::MatrixXd& xHat, const typename Manifold::point_t & to, Eigen::VectorXd& outDifference, Eigen::MatrixXd& outJacobian) {
-			minimalDifference(manifold, xHat, to, outDifference);
-			outJacobian = manifold.dlog(xHat, to);
-		};
-	};
-
-
 	template <typename TDiffManifoldBSplineConfiguration, typename TDiffManifoldBSplineConfigurationDerived>
 	inline void SegmentData< ::aslam::splines::DesignVariableSegmentBSplineConf<TDiffManifoldBSplineConfiguration, TDiffManifoldBSplineConfigurationDerived> >::minimalDifferenceImplementation(const Eigen::MatrixXd& xHat, Eigen::VectorXd& outDifference) const {
-		SM_ASSERT_TRUE(aslam::InvalidArgumentException, (xHat.rows() == _manifold.getPointSize()) && (xHat.cols() == 1), "xHat has incompatible dimensions");
-		MinimalDifferenceTraits<typename Manifold::configuration_t>::minimalDifference(_manifold, xHat, this->getControlVertex(), outDifference);
+		UpdateTraits::minimalDifference(_manifold, xHat, this->getControlVertex(), outDifference);
 	}
 
 	template <typename TDiffManifoldBSplineConfiguration, typename TDiffManifoldBSplineConfigurationDerived>
 	inline void SegmentData< ::aslam::splines::DesignVariableSegmentBSplineConf<TDiffManifoldBSplineConfiguration, TDiffManifoldBSplineConfigurationDerived> >::minimalDifferenceAndJacobianImplementation(const Eigen::MatrixXd& xHat, Eigen::VectorXd& outDifference, Eigen::MatrixXd& outJacobian) const {
-		MinimalDifferenceTraits<typename Manifold::configuration_t>::minimalDifferenceAndJacobian(_manifold, xHat, this->getControlVertex(), outDifference, outJacobian);
+		UpdateTraits::minimalDifferenceAndJacobian(_manifold, xHat, this->getControlVertex(), outDifference, outJacobian);
 	}
 
 	template <typename TDerived>

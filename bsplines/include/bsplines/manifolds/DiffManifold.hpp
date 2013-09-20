@@ -69,6 +69,12 @@ namespace manifolds {
 			inline static void update(const Manifold & manifold, point_t & point, const tangent_vector_t & vec){
 				SM_THROW(std::runtime_error, NotImplementedMessage);
 			}
+			inline static void minimalDifference(const Manifold &, const Eigen::MatrixXd& xHat, const typename Manifold::point_t & to, Eigen::VectorXd& outDifference) {
+				SM_THROW(std::runtime_error, NotImplementedMessage);
+			};
+			inline static void minimalDifferenceAndJacobian(const Manifold &, const Eigen::MatrixXd& xHat, const typename Manifold::point_t & to, Eigen::VectorXd& outDifference, Eigen::MatrixXd& outJacobian) {
+				SM_THROW(std::runtime_error, NotImplementedMessage);
+			};
 		 private:
 			constexpr static const char * NotImplementedMessage = "Point updates / minimal differences not implemented for this manifold. Pleas specialize manifolds::internal::DiffManifoldPointUpdateTraits";
 		};

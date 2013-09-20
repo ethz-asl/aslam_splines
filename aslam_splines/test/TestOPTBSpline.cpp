@@ -18,6 +18,7 @@
 #include <aslam/backend/TransformationExpression.hpp>
 #include <aslam/backend/Vector2RotationQuaternionExpressionAdapter.hpp>
 #include <aslam/backend/ErrorTermTransformation.hpp>
+#include <aslam/backend/DesignVariableMinimalDifferenceExpressionNode.hpp>
 #include <aslam/backend/test/ErrorTermTestHarness.hpp>
 #include <aslam/backend/test/ExpressionTests.hpp>
 #include <aslam/backend/test/RotationExpressionTests.hpp>
@@ -166,8 +167,10 @@ struct OPTSplineTester{
 		auto manifold = testSpline.getManifold();
 		testSpline.initConstantUniformSpline(0, 1, 2, manifold.getDefaultPoint());
 		DesignVariable* dv = testSpline.getDesignVariables()[0];
+		dv->setActive(true);
+		dv->setBlockIndex(0);
 
-		for(int i = 0; i < 1; i ++){
+		for(int i = 0; i < 10; i ++){
 			point_t startPoint = manifold.getRandomPoint();
 			Eigen::VectorXd updateVector = Eigen::VectorXd::Random(manifold.getDimension());
 
@@ -175,7 +178,11 @@ struct OPTSplineTester{
 			dv->update(&updateVector[0], updateVector.size());
 			Eigen::VectorXd vector;
 			dv->minimalDifference(startPoint, vector);
-			sm::eigen::assertNear(vector, updateVector, eps * 2, SM_SOURCE_FILE_POS);
+			sm::eigen::assertNear(vector, updateVector, eps * 4, SM_SOURCE_FILE_POS);
+
+			VectorExpression<IDim> dvMDE(boost::shared_ptr< VectorExpressionNode<IDim> >(new DesignVariableMinimalDifferenceExpressionNode<IDim>(*dv, startPoint)));
+			sm::eigen::assertEqual(dvMDE.evaluate(), vector, SM_SOURCE_FILE_POS);
+			testJacobian(dvMDE);
 		}
 	}
 };

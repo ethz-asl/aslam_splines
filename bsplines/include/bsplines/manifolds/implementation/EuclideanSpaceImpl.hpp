@@ -18,38 +18,48 @@ namespace manifolds {
 	}
 
 	_TEMPLATE
-	inline void _CLASS::multInto(const point_t & a, const point_t & b, point_t & result)
-	{
+	inline void _CLASS::multInto(const point_t & a, const point_t & b, point_t & result) const {
 		result = a + b;
 	}
 
 	_TEMPLATE
-	inline void _CLASS::logInto(const point_t & from, const point_t & to, tangent_vector_t & result) {
+	inline typename _CLASS::dmatrix_point2point_t _CLASS::dMultL(const point_t & mult, bool oppositeMult) const
+	{
+		return _CLASS::dmatrix_point2point_t::Identity(this->getPointSize(), this->getPointSize());
+	}
+
+	_TEMPLATE
+	inline void _CLASS::invertInto(const point_t & p, point_t & result) const {
+		result = -p;
+	}
+
+	_TEMPLATE
+	inline void _CLASS::logInto(const point_t & from, const point_t & to, tangent_vector_t & result) const {
 		result = to - from;
 	}
 
 	_TEMPLATE
-	void _CLASS::logAtIdInto(const point_t & to, tangent_vector_t & result){
+	void _CLASS::logAtIdInto(const point_t & to, tangent_vector_t & result) const{
 		result = to;
 	}
 
 	_TEMPLATE
-	void _CLASS::dlogInto(const point_t & point, const tangent_vector_t & vec, dmatrix_t & result) const{
+	void _CLASS::dlogInto(const point_t & point, const tangent_vector_t & vec, dmatrix_transposed_t & result) const{
 		result = dmatrix_t::Identity(result.rows(), result.cols());
 	}
 
 	_TEMPLATE
-	void _CLASS::dlogAtIdInto(const tangent_vector_t & vec, dmatrix_t & result) const{
+	void _CLASS::dlogAtIdInto(const tangent_vector_t & vec, dmatrix_transposed_t & result) const {
 		result = dmatrix_t::Identity(result.rows(), result.cols());
 	}
 
 	_TEMPLATE
-	inline void _CLASS::expInto(const point_t & point, const tangent_vector_t & vec, point_t & result) {
+	inline void _CLASS::expInto(const point_t & point, const tangent_vector_t & vec, point_t & result) const {
 		result = point + vec;
 	}
 
 	_TEMPLATE
-	inline void _CLASS::expAtIdInto(const tangent_vector_t & vec, point_t & p) {
+	inline void _CLASS::expAtIdInto(const tangent_vector_t & vec, point_t & p) const {
 		p = vec;
 	}
 

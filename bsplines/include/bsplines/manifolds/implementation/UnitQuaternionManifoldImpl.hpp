@@ -24,15 +24,21 @@ inline void _CLASS::multInto(const point_t & a, const point_t & b, point_t & res
 }
 
 _TEMPLATE
-inline void _CLASS::logAtIdInto(const point_t & to, tangent_vector_t & result)
+inline typename _CLASS::dmatrix_point2point_t _CLASS::dMultL(const point_t & mult, bool oppositeMult) const
 {
-	result = ::sm::kinematics::quat2AxisAngle(to);
+	return !oppositeMult ? ::sm::kinematics::quatPlus(mult) : ::sm::kinematics::quatOPlus(mult);
 }
 
 _TEMPLATE
-inline void _CLASS::logInto(const point_t & from, const point_t & to, tangent_vector_t & result)
+inline void _CLASS::invertInto(const point_t & p, point_t & result) const
 {
-	_CLASS::DERIVED::logAtIdInto(::sm::kinematics::qplus(::sm::kinematics::quatInv(from), to), result);
+	result = ::sm::kinematics::quatInv(p);
+}
+
+_TEMPLATE
+inline void _CLASS::logAtIdInto(const point_t & to, tangent_vector_t & result)
+{
+	result = ::sm::kinematics::quat2AxisAngle(to);
 }
 
 _TEMPLATE
@@ -48,16 +54,9 @@ inline void _CLASS::expAtIdInto(const tangent_vector_t & vec, point_t & result)
 }
 
 _TEMPLATE
-inline void _CLASS::expInto(const point_t & point, const tangent_vector_t & vec, point_t & result)
-{
-	result = ::sm::kinematics::qplus(point, expAtId(vec));
-}
-
-_TEMPLATE
 inline void _CLASS::getIdentityInto(point_t & result) {
 	result = ::sm::kinematics::quatIdentity();
 }
-
 
 _TEMPLATE
 inline const typename _CLASS::dmatrix_t & _CLASS::V(){
@@ -75,12 +74,6 @@ inline Eigen::Matrix3d _CLASS::LByVec(const tangent_vector_t & vec){
 }
 
 _TEMPLATE
-void _CLASS::dlogInto(const point_t & from, const point_t & to, dmatrix_transposed_t & result) const {
-	auto fromInv = ::sm::kinematics::quatInv(from);
-	result = ::sm::kinematics::quatLogJacobian2(::sm::kinematics::qplus(fromInv, to)) * ::sm::kinematics::quatPlus(fromInv);
-}
-
-_TEMPLATE
 void _CLASS::dlogAtIdInto(const point_t & to, dmatrix_transposed_t & result) const {
 	result = ::sm::kinematics::quatLogJacobian2(to);
 }
@@ -91,11 +84,6 @@ inline void _CLASS::dexpAtIdInto(const tangent_vector_t & vec, dmatrix_t & resul
 	result = ::sm::kinematics::quatExpJacobian(vec);
 }
 
-_TEMPLATE
-inline void _CLASS::dexpInto(const point_t & point, const tangent_vector_t & vec, dmatrix_t & result) const
-{
-	result = ::sm::kinematics::quatPlus(point) * this->dexpAtId(vec);
-}
 
 _TEMPLATE
 bool _CLASS::isInManifold(const point_t & pt)

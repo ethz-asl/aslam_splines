@@ -10,6 +10,7 @@
 
 #include "bsplines/DynamicOrTemplateInt.hpp"
 namespace manifolds {
+	enum class CanonicalConnection { LEFT, RIGHT };
 
 	template <typename TConfiguration, typename TConfigurationDerived = TConfiguration>
 	class DiffManifold : public DiffManifold<typename TConfiguration::ParentConf, TConfigurationDerived>{
@@ -52,6 +53,7 @@ namespace manifolds {
 			typedef Eigen::Matrix<scalar_t, Dimension, 1> tangent_vector_t;
 			typedef Eigen::Matrix<scalar_t, PointSize, Dimension> dmatrix_t;
 			typedef Eigen::Matrix<scalar_t, Dimension, PointSize> dmatrix_transposed_t;
+			typedef Eigen::Matrix<scalar_t, PointSize, PointSize> dmatrix_point2point_t;
 		};
 
 		template <typename TManifoldConf, typename TConfigurationDerived = TManifoldConf>
@@ -60,11 +62,15 @@ namespace manifolds {
 
 		template <typename TConfigurationDerived>
 		struct DiffManifoldPointUpdateTraits<DiffManifoldConfigurationBase, TConfigurationDerived> {
-			typedef manifolds::internal::DiffManifoldConfigurationTypeTrait<TConfigurationDerived> Types;
+			typedef DiffManifoldConfigurationTypeTrait<TConfigurationDerived> Types;
 			typedef typename Types::point_t point_t;
 			typedef typename Types::tangent_vector_t tangent_vector_t;
 			typedef typename Types::Manifold Manifold;
-			static void update(const Manifold & manifold, point_t & point, const tangent_vector_t & vec);
+			inline static void update(const Manifold & manifold, point_t & point, const tangent_vector_t & vec){
+				SM_THROW(std::runtime_error, NotImplementedMessage);
+			}
+		 private:
+			constexpr static const char * NotImplementedMessage = "Point updates / minimal differences not implemented for this manifold. Pleas specialize manifolds::internal::DiffManifoldPointUpdateTraits";
 		};
 	}
 
@@ -78,6 +84,8 @@ namespace manifolds {
 		typedef typename Types::point_t point_t;
 		typedef typename Types::tangent_vector_t tangent_vector_t;
 		typedef typename Types::dmatrix_t dmatrix_t;
+		typedef typename Types::dmatrix_transposed_t dmatrix_transposed_t;
+		typedef typename Types::dmatrix_point2point_t dmatrix_point2point_t;
 
 		inline DiffManifold(const TConfigurationDerived & configuration) : _configuration(configuration) {}
 
@@ -99,7 +107,7 @@ namespace manifolds {
 		TConfigurationDerived _configuration;
 		typedef DiffManifold<TConfigurationDerived, TConfigurationDerived> DERIVED;
 		inline DERIVED & getDerived() { return static_cast<DERIVED&>(*this); }
-		inline const DERIVED & getDerived() const { return *static_cast<const DERIVED*>(this); }
+		inline const DERIVED & getDerived() const { return static_cast<const DERIVED&>(*this); }
 	};
 }
 

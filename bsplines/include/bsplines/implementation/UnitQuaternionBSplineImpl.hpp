@@ -204,7 +204,6 @@ namespace bsplines{
 		return ret;
 	}
 
-	//inline Eigen::Matrix<double, spline_t::Dimension, spline_t::Dimension> getPhiVectorJacobian(const CalculationCache & cache, int i) const;
 	_TEMPLATE
 	template<int IMaximalDerivativeOrder>
 	inline Eigen::Matrix<double, _CLASS::spline_t::Dimension, _CLASS::spline_t::Dimension> _CLASS::Evaluator<IMaximalDerivativeOrder>::getPhiVectorJacobian(const CalculationCache & cache, int i) const {

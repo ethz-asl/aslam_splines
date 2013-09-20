@@ -16,15 +16,21 @@ inline typename _CLASS::point_t _CLASS::getIdentity() const
 _TEMPLATE
 inline typename _CLASS::point_t _CLASS::getDefaultPoint() const
 {
-	return getIdentity();
+	return this->getDerived().getIdentity();
 }
 
 _TEMPLATE
-inline typename _CLASS::point_t _CLASS::mult(const point_t & a, const point_t & b)
+inline typename _CLASS::point_t _CLASS::mult(const point_t & a, const point_t & b, bool oppositeMult) const
 {
 	point_t p(a.rows());
-	_CLASS::DERIVED::multInto(a, b, p);
+	this->getDerived().multIntoCO(a, b, p, oppositeMult);
 	return p;
+}
+
+_TEMPLATE
+inline void _CLASS::expInto(const point_t & point, const tangent_vector_t & vec, point_t & result) const
+{
+	this->getDerived().canonicalMultInto(point, this->getDerived().expAtId(vec), result);
 }
 
 _TEMPLATE
@@ -52,6 +58,12 @@ inline typename _CLASS::dmatrix_t _CLASS::dexpAtId(const tangent_vector_t & vec)
 }
 
 _TEMPLATE
+inline void _CLASS::dexpInto(const point_t & point, const tangent_vector_t & vec, dmatrix_t & result) const
+{
+	result = this->getDerived().dCanonicalMult(point) * this->getDerived().dexpAtId(vec);
+}
+
+_TEMPLATE
 inline typename _CLASS::dmatrix_t _CLASS::dexp(const point_t & point, const tangent_vector_t & vec) const
 {
 	dmatrix_t result((int)this->getPointSize(), (int)this->getDimension());
@@ -60,34 +72,51 @@ inline typename _CLASS::dmatrix_t _CLASS::dexp(const point_t & point, const tang
 }
 
 _TEMPLATE
-inline typename _CLASS::tangent_vector_t _CLASS::log(const point_t & from, const point_t & to) const
-{
+inline typename _CLASS::tangent_vector_t _CLASS::log(const point_t & from, const point_t & to) const {
 	tangent_vector_t v(this->getDimension());
 	this->getDerived().logInto(from, to, v);
 	return v;
 }
 
 _TEMPLATE
-inline typename _CLASS::tangent_vector_t _CLASS::logAtId(const point_t & to) const
-{
+inline typename _CLASS::tangent_vector_t _CLASS::logAtId(const point_t & to) const {
 	tangent_vector_t v(this->getDimension());
 	this->getDerived().logAtIdInto(to, v);
 	return v;
 }
 
 _TEMPLATE
-inline typename _CLASS::dlog_matrix_t _CLASS::dlogAtId(const point_t & to) const
-{
-	dlog_matrix_t result(this->getDimension(), this->getDimension());
+inline void _CLASS::logInto(const point_t & from, const point_t & to, tangent_vector_t & result) const {
+	auto & d = this->getDerived();
+	d.logAtIdInto(d.canonicalMult(d.invert(from), to), result);
+}
+
+_TEMPLATE
+inline typename _CLASS::dmatrix_transposed_t _CLASS::dlogAtId(const point_t & to) const {
+	dmatrix_transposed_t result(this->getDimension(), this->getPointSize());
 	this->getDerived().dlogAtIdInto(to, result);
 	return result;
 }
 
 _TEMPLATE
-inline typename _CLASS::dlog_matrix_t _CLASS::dlog(const point_t & from, const point_t & to) const
-{
-	dlog_matrix_t result(this->getDimension(), this->getDimension());
+void _CLASS::dlogInto(const point_t & from, const point_t & to, dmatrix_transposed_t & result) const {
+	auto & d = this->getDerived();
+	auto fromInv = d.invert(from);
+	result = d.dlogAtId(d.canonicalMult(fromInv, to)) * d.dCanonicalMult(fromInv);
+}
+
+_TEMPLATE
+inline typename _CLASS::dmatrix_transposed_t _CLASS::dlog(const point_t & from, const point_t & to) const {
+	dmatrix_transposed_t result(this->getDimension(), this->getPointSize());
 	this->getDerived().dlogInto(from, to, result);
+	return result;
+}
+
+_TEMPLATE
+inline typename _CLASS::point_t _CLASS::invert(const point_t & p) const
+{
+	point_t result(this->getPointSize());
+	this->getDerived().invertInto(p, result);
 	return result;
 }
 

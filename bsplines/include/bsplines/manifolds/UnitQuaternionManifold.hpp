@@ -34,7 +34,7 @@ namespace manifolds {
 		typedef typename Types::tangent_vector_t tangent_vector_t;
 		typedef typename Types::dmatrix_t dmatrix_t;
 		typedef typename Types::dmatrix_transposed_t dmatrix_transposed_t;
-		typedef typename Eigen::Matrix<scalar_t, configuration_t::Dimension::VALUE, configuration_t::PointSize::VALUE> dlog_matrix_t;
+		typedef typename Types::dmatrix_point2point_t dmatrix_point2point_t;
 
 		DiffManifold(configuration_t configuration) : parent_t(configuration) {};
 		DiffManifold() : parent_t(configuration_t()) {};
@@ -49,16 +49,14 @@ namespace manifolds {
 		static void randomizePoint(point_t & pt);
 
 		static void multInto(const point_t & a, const point_t & b, point_t & result);
+		inline dmatrix_point2point_t dMultL(const point_t & mult, bool oppositeMult) const;
+		inline void invertInto(const point_t & p, point_t & result) const;
 
-		static void expInto(const point_t & point, const tangent_vector_t & vec, point_t & result);
 		static void expAtIdInto(const tangent_vector_t & vec, point_t & result);
 		static point_t expAtId(const tangent_vector_t & vec);
 		void dexpAtIdInto(const tangent_vector_t & vec, dmatrix_t & result) const;
-		void dexpInto(const point_t & from, const tangent_vector_t & vec, dmatrix_t & result) const;
 
 		static void logAtIdInto(const point_t & to, tangent_vector_t & result);
-		static void logInto(const point_t & from, const point_t & to, tangent_vector_t & result);
-		void dlogInto(const point_t & point, const point_t & to, dmatrix_transposed_t & result) const;
 		void dlogAtIdInto(const point_t & to, dmatrix_transposed_t & result) const;
 	};
 }

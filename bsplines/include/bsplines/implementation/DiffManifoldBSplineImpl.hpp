@@ -941,22 +941,24 @@ namespace bsplines {
 	_TEMPLATE
 	template <int IMaximalDerivativeOrder>
 	inline typename _CLASS::point_t _CLASS::Evaluator<IMaximalDerivativeOrder>::evalGeneric() const {
+		static_assert(_CLASS::spline_t::manifold_t::getCanonicalConnection() == ::manifolds::CanonicalConnection::LEFT, "Only Lie groups with canonical left multiplications are supported here, yet.");
 		const SplineOrderVector & cumulativeBi = getLocalCumulativeBi();
 		SegmentMapConstIterator it = _firstRelevantControlVertexIt;
 		const point_t * lastControlVertex_t = & it->second.getControlVertex();
 		point_t p = *lastControlVertex_t;
 		tangent_vector_t vec;
 
+		auto & manifold = _spline.getManifold();
 		for (int i = 1, n = _spline.getSplineOrder(); i < n; i++){
 			it++;
 			const point_t * nextControlVertex_t = & it->second.getControlVertex();
-			_spline._manifold.logInto(*lastControlVertex_t, *nextControlVertex_t, vec);
+			manifold.logInto(*lastControlVertex_t, *nextControlVertex_t, vec);
 			lastControlVertex_t = nextControlVertex_t;
 			double d = cumulativeBi[i];
 			if(d == 0.0)
 				continue;
-			_spline._manifold.scaleVectorInPlace(vec, d);
-			_spline._manifold.expInto(p, vec, p);
+			manifold.scaleVectorInPlace(vec, d);
+			manifold.expInto(p, vec, p);
 		}
 		return p;
 	}

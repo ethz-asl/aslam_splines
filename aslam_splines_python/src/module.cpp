@@ -5,7 +5,6 @@
 void exportCameraGeometries();
 void exportTimeAndDuration();
 void exportBackend();
-void exportBackendDesignVariables();
 void exportFrontend();
 // The title of this library must match exactly
 BOOST_PYTHON_MODULE(libaslam_python)

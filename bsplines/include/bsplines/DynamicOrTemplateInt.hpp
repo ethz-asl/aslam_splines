@@ -92,7 +92,7 @@ namespace eigenTools {
 			if(size < 0) throw new std::runtime_error("dynamic size has to be non negative");
 		}
 		~ DynOrStaticSizedArray(){
-			delete p;
+			delete[] p;
 		}
 
 		inline T & operator [] (int i){

@@ -40,12 +40,12 @@ namespace bsplines {
 			return std::floor((t - from) / dt);
 		}
 
-		inline static duration_t getZero(){
+		constexpr inline static duration_t getZero(){
 			return duration_t(0.0);
 		}
 
-		inline static duration_t getOne(){
-			static_assert(!std::is_integral<duration_t>::value, "Please override (shadow) this (getOne) method for your simple type's time policy - preferably with a inline or even better constexpr function.");
+		constexpr inline static duration_t getOne(){
+			static_assert(!std::is_integral<duration_t>::value, "Please shadow this (getOne) method for your simple type's time policy - preferably with an inline or even better constexpr function.");
 			return duration_t(1.0);
 		}
 	};

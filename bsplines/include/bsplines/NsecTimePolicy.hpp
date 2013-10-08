@@ -14,7 +14,7 @@
 namespace bsplines {
 
 struct NsecTimePolicy : public SimpleTypeTimePolicy<sm::timing::NsecTime> {
-	inline static sm::timing::NsecTime getOne() {
+	constexpr inline static sm::timing::NsecTime getOne() {
 		return sm::timing::NsecTime(1E9);
 	}
 };

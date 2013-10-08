@@ -10,6 +10,9 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #set(ROS_BUILD_TYPE RelWithDebInfo)
 #set(ROS_BUILD_TYPE Debug)
 set(ROS_BUILD_TYPE Release)
+# just write one of the upper lines into LocalBuildType.cmake to have a ROS_BUILD_TYPE not under version control as it should be.
+include(LocalBuildType.cmake OPTIONAL)
+message("ROS_BUILD_TYPE=" ${ROS_BUILD_TYPE})
 rosbuild_init()
 
 set(CMAKE_CXX_FLAGS "-std=c++0x")

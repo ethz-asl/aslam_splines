@@ -86,6 +86,12 @@ namespace bsplines {
 			void evalAngularVelocityJacobian(angular_jacobian_t & jacobian) const;
 
 			void evalAngularAccelerationJacobian(angular_jacobian_t & jacobian) const;
+
+			template <int IDerivativeOrder>
+			tangent_vector_t evalAngularDerivative() const;
+
+			template <int IDerivativeOrder>
+			void evalAngularDerivativeJacobian(angular_jacobian_t & jacobian) const;
 		private:
 			struct CalculationCache;
 			inline int getNumVectors() const;
@@ -106,12 +112,6 @@ namespace bsplines {
 
 			dmatrix_t getRiDJacobian(const CalculationCache & cache, int derivativeOrder, int i) const;
 			dmatrix_t evalJacobianDRecursiveProductRest(const CalculationCache & cache, int derivativeOrder, int i, const int kombinatorialFactor, int j) const;
-
-			template <int IDerivativeOrder>
-			tangent_vector_t evalAngularDerivative() const;
-
-			template <int IDerivativeOrder>
-			void evalAngularDerivativeJacobian(angular_jacobian_t & jacobian) const;
 		};
 
 		template<int IMaximalDerivativeOrder>

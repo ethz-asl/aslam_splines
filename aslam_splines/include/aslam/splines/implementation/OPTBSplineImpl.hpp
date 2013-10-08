@@ -8,6 +8,7 @@
 #ifndef OPTBSPLINEIMPL_HPP_
 #define OPTBSPLINEIMPL_HPP_
 
+#include <type_traits>
 #include "aslam/backend/JacobianContainer.hpp"
 #include "boost/typeof/typeof.hpp"
 #include "bsplines/DiffManifoldBSpline.hpp"
@@ -50,9 +51,31 @@ const std::vector<typename _CLASS::dv_t *> & _CLASS::getDesignVariables() {
 	return _designVariables;
 }
 
+template <typename T>
+struct TimeExpEvaluator {
+	static T eval(T t) { return t; }
+};
+
+template <typename Scalar_, std::uintmax_t Divider>
+struct TimeExpEvaluator<FixedPointNumber<Scalar_, Divider> > {
+	static Scalar_ eval(FixedPointNumber<Scalar_, Divider> t) { return t.getNumerator(); }
+};
+
 _TEMPLATE
-template <int IMaxDerivativeOrder>
-_CLASS::ExpressionFactory<IMaxDerivativeOrder>::ExpressionFactory(const spline_t & spline, const time_t & t) : _evalPtr(new eval_t(spline, t)) {
+template<int IMaxDerivativeOrder>
+auto _CLASS::TimeExpressionFactoryData<IMaxDerivativeOrder>::getEvaluator() const -> const eval_t & {
+	time_t t = TimeExpEvaluator<typename TimeExpression::Scalar>::eval(_timeExp.evaluate());
+	SM_ASSERT_GE_LT(std::runtime_error, t, _lowerBound, _upperBound, "The evaluation time expression evaluated to a value outside its declared bounds");
+	if(evalPtr) {
+		if(evalPtr->getKnot() != t) {
+			delete evalPtr;
+			evalPtr = nullptr;
+		}
+	}
+	if(!evalPtr){
+		evalPtr = new eval_t(_spline, t);
+	}
+	return *evalPtr;
 }
 
 namespace internal {
@@ -92,33 +115,37 @@ namespace internal {
 }
 
 _TEMPLATE
-template <int IMaxDerivativeOrder>
-typename _CLASS::expression_t _CLASS::ExpressionFactory<IMaxDerivativeOrder>::getValueExpression(const int derivativeOrder) const {
+template <typename FactoryData_>
+typename _CLASS::expression_t _CLASS::ExpressionFactory<FactoryData_>::getValueExpression(const int derivativeOrder) const {
 	typedef aslam::backend::VectorExpressionNode<PointSize> node_t;
 
 	class ExpressionNode : public node_t {
 		typedef typename node_t::vector_t vector_t;
-		eval_ptr_t _evalPtr;
+		DataSharedPtr _dataPtr;
 		const int _derivativeOrder;
 	public:
-		ExpressionNode(const eval_ptr_t & evalPtr, int derivativeOrder) : _evalPtr(evalPtr), _derivativeOrder(derivativeOrder){}
+		ExpressionNode(const DataSharedPtr & dataPtr, int derivativeOrder) : _dataPtr(dataPtr), _derivativeOrder(derivativeOrder){}
 		virtual ~ExpressionNode(){}
 	protected:
 		inline void evaluateJacobiansImplementation(JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule) const {
-			const int dimension=_evalPtr->getSpline().getDimension(), pointSize = _evalPtr->getSpline().getPointSize(), splineOrder = _evalPtr->getSpline().getSplineOrder();
+			const int dimension=_dataPtr->getSpline().getDimension(), pointSize = _dataPtr->getSpline().getPointSize(), splineOrder = _dataPtr->getSpline().getSplineOrder();
 			typename _CLASS::full_jacobian_t J(pointSize, dimension * splineOrder);
-			_evalPtr->evalJacobian(_derivativeOrder, J);
-
+			auto & eval = _dataPtr->getEvaluator();
+			eval.evalJacobian(_derivativeOrder, J);
 			int col = 0;
-			for(SegmentConstIterator i = _evalPtr->begin(), end = _evalPtr->end(); i != end; ++i)
+			for(SegmentConstIterator i = eval.begin(), end = eval.end(); i != end; ++i)
 			{
 				internal::AddJac<typename _CLASS::full_jacobian_t, PointSize, Dimension>::addJac(J, col, &i->getDesignVariable(), outJacobians, applyChainRule, pointSize, dimension);
 				col+=dimension;
 			}
+			if(_dataPtr->hasTimeExpression()){
+				auto evalJac = eval.evalD(_derivativeOrder + 1);
+				_dataPtr->getTimeExpression().evaluateJacobians(outJacobians, applyChainRule ? (*applyChainRule * evalJac) : evalJac);
+			}
 		}
 
 		virtual vector_t evaluateImplementation() const {
-			return _evalPtr->evalD(_derivativeOrder);
+			return _dataPtr->getEvaluator().evalD(_derivativeOrder);
 		}
 
 		virtual void evaluateJacobiansImplementation(JacobianContainer & outJacobians) const {
@@ -130,14 +157,10 @@ typename _CLASS::expression_t _CLASS::ExpressionFactory<IMaxDerivativeOrder>::ge
 		}
 
 		virtual void getDesignVariablesImplementation(DesignVariable::set_t & designVariables) const {
-			for(SegmentConstIterator i = _evalPtr->begin(), end = _evalPtr->end(); i != end; ++i)
-			{
-		//TODO discuss why is this method declared const in the parent, while the set is not of const *DesignVariables? - requires the following const_cast?
-				designVariables.insert(const_cast<DesignVariable *>(&i->getDesignVariable()));
-			}
+			_dataPtr->getDesignVariables(designVariables);
 		}
 	};
-	return expression_t(boost::shared_ptr<node_t>(static_cast<node_t *> (new ExpressionNode(_evalPtr, derivativeOrder))));
+	return expression_t(boost::shared_ptr<node_t>(static_cast<node_t *> (new ExpressionNode(this->getDataPtr(), derivativeOrder))));
 }
 
 _TEMPLATE

@@ -298,11 +298,25 @@ namespace bsplines{
 	template<int IMaximalDerivativeOrder>
 	template <int IDerivativeOrder>
 	typename _CLASS::tangent_vector_t _CLASS::Evaluator<IMaximalDerivativeOrder>::evalAngularDerivative() const{
+		static_assert(IDerivativeOrder <= 3 && IDerivativeOrder >= 1, "Only angular derivatives of order 1, 2, 3 are supported.");
+
 		point_t d = evalD(IDerivativeOrder);
 		Eigen::Vector3d deps = qeps(d);
 		point_t v = this->eval();
 		Eigen::Vector3d veps = qeps(v);
-		return 2 * (qeta(v) * deps - qeta(d) * veps - veps.cross(deps));
+		auto tmp = (qeta(v) * deps - qeta(d) * veps - veps.cross(deps));
+
+		switch(IDerivativeOrder){
+			case 1:
+			case 2:
+				return 2 * tmp;
+			case 3:
+			{
+				point_t d1 = evalD(1);
+				point_t d2 = evalD(2);
+				return 2 * (tmp + qeta(d1) * qeps(d2) - qeta(d2) * qeps(d1) - qeps(d1).cross(qeps(d2)));
+			}
+		}
 	}
 
 	_TEMPLATE

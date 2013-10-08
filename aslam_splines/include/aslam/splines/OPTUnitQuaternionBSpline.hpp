@@ -39,19 +39,27 @@ public:
 
 	DiffManifoldBSpline(const CONF & config = CONF()) : parent_t(config){}
 
-	template <int IMaxDerivativeOrder>
-	class ExpressionFactory : public parent_t::template ExpressionFactory<IMaxDerivativeOrder> {
+	template <typename FactoryData_>
+	class ExpressionFactory : public parent_t::template ExpressionFactory<FactoryData_> {
 	public:
-		typedef typename parent_t::template ExpressionFactory<IMaxDerivativeOrder> ParentExpressionFactory;
-		typedef typename ParentExpressionFactory::eval_ptr_t  eval_ptr_t;
-		ExpressionFactory(const spline_t & spline, const time_t & t) : ParentExpressionFactory(spline, t){}
+		typedef typename parent_t::template ExpressionFactory<FactoryData_> ParentExpressionFactory;
+		typedef typename ParentExpressionFactory::DataSharedPtr DataSharedPtr;
+		typedef typename FactoryData_::eval_t eval_t;
 
 		/// \brief get an expression
 		angular_derivative_expression_t getAngularVelocityExpression() const;
 		angular_derivative_expression_t getAngularAccelerationExpression() const;
+	protected:
+		inline ExpressionFactory(const FactoryData_ & factoryBase) : ParentExpressionFactory(factoryBase) {}
+		friend class DiffManifoldBSpline;
 	};
 
-	template <int IMaxDerivativeOrder> inline ExpressionFactory<IMaxDerivativeOrder> getExpressionFactoryAt(const time_t & t) const { return ExpressionFactory<IMaxDerivativeOrder>(*this, t); }
+	template <int IMaxDerivativeOrder> inline ExpressionFactory<typename parent_t::template ConstTimeFactoryData<IMaxDerivativeOrder> > getExpressionFactoryAt(const time_t & t) const {
+		return ExpressionFactory<typename parent_t::template ConstTimeFactoryData<IMaxDerivativeOrder> >(typename parent_t::template ConstTimeFactoryData<IMaxDerivativeOrder>(*this, t));
+	}
+	template <int IMaxDerivativeOrder> inline ExpressionFactory<typename parent_t::template TimeExpressionFactoryData<IMaxDerivativeOrder> > getExpressionFactoryAt(typename parent_t::TimeExpression & t, time_t lowerBound, time_t upperBound) const {
+		return ExpressionFactory<typename parent_t::template TimeExpressionFactoryData<IMaxDerivativeOrder> >(typename parent_t::template TimeExpressionFactoryData<IMaxDerivativeOrder>(*this, t, lowerBound, upperBound));
+	}
 };
 
 } // namespace bsplines

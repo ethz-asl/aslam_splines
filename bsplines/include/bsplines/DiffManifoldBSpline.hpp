@@ -280,7 +280,7 @@ namespace bsplines {
 		inline time_t getMinTime() const;
 		inline time_t getMaxTime() const;
 
-		inline std::pair<time_t, time_t>getTimeInterval() const { return std::pair<time_t, time_t> (getMinTime(), getMaxTime()); };
+		inline std::pair<time_t, time_t> getTimeInterval() const { return std::pair<time_t, time_t> (getMinTime(), getMaxTime()); };
 
 		inline SegmentIterator firstRelevantSegment();
 		inline SegmentConstIterator firstRelevantSegment() const;
@@ -332,7 +332,8 @@ namespace bsplines {
 
 			SegmentConstIterator end() const;
 
-			inline time_t getKnot() const;
+			inline time_t getKnot() const { return _t; }
+			inline time_t getTime() const { return _t; }
 
 			inline point_t eval() const;
 

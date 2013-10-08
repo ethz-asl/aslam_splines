@@ -916,14 +916,6 @@ namespace bsplines {
 		return getLocalBiT<true>(derivativeOrder);
 	}
 
-
-	_TEMPLATE
-	template <int IMaximalDerivativeOrder>
-	inline typename _CLASS::time_t _CLASS::Evaluator<IMaximalDerivativeOrder>::getKnot() const {
-		return _ti.getKnot();
-	}
-
-
 	_TEMPLATE
 	template <int IMaximalDerivativeOrder>
 	inline typename _CLASS::point_t _CLASS::Evaluator<IMaximalDerivativeOrder>::eval() const {

@@ -19,32 +19,37 @@ namespace bsplines {
 #define _CLASS DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy>, TModifiedDerivedConf>, aslam::splines::DesignVariableSegmentBSplineConf<TModifiedDerivedConf> >
 
 _TEMPLATE
-template <int IMaxDerivativeOrder>
-typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<IMaxDerivativeOrder>::getAngularVelocityExpression() const {
+template <typename FactoryData_>
+typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<FactoryData_>::getAngularVelocityExpression() const {
 	typedef aslam::backend::VectorExpressionNode<3> node_t;
 
 	class ExpressionNode : public node_t {
 	public:
-		ExpressionNode(const eval_ptr_t & evalPtr) : _evalPtr(evalPtr){}
+		ExpressionNode(const DataSharedPtr & dataPtr) : _dataPtr(dataPtr){}
 	private:
 		typedef typename node_t::vector_t vector_t;
-		const eval_ptr_t _evalPtr;
+		const DataSharedPtr _dataPtr;
 		inline void evaluateJacobiansImplementation(JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule) const {
-			const int dimension=_evalPtr->getSpline().getDimension(), pointSize = dimension, splineOrder = _evalPtr->getSpline().getSplineOrder();
+			const int dimension=_dataPtr->getSpline().getDimension(), pointSize = dimension, splineOrder = _dataPtr->getSpline().getSplineOrder();
 			typename _CLASS::angular_jacobian_t J(pointSize, dimension * splineOrder);
-			_evalPtr->evalAngularVelocityJacobian(J);
+			auto & eval = _dataPtr->getEvaluator();
+			eval.evalAngularVelocityJacobian(J);
 
 			int col = 0;
-			for(SegmentConstIterator i = _evalPtr->begin(), end = _evalPtr->end(); i != end; ++i)
+			for(SegmentConstIterator i = eval.begin(), end = eval.end(); i != end; ++i)
 			{
 				internal::AddJac<typename _CLASS::angular_jacobian_t, Dimension, Dimension>::addJac(J, col, &i->getDesignVariable(), outJacobians, applyChainRule, pointSize, dimension);
 				col+=dimension;
+			}
+			if(_dataPtr->hasTimeExpression()){
+				auto evalJac = eval.evalAngularAcceleration();
+				_dataPtr->getTimeExpression().evaluateJacobians(outJacobians, applyChainRule ? (*applyChainRule * evalJac) : evalJac);
 			}
 		}
 
 	protected:
 		virtual vector_t evaluateImplementation() const {
-			return _evalPtr->evalAngularVelocity();
+			return _dataPtr->getEvaluator().evalAngularVelocity();
 		}
 
 		virtual void evaluateJacobiansImplementation(JacobianContainer & outJacobians) const {
@@ -56,44 +61,46 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<IMaxD
 		}
 
 		virtual void getDesignVariablesImplementation(DesignVariable::set_t & designVariables) const {
-			for(SegmentConstIterator i = _evalPtr->begin(), end = _evalPtr->end(); i != end; ++i)
-			{
-				designVariables.insert(const_cast<DesignVariable *>(&i->getDesignVariable()));
-			}
+			_dataPtr->getDesignVariables(designVariables);
 		}
 	};
-	return angular_derivative_expression_t(boost::shared_ptr<node_t>(static_cast<node_t *> (new ExpressionNode(this->_evalPtr))));
+	return angular_derivative_expression_t(boost::shared_ptr<node_t>(static_cast<node_t *> (new ExpressionNode(this->getDataPtr()))));
 }
 
 _TEMPLATE
-template <int IMaxDerivativeOrder>
-typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<IMaxDerivativeOrder>::getAngularAccelerationExpression() const {
+template <typename FactoryData_>
+typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<FactoryData_>::getAngularAccelerationExpression() const {
 	typedef aslam::backend::VectorExpressionNode<3> node_t;
 
 	class ExpressionNode : public node_t {
 	private:
 		typedef typename node_t::vector_t vector_t;
-		eval_ptr_t _evalPtr;
+		_CLASS::ExpressionFactory<FactoryData_>::DataSharedPtr _dataPtr;
 	public:
-		ExpressionNode(const eval_ptr_t & evalPtr) : _evalPtr(evalPtr){}
+		ExpressionNode(const DataSharedPtr & dataPtr) : _dataPtr(dataPtr){}
 		virtual ~ExpressionNode(){};
 	private:
 		inline void evaluateJacobiansImplementation(JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule) const {
-			const int dimension=_evalPtr->getSpline().getDimension(), pointSize = dimension, splineOrder = _evalPtr->getSpline().getSplineOrder();
+			const int dimension=_dataPtr->getSpline().getDimension(), pointSize = dimension, splineOrder = _dataPtr->getSpline().getSplineOrder();
 			typename _CLASS::angular_jacobian_t J(pointSize, dimension * splineOrder);
-			_evalPtr->evalAngularAccelerationJacobian(J);
+			auto & eval = _dataPtr->getEvaluator();
 
+			eval.evalAngularAccelerationJacobian(J);
 			int col = 0;
-			for(SegmentConstIterator i = _evalPtr->begin(), end = _evalPtr->end(); i != end; ++i)
+			for(SegmentConstIterator i = eval.begin(), end = eval.end(); i != end; ++i)
 			{
 				internal::AddJac<typename _CLASS::angular_jacobian_t, Dimension, Dimension>::addJac(J, col, &i->getDesignVariable(), outJacobians, applyChainRule, pointSize, dimension);
 				col+=dimension;
+			}
+			if(_dataPtr->hasTimeExpression()){
+				auto evalJac = eval.template evalAngularDerivative<3>();
+				_dataPtr->getTimeExpression().evaluateJacobians(outJacobians, applyChainRule ? (*applyChainRule * evalJac) : evalJac);
 			}
 		}
 
 	protected:
 		virtual vector_t evaluateImplementation() const {
-			return _evalPtr->evalAngularAcceleration();
+			return _dataPtr->getEvaluator().evalAngularAcceleration();
 		}
 
 		virtual void evaluateJacobiansImplementation(JacobianContainer & outJacobians) const {
@@ -105,13 +112,10 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<IMaxD
 		}
 
 		virtual void getDesignVariablesImplementation(DesignVariable::set_t & designVariables) const {
-			for(SegmentConstIterator i = _evalPtr->begin(), end = _evalPtr->end(); i != end; ++i)
-			{
-				designVariables.insert(const_cast<DesignVariable *>(&i->getDesignVariable()));
-			}
+			_dataPtr->getDesignVariables(designVariables);
 		}
 	};
-	return angular_derivative_expression_t(boost::shared_ptr<node_t>(static_cast<node_t *> (new ExpressionNode(this->_evalPtr))));
+	return angular_derivative_expression_t(boost::shared_ptr<node_t>(static_cast<node_t *> (new ExpressionNode(this->getDataPtr()))));
 }
 
 #undef _CLASS

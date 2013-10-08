@@ -15,6 +15,9 @@
 #include <aslam/backend/TransformationExpression.hpp>
 #include <aslam/backend/RotationExpression.hpp>
 #include <aslam/backend/EuclideanExpression.hpp>
+#include <aslam/backend/FixedPointNumber.hpp>
+#include <aslam/backend/GenericScalarExpression.hpp>
+#include <aslam/backend/DesignVariable.hpp>
 #include <aslam/backend/VectorExpression.hpp>
 #include <aslam/backend/VectorExpressionNode.hpp>
 
@@ -97,13 +100,21 @@ namespace internal {
 		/// Computes the minimal distance in tangent space between the current value of the DV and xHat and the jacobian
 		virtual void minimalDifferenceAndJacobianImplementation(const Eigen::MatrixXd& xHat, Eigen::VectorXd& outDifference, Eigen::MatrixXd& outJacobian) const;
 	};
+
+	template <typename TimePolicy, bool IsInteger = std::numeric_limits<typename TimePolicy::time_t>::is_integer>
+	struct TimeExpressionTraits {
+		typedef aslam::backend::GenericScalarExpression<typename TimePolicy::time_t> type;
+	};
+
+	template <typename TimePolicy>
+	struct TimeExpressionTraits<TimePolicy, true> {
+		typedef aslam::backend::GenericScalarExpression<aslam::backend::FixedPointNumber<typename TimePolicy::time_t, TimePolicy::getOne()>> type;
+	};
 }
 
 template <typename TModifiedConf, typename TModifiedDerivedConf>
 class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModifiedConf, TModifiedDerivedConf>, aslam::splines::DesignVariableSegmentBSplineConf<TModifiedDerivedConf> > : public bsplines::DiffManifoldBSpline<TModifiedDerivedConf, aslam::splines::DesignVariableSegmentBSplineConf<TModifiedDerivedConf> > {
-
-protected:
-public:
+ public:
 	typedef aslam::splines::DesignVariableSegmentBSplineConf<TModifiedDerivedConf> configuration_t;
 	typedef bsplines::DiffManifoldBSpline<TModifiedDerivedConf, configuration_t> parent_t;
 	typedef typename configuration_t::BSpline spline_t;
@@ -112,6 +123,7 @@ public:
 	typedef typename parent_t::point_t point_t;
 	typedef typename parent_t::SegmentIterator SegmentIterator;
 	typedef typename parent_t::SegmentConstIterator SegmentConstIterator;
+	typedef typename internal::TimeExpressionTraits<TimePolicy>::type TimeExpression;
 
 	typedef spline_t TYPE;
 
@@ -138,25 +150,68 @@ public:
 	time_t appendSegments(KnotGenerator<time_t> & knotGenerator, int numSegments, const point_t * value);
 	void removeSegment();
 
-	template <int IMaxDerivativeOrder>
+	template <typename FactoryData_>
 	class ExpressionFactory {
-public:
-	typedef typename spline_t::template Evaluator<IMaxDerivativeOrder> eval_t;
-	typedef boost::shared_ptr<const eval_t> eval_ptr_t;
-	protected:
-		eval_ptr_t _evalPtr;
-
-	public:
-		ExpressionFactory(const spline_t & spline, const time_t & t);
-
-		const eval_t & getEvaluator() const { return *_evalPtr; };
-
+	 public:
+		typedef boost::shared_ptr<FactoryData_> DataSharedPtr;
+		inline const typename FactoryData_::eval_t & getEvaluator() const { return _dataPtr->getEvaluator(); };
 		/// \brief get an value expression
 		expression_t getValueExpression(int derivativeOrder = 0) const;
+	 protected:
+		inline const DataSharedPtr & getDataPtr() const { return _dataPtr; }
+		inline ExpressionFactory(const FactoryData_ & factoryData) : _dataPtr(new FactoryData_(factoryData)) {}
+		friend class DiffManifoldBSpline;
+	 private:
+		DataSharedPtr _dataPtr;
 	};
 
-	template <int IMaxDerivativeOrder> inline ExpressionFactory<IMaxDerivativeOrder> getExpressionFactoryAt(const time_t & t) const { return ExpressionFactory<IMaxDerivativeOrder>(*this, t); }
-protected:
+ protected:
+	template<int IMaxDerivativeOrder>
+	class ConstTimeFactoryData {
+	 public:
+		typedef typename spline_t::template Evaluator<IMaxDerivativeOrder> eval_t;
+		inline const eval_t & getEvaluator() const { return _eval; };
+		inline const spline_t & getSpline() const { return _eval.getSpline(); };
+		inline ConstTimeFactoryData(const spline_t & spline, time_t t) : _eval(spline, t) {}
+		inline void getDesignVariables(aslam::backend::DesignVariable::set_t & designVariables) const { for(auto & i : _eval) { designVariables.insert(const_cast<aslam::backend::DesignVariable *>(&i.getDesignVariable())); }}
+		inline bool hasTimeExpression(){ return false; }
+		inline const TimeExpression & getTimeExpression(){ throw std::runtime_error("not implemented"); }
+	 protected:
+		inline ConstTimeFactoryData() = default;
+	 private:
+		eval_t _eval;
+	};
+
+	template<int IMaxDerivativeOrder>
+	class TimeExpressionFactoryData {
+	 public:
+		typedef typename spline_t::template Evaluator<IMaxDerivativeOrder != Eigen::Dynamic ? IMaxDerivativeOrder + 1 : Eigen::Dynamic> eval_t;
+		inline TimeExpressionFactoryData(const spline_t & spline, const TimeExpression & timeExp, time_t lowerBound, time_t upperBound) : _timeExp(timeExp), _lowerBound(lowerBound), _upperBound(upperBound), evalPtr(nullptr), _spline(spline) { SM_ASSERT_LT(std::runtime_error, lowerBound, upperBound, "upper bound must be greater than lower bound."); }
+		~TimeExpressionFactoryData(){ delete evalPtr; }
+		inline const spline_t & getSpline() const { return _spline; };
+		inline void getDesignVariables(aslam::backend::DesignVariable::set_t & designVariables) const { for(auto & i: *this) { designVariables.insert(const_cast<aslam::backend::DesignVariable *>(&i.getDesignVariable())); }; _timeExp.getDesignVariables(designVariables); }
+		const eval_t & getEvaluator() const;
+		inline bool hasTimeExpression(){ return true; }
+		inline const TimeExpression & getTimeExpression(){ return _timeExp; }
+	 private:
+		TimeExpression _timeExp;
+		time_t _lowerBound;
+		time_t _upperBound;
+		mutable eval_t * evalPtr;
+		inline SegmentConstIterator begin() const { return _spline.getFirstRelevantSegmentByLast(_spline.getSegmentIterator(std::max(_spline.getMinTime(), _lowerBound))); }
+		inline SegmentConstIterator end() const { auto end = _spline.getSegmentIterator(std::min(_spline.getMaxTime(),_upperBound)); if(end != _spline.end()) end++; return end; }
+		const spline_t & _spline;
+	};
+
+ public:
+	template <int IMaxDerivativeOrder> inline ExpressionFactory<ConstTimeFactoryData<IMaxDerivativeOrder> > getExpressionFactoryAt(const time_t & t) const {
+		return ExpressionFactory<ConstTimeFactoryData<IMaxDerivativeOrder> >(ConstTimeFactoryData<IMaxDerivativeOrder>(*this, t));
+	}
+	template <int IMaxDerivativeOrder> inline ExpressionFactory<TimeExpressionFactoryData<IMaxDerivativeOrder> > getExpressionFactoryAt(const TimeExpression & t, time_t lowerBound, time_t upperBound) const {
+		return ExpressionFactory<TimeExpressionFactoryData<IMaxDerivativeOrder> >(TimeExpressionFactoryData<IMaxDerivativeOrder>(*this, t, lowerBound, upperBound));
+	}
+
+ private:
 	/// \brief the vector of design variables.
 	std::vector< dv_t * > _designVariables;
 };

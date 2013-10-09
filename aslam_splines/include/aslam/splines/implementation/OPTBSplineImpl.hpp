@@ -78,6 +78,14 @@ auto _CLASS::TimeExpressionFactoryData<IMaxDerivativeOrder>::getEvaluator() cons
 	return *evalPtr;
 }
 
+
+_TEMPLATE
+template<int IMaxDerivativeOrder>
+void _CLASS::TimeExpressionFactoryData<IMaxDerivativeOrder>::getDesignVariables(aslam::backend::DesignVariable::set_t & designVariables) const {
+	for(auto & i: *this) { designVariables.insert(const_cast<aslam::backend::DesignVariable *>(&i.getDesignVariable())); }; _timeExp.getDesignVariables(designVariables);
+}
+
+
 namespace internal {
 	template <typename TDiffManifoldBSplineConfiguration, typename TDiffManifoldBSplineConfigurationDerived>
 	inline void SegmentData< ::aslam::splines::DesignVariableSegmentBSplineConf<TDiffManifoldBSplineConfiguration, TDiffManifoldBSplineConfigurationDerived> >::minimalDifferenceImplementation(const Eigen::MatrixXd& xHat, Eigen::VectorXd& outDifference) const {

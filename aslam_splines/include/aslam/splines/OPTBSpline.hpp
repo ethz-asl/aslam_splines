@@ -189,17 +189,17 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 		inline TimeExpressionFactoryData(const spline_t & spline, const TimeExpression & timeExp, time_t lowerBound, time_t upperBound) : _timeExp(timeExp), _lowerBound(lowerBound), _upperBound(upperBound), evalPtr(nullptr), _spline(spline) { SM_ASSERT_LT(std::runtime_error, lowerBound, upperBound, "upper bound must be greater than lower bound."); }
 		~TimeExpressionFactoryData(){ delete evalPtr; }
 		inline const spline_t & getSpline() const { return _spline; };
-		inline void getDesignVariables(aslam::backend::DesignVariable::set_t & designVariables) const { for(auto & i: *this) { designVariables.insert(const_cast<aslam::backend::DesignVariable *>(&i.getDesignVariable())); }; _timeExp.getDesignVariables(designVariables); }
+		inline void getDesignVariables(aslam::backend::DesignVariable::set_t & designVariables) const;
 		const eval_t & getEvaluator() const;
 		inline bool hasTimeExpression(){ return true; }
 		inline const TimeExpression & getTimeExpression(){ return _timeExp; }
+		inline SegmentConstIterator begin() const { return _spline.getFirstRelevantSegmentByLast(_spline.getSegmentIterator(std::max(_spline.getMinTime(), _lowerBound))); }
+		inline SegmentConstIterator end() const { auto end = _spline.getSegmentIterator(std::min(_spline.getMaxTime(),_upperBound)); if(end != _spline.end()) end++; return end; }
 	 private:
 		TimeExpression _timeExp;
 		time_t _lowerBound;
 		time_t _upperBound;
 		mutable eval_t * evalPtr;
-		inline SegmentConstIterator begin() const { return _spline.getFirstRelevantSegmentByLast(_spline.getSegmentIterator(std::max(_spline.getMinTime(), _lowerBound))); }
-		inline SegmentConstIterator end() const { auto end = _spline.getSegmentIterator(std::min(_spline.getMaxTime(),_upperBound)); if(end != _spline.end()) end++; return end; }
 		const spline_t & _spline;
 	};
 

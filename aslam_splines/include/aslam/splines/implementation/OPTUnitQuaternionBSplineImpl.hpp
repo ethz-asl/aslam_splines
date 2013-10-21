@@ -43,7 +43,7 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<Facto
 			}
 			if(_dataPtr->hasTimeExpression()){
 				auto evalJac = eval.evalAngularAcceleration();
-				_dataPtr->getTimeExpression().evaluateJacobians(outJacobians, applyChainRule ? (*applyChainRule * evalJac) : evalJac);
+				_dataPtr->getTimeExpression().evaluateJacobians(outJacobians, applyChainRule ? Eigen::MatrixXd(*applyChainRule * evalJac) : Eigen::MatrixXd(evalJac));
 			}
 		}
 
@@ -94,7 +94,7 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<Facto
 			}
 			if(_dataPtr->hasTimeExpression()){
 				auto evalJac = eval.template evalAngularDerivative<3>();
-				_dataPtr->getTimeExpression().evaluateJacobians(outJacobians, applyChainRule ? (*applyChainRule * evalJac) : evalJac);
+				_dataPtr->getTimeExpression().evaluateJacobians(outJacobians, applyChainRule ? Eigen::MatrixXd(*applyChainRule * evalJac) : Eigen::MatrixXd(evalJac));
 			}
 		}
 

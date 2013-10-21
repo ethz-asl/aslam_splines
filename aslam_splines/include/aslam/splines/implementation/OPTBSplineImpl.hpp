@@ -148,7 +148,7 @@ typename _CLASS::expression_t _CLASS::ExpressionFactory<FactoryData_>::getValueE
 			}
 			if(_dataPtr->hasTimeExpression()){
 				auto evalJac = eval.evalD(_derivativeOrder + 1);
-				_dataPtr->getTimeExpression().evaluateJacobians(outJacobians, applyChainRule ? (*applyChainRule * evalJac) : evalJac);
+				_dataPtr->getTimeExpression().evaluateJacobians(outJacobians, applyChainRule ? Eigen::MatrixXd(*applyChainRule * evalJac) : Eigen::MatrixXd(evalJac));
 			}
 		}
 

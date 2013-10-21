@@ -57,7 +57,7 @@ public:
 	template <int IMaxDerivativeOrder> inline ExpressionFactory<typename parent_t::template ConstTimeFactoryData<IMaxDerivativeOrder> > getExpressionFactoryAt(const time_t & t) const {
 		return ExpressionFactory<typename parent_t::template ConstTimeFactoryData<IMaxDerivativeOrder> >(typename parent_t::template ConstTimeFactoryData<IMaxDerivativeOrder>(*this, t));
 	}
-	template <int IMaxDerivativeOrder> inline ExpressionFactory<typename parent_t::template TimeExpressionFactoryData<IMaxDerivativeOrder> > getExpressionFactoryAt(typename parent_t::TimeExpression & t, time_t lowerBound, time_t upperBound) const {
+	template <int IMaxDerivativeOrder> inline ExpressionFactory<typename parent_t::template TimeExpressionFactoryData<IMaxDerivativeOrder> > getExpressionFactoryAt(const typename parent_t::TimeExpression & t, time_t lowerBound, time_t upperBound) const {
 		return ExpressionFactory<typename parent_t::template TimeExpressionFactoryData<IMaxDerivativeOrder> >(typename parent_t::template TimeExpressionFactoryData<IMaxDerivativeOrder>(*this, t, lowerBound, upperBound));
 	}
 };

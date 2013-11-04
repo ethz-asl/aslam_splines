@@ -141,7 +141,7 @@ struct BSplineImporter {
 	
 	static Eigen::MatrixXd getControlVertices(TSpline * bsp)
 	{
-		Eigen::MatrixXd vertices(bsp->getNumControlVertices(), bsp->getDimension());
+		Eigen::MatrixXd vertices(bsp->getNumControlVertices(), (int)bsp->getDimension());
 
 		typename TSpline::SegmentIterator it = bsp->getAbsoluteBegin();
 		for(int c = 0, end = vertices.rows(); c != end; c++, it++){

@@ -19,6 +19,7 @@
   <depend package="aslam_frames"/>
   <depend package="numpy_eigen"/>
   <depend package="aslam_backend"/>
+  <depend package="aslam_backend_python"/>
   <depend package="sm_python"/>
   <depend package="aslam_backend_expressions"/>
 

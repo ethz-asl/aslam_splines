@@ -332,7 +332,7 @@ namespace bsplines {
 
 			SegmentConstIterator end() const;
 
-			inline time_t getKnot() const { return _t; }
+			inline time_t getKnot() const { return _ti.getKnot(); }
 			inline time_t getTime() const { return _t; }
 
 			inline point_t eval() const;

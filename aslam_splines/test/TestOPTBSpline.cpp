@@ -63,7 +63,8 @@ template <typename TSplineMap, int ISplineOrder, int IDim>
 struct OPTSplineSpecializationTester
 {
 	typedef typename OPTBSpline<typename TSplineMap::CONF>::BSpline TestBSpline;
-	typedef GenericScalar<typename TestBSpline::TimeExpression::Scalar> TimeDesignVariable;
+	typedef typename TestBSpline::TimeExpression TimeExpression;
+	typedef GenericScalar<typename TimeExpression::Scalar> TimeDesignVariable;
 	static void test(TestBSpline & spline, double t, typename TestBSpline::TimeExpression timeExpression){}
 };
 
@@ -82,6 +83,7 @@ struct OPTSplineTester{
 	typedef typename TestBSpline::point_t point_t;
 	typedef typename TestBSpline::tangent_vector_t tangent_vector_t;
 	typedef typename TestBSpline::scalar_t scalar_t;
+	typedef typename TestBSpline::TimeExpression TimeExpression;
 	typedef GenericScalar<typename TestBSpline::TimeExpression::Scalar> TimeDesignVariable;
 
 	constexpr static scalar_t eps = std::numeric_limits<scalar_t>::epsilon();

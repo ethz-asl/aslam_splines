@@ -11,6 +11,85 @@
 #include <cmath>
 
 namespace numeric_integrator {
+	template <typename ValueFactor, typename IntegrationScalar>
+	class Integrator {
+	 public:
+		virtual ~Integrator() {}
+		virtual bool isAtEnd() const = 0;
+		virtual void next() = 0;
+		virtual int getNIntegrationPoints() const = 0;
+		virtual IntegrationScalar getIntegrationScalar() const = 0;
+		virtual ValueFactor getValueFactor() const = 0;
+		virtual ValueFactor getCommonFactor() const = 0;
+	};
+
+	template <typename ValueFactor, typename IntegrationScalar>
+	class AbstractIntegrator : public Integrator<ValueFactor, IntegrationScalar> {
+	 public:
+		AbstractIntegrator(IntegrationScalar a, IntegrationScalar b, int nIntegrationPoints) : a(a), b(b), maxIndex(nIntegrationPoints - 1) {}
+		virtual ~AbstractIntegrator() {}
+		int getNIntegrationPoints() const { return maxIndex + 1; }
+	 protected:
+		IntegrationScalar a, b;
+		int maxIndex;
+	};
+
+	template <typename DERIVED, template<typename, typename> class Integrator>
+	class IntegrationAlgorithm {
+	 private:
+		const DERIVED & derived() const {
+			return static_cast<const DERIVED&>(*this);
+		}
+	 public:
+		template <typename ValueFactor, typename IntegrationScalar>
+		Integrator<ValueFactor, IntegrationScalar> getIntegrator(IntegrationScalar a, IntegrationScalar b, int nIntegrationPoints) const
+		{
+			return Integrator<ValueFactor, IntegrationScalar>(a, b, nIntegrationPoints);
+		}
+	};
+
+	namespace internal {
+		template <typename ValueFactor, typename IntegrationScalar>
+		class FixStepSizeIntegrator : public AbstractIntegrator<ValueFactor, IntegrationScalar> {
+		 public:
+			FixStepSizeIntegrator(IntegrationScalar a, IntegrationScalar b, int nIntegrationPoints): AbstractIntegrator<ValueFactor, IntegrationScalar>(a, b, nIntegrationPoints), stepSize((b-a) / this->maxIndex), iIntegrationPoint(0) {}
+			inline bool isAtEnd() const { return iIntegrationPoint > this->maxIndex; }
+			inline void next() { ++iIntegrationPoint;}
+			inline IntegrationScalar getIntegrationScalar() const { return (iIntegrationPoint == this->maxIndex) ? this->b : this->a + stepSize * iIntegrationPoint; }
+			inline bool atBounds() const { return this->iIntegrationPoint == 0 || this->iIntegrationPoint == this->maxIndex; }
+		 protected:
+			IntegrationScalar stepSize;
+			int iIntegrationPoint;
+		};
+
+		template <typename ValueFactor, typename IntegrationScalar>
+		class SimpsonRuleIntegrator : public FixStepSizeIntegrator<ValueFactor, IntegrationScalar> {
+		 public:
+			SimpsonRuleIntegrator(IntegrationScalar a, IntegrationScalar b, int nIntegrationPoints): FixStepSizeIntegrator<ValueFactor, IntegrationScalar>(a, b, (nIntegrationPoints + 1 - nIntegrationPoints % 2)) {}
+			inline ValueFactor getValueFactor() const { return this->atBounds() ? 0.5 : (this->iIntegrationPoint % 2 == 1 ? 2 : 1); }
+			inline ValueFactor getCommonFactor() const { return (this->stepSize * 2. / 3.); }
+		};
+
+
+		template <typename ValueFactor, typename IntegrationScalar>
+		class TrapezoidalRuleIntegrator : public FixStepSizeIntegrator<ValueFactor, IntegrationScalar> {
+		 public:
+			TrapezoidalRuleIntegrator(IntegrationScalar a, IntegrationScalar b, int nIntegrationPoints): FixStepSizeIntegrator<ValueFactor, IntegrationScalar>(a, b, nIntegrationPoints) {}
+			inline ValueFactor getValueFactor() const { return this->atBounds() ? 0.5 : 1.0; }
+			inline ValueFactor getCommonFactor() const { return this->stepSize; }
+		};
+	}
+
+	namespace algorithms {
+		class SimpsonRule : public IntegrationAlgorithm<SimpsonRule, internal::SimpsonRuleIntegrator> {
+		};
+		class TrapezoidalRule : public IntegrationAlgorithm<TrapezoidalRule, internal::TrapezoidalRuleIntegrator> {
+		};
+
+		typedef SimpsonRule Default;
+	}
+	typedef algorithms::Default DefaultAlgorithm;
+
 	template <typename TValue, typename TArgScalar>
 	struct Integrand {
 		typedef TValue ValueT;
@@ -34,15 +113,15 @@ namespace numeric_integrator {
 		return Integrand<TValue, TArgScalar>(integrand);
 	}
 
-	enum Algorithm {
-		TRAPEZOIDAL,
-		SIMPSON,
-		TANH1,
-		TANH3,
-		TANH5,
-		TANH_SINH,
-		DEFAULT = SIMPSON
-	};
+//	enum Algorithm {
+//		TRAPEZOIDAL,
+//		SIMPSON,
+//		TANH1,
+//		TANH3,
+//		TANH5,
+//		TANH_SINH,
+//		DEFAULT = SIMPSON
+//	};
 
 	namespace internal {
 		template <typename TValue, int IExponent, typename TArgScalar, typename TFunctor>
@@ -57,71 +136,64 @@ namespace numeric_integrator {
 	}
 
 	//TODO allow integration according to arbitrary TimePolicy
-	template <enum Algorithm EAlgorithm, typename TValue, typename TArgScalar, typename TFunctor>
+	template <typename Algorithm, typename TValue, typename TArgScalar, typename TFunctor>
 	inline TValue integrateFunctor(TArgScalar a, TArgScalar b, const TFunctor & f, int numberOfPoints, TValue zero = TValue(0)){
-		switch(EAlgorithm){
-		case SIMPSON:
-			numberOfPoints += (1 - numberOfPoints % 2); // make odd
-			break;
-		default:
-			break;
+		if(a == b) return zero;
+
+		auto integrator = Algorithm().template getIntegrator<double>(a, b, numberOfPoints);
+
+		SM_ASSERT_TRUE_DBG(std::runtime_error, !integrator.isAtEnd(), "too few integration points given : " << numberOfPoints);
+
+		TValue sum = f(integrator.getIntegrationScalar()) * integrator.getValueFactor();
+		integrator.next();
+
+		for(; !integrator.isAtEnd(); integrator.next()){
+			double valueFactor = integrator.getValueFactor();
+			if(valueFactor == 1)
+				sum += f(integrator.getIntegrationScalar());
+			else
+				sum += f(integrator.getIntegrationScalar()) * valueFactor;
 		}
+		return sum * integrator.getCommonFactor();
 
-		TArgScalar diff = b-a, stepSize = diff / (numberOfPoints - 1);
-		if(diff == 0) return zero;
-
-		switch(EAlgorithm){
-		case TRAPEZOIDAL:
-			{
-				TValue sum = 0.5 * (f(a) + f(b));
-
-				for(int i = 1; i < numberOfPoints - 1; i++){
-					sum += f((TArgScalar)(a + stepSize * i));
-				}
-				return sum * stepSize;
-			}
-		case SIMPSON:
-			{
-				TValue sum = 0.5 * (f(a) + f(b));
-
-				for(int i = 1; i < numberOfPoints - 1; i++){
-					sum += f((TArgScalar)(a + stepSize * i)) * (i % 2 == 1 ? 2 : 1);
-				}
-				return sum * (stepSize * 2. / 3.);
-			}
-		case TANH1:
-		case TANH3:
-		case TANH5:
-			throw std::runtime_error("TANHX integration scheme not supported yet");
-			{
-				const double diffHalf = diff /2.;
-				const double mean = 0.5 * (a+b);
-				const int exponent = 2 * (EAlgorithm - TANH1) + 1;
-				TValue sum = internal::tanhFunctor<TValue, exponent>(f, (TArgScalar)0, mean, diffHalf);
-
-				for(int i = numberOfPoints / 2, end = numberOfPoints / 2; i <= end; i++){
-					sum += internal::tanhFunctor<TValue, exponent>(f, (TArgScalar) i, mean, diffHalf);
-				}
-				return sum / diffHalf;
-			}
-		case TANH_SINH:
-			throw std::runtime_error("TANH_SINH integration scheme not supported yet");
-			break;
-		}
+// TODO implement TANH* stuff
+//		TArgScalar diff = b-a, stepSize = diff / (numberOfPoints - 1);
+//		if(diff == 0) return zero;
+//
+//		switch(EAlgorithm){
+//		case TANH1:
+//		case TANH3:
+//		case TANH5:
+//			throw std::runtime_error("TANHX integration scheme not supported yet");
+//			{
+//				const double diffHalf = diff /2.;
+//				const double mean = 0.5 * (a+b);
+//				const int exponent = 2 * (EAlgorithm - TANH1) + 1;
+//				TValue sum = internal::tanhFunctor<TValue, exponent>(f, (TArgScalar)0, mean, diffHalf);
+//
+//				for(int i = numberOfPoints / 2, end = numberOfPoints / 2; i <= end; i++){
+//					sum += internal::tanhFunctor<TValue, exponent>(f, (TArgScalar) i, mean, diffHalf);
+//				}
+//				return sum / diffHalf;
+//			}
+//		case TANH_SINH:
+//			throw std::runtime_error("TANH_SINH integration scheme not supported yet");
+//			break;
+//		}
 	}
 	template <typename TValue, typename TArgScalar, typename TFunctor>
 	inline TValue integrateFunctor(TArgScalar a, TArgScalar b, const TFunctor & f, int numberOfPoints, TValue zero = TValue(0)){
-		return integrateFunctor<DEFAULT> (a, b, f, numberOfPoints, zero);
+		return integrateFunctor<algorithms::Default> (a, b, f, numberOfPoints, zero);
 	}
 
-	template <enum Algorithm EAlgorithm, typename TValue, typename TArgScalar>
+	template <typename Algorithm, typename TValue, typename TArgScalar>
 	inline TValue integrateFunction(TArgScalar a, TArgScalar b, TValue (& integrand)(const TArgScalar & t), int numberOfPoints, TValue zero = TValue(0)){
-		return integrateFunctor(a, b, createIntegrand(integrand), numberOfPoints, zero);
+		return integrateFunctor<Algorithm>(a, b, createIntegrand(integrand), numberOfPoints, zero);
 	}
 
 	template <typename TValue, typename TArgScalar>
 	inline TValue integrateFunction(TArgScalar a, TArgScalar b, TValue (& integrand)(const TArgScalar & t), int numberOfPoints, TValue zero = TValue(0)){
-		return integrateFunction<DEFAULT>(a, b, integrand, numberOfPoints, zero);
+		return integrateFunction<algorithms::Default>(a, b, integrand, numberOfPoints, zero);
 	}
 }
 

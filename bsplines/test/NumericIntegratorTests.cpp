@@ -37,12 +37,12 @@ struct ZeroGetter<Eigen::Vector3d>{
 	}
 };
 
-template <typename TValue, enum Algorithm EAlgorithm, int INumberOfPoints, typename TFunctor>
+template <typename TValue, typename TAlgorithm, int INumberOfPoints, typename TFunctor>
 void checkIntegral(TFunctor & f){
 	for(int i = 0; i < numberOfBounds; i ++){
 		for(int j = 0; j < numberOfBounds; j ++){
 			double lBound = bounds[i], uBound = bounds[j];
-			TValue val = integrateFunctor<EAlgorithm>(lBound, uBound, f, INumberOfPoints, ZeroGetter<TValue>::getZero());
+			TValue val = integrateFunctor<TAlgorithm>(lBound, uBound, f, INumberOfPoints, ZeroGetter<TValue>::getZero());
 			TValue analyticalVal = f.calcIntegral(lBound, uBound);
 			SM_ASSERT_NEAR(std::runtime_error, val, analyticalVal, fmax(fabs(analyticalVal) * 1e-3, 1e-6), f.getName());
 		}
@@ -51,8 +51,8 @@ void checkIntegral(TFunctor & f){
 
 template <typename TFunctor>
 void checkIntegral(TFunctor & f){
-	checkIntegral<typename TFunctor::ValueT, TRAPEZOIDAL, 200>(f);
-	checkIntegral<typename TFunctor::ValueT, SIMPSON, 50>(f);
+	checkIntegral<typename TFunctor::ValueT, algorithms::TrapezoidalRule, 200>(f);
+	checkIntegral<typename TFunctor::ValueT, algorithms::SimpsonRule, 50>(f);
 //	checkIntegral<DOUBLE_EXPONENTIAL3>(f);
 //	checkIntegral<DOUBLE_EXPONENTIAL5>(f);
 }
@@ -156,7 +156,7 @@ TEST(NumericIntegratorTestSuite, testFunctionInterface)
 		inline static ValueT integrand(const double & x){
 			return x * x;
 		}
-	} ;
+	};
 
 	integrateFunction(0., 1., Integrand::integrand, 100, 0.);
 }

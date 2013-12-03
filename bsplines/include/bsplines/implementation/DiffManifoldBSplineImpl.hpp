@@ -719,7 +719,7 @@ namespace bsplines {
 	inline TValue _CLASS ::evalFunctorIntegralNumerically(const time_t & t1, const time_t & t2, const TFunctor & f, int numberOfPoints) const {
 		if(t1 > t2) return -getDerived().template evalFunctorIntegralNumerically<TValue, TFunctor>(t2, t1, f, numberOfPoints);
 		typedef IntegrandFunctor<spline_t, TFunctor, TValue> IFunc;
-		return numeric_integrator::template integrateFunctor<numeric_integrator::SIMPSON, TValue, time_t, const IFunc>(t1, t2, IFunc(this->getDerived(), f), numberOfPoints, f.getZeroValue(this->getDerived()));
+		return numeric_integrator::template integrateFunctor<numeric_integrator::algorithms::Default, TValue, time_t, const IFunc>(t1, t2, IFunc(this->getDerived(), f), numberOfPoints, f.getZeroValue(this->getDerived()));
 	}
 
 	_TEMPLATE

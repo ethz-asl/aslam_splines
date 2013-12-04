@@ -25,7 +25,7 @@
 #include <bsplines/NumericIntegrator.hpp>
 
 namespace aslam {
-namespace splines {
+namespace backend {
 namespace integration {
 
 namespace algorithms = ::numeric_integrator::algorithms;
@@ -46,14 +46,18 @@ To add an error term of the form
 
 	e = Int E(t)^T W(t) E(t) dt
 
-to a problem use this function when E(t) is implemented as an ErrorTerm. If f is an expression use the next function.
+to a problem use this function when E(t) is implemented as an ErrorTerm. If E is an expression use the next function.
 
 The ErrorTermFactory functor must have an 
 
-	ErrorTerm operator()(TTime t, double factor) const
+	ErrorTerm* operator()(TTime t, double factor) const
+or
+	boost::shared_ptr<ErrorTerm> operator()(TTime t, double factor) const
 
 member that returns E(t) with its invR = W * factor.
 So don't forget to take the square root of factor when you use the setSqrtInvR method.
+
+When a shared_ptr is returned the problemOwnsErrorTerms flag is ignored. Otherwise true makes the problem deleting the error terms in its destructor.
  */
 template <typename Algorithm = DefaultAlgorithm, typename TTime, typename ErrorTermFactory>
 void addQuadraticIntegralErrorTerms(OptimizationProblem & problem, const TTime & a, const TTime & b, int numberOfPoints, const ErrorTermFactory & errorTermFactory, bool problemOwnsErrorTerms = true)
@@ -70,6 +74,11 @@ void addQuadraticIntegralErrorTerms(OptimizationProblem & problem, const TTime &
 	}
 }
 
+template <typename TTime, typename ErrorTermFactory>
+void addQuadraticIntegralErrorTerms(OptimizationProblem & problem, const TTime & a, const TTime & b, int numberOfPoints, const ErrorTermFactory & errorTermFactory, bool problemOwnsErrorTerms = true){
+	addQuadraticIntegralErrorTerms(problem, a, b, numberOfPoints, errorTermFactory, problemOwnsErrorTerms);
+}
+
 /**
 To add an error term of the form
 
@@ -79,17 +88,29 @@ to a problem use this function when E(t) is implemented as an VectorExpression.
 
 The ExpressionFactory functor must have an
 
-	VectorExpression operator()(TTime t) const
+	VectorExpression<D> operator()(TTime t) const
 or
-	GenericMatrixExpression<n, 1> operator()(TTime t) const
+	GenericMatrixExpression<D, 1> operator()(TTime t) const
 
 member that returns E(t).
  */
-template <typename Algorithm = DefaultAlgorithm, typename TTime, typename ExpressionFactory, typename DerivedMatrix>
+template <typename Algorithm, typename TTime, typename ExpressionFactory, typename DerivedMatrix>
 void addQuadraticIntegralExpressionErrorTerms(OptimizationProblem & problem, const TTime & a, const TTime & b, int numberOfPoints, const ExpressionFactory & expressionFactory, const Eigen::MatrixBase<DerivedMatrix> & sqrtInvR)
 {
-	addQuadraticIntegralErrorTerms<Algorithm>(problem, a, b, numberOfPoints, [&expressionFactory, &sqrtInvR](TTime t, double f){ return toErrorTermSqrt(expressionFactory(t), sqrtInvR * sqrt(f)); }, true);
+	addQuadraticIntegralErrorTerms<Algorithm>(
+			problem, a, b, numberOfPoints,
+			[&expressionFactory, &sqrtInvR](TTime t, double f){
+				return toErrorTermSqrt(expressionFactory(t), sqrtInvR * sqrt(f));
+			}
+		);
 }
+
+// to specify a default for the algorithm,
+template <typename TTime, typename ExpressionFactory, typename DerivedMatrix>
+void addQuadraticIntegralExpressionErrorTerms(OptimizationProblem & problem, const TTime & a, const TTime & b, int numberOfPoints, const ExpressionFactory & expressionFactory, const Eigen::MatrixBase<DerivedMatrix> & sqrtInvR){
+	addQuadraticIntegralExpressionErrorTerms<DefaultAlgorithm>(problem, a, b, numberOfPoints, expressionFactory, sqrtInvR);
+}
+
 
 }
 }

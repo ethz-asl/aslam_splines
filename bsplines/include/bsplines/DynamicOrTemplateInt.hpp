@@ -27,7 +27,7 @@ namespace eigenTools {
 		enum { VALUE = VALUE_T, IS_DYNAMIC = 0 };
 
 		DynamicOrTemplateInt(int value = VALUE_T){
-			SM_ASSERT_EQ(std::runtime_error, value, VALUE, "Please don't set dynamic parameter value with fixed size template argument to something else!")
+			SM_ASSERT_EQ(std::runtime_error, value, (int)VALUE, "Please don't set dynamic parameter value with fixed size template argument to something else!")
 		}
 
 		virtual inline int getValue() const {

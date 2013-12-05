@@ -87,13 +87,13 @@ namespace bsplines {
 	_TEMPLATE
 	inline
 	void _CLASS::assertEvaluable() const {
-		SM_ASSERT_EQ(Exception, internal::state::EVALUABLE, getState(), "This spline is currently not evaluable. Did you call init() after initialization or last knot manipulations?");
+		SM_ASSERT_EQ(Exception, (int)internal::state::EVALUABLE, (int)getState(), "This spline is currently not evaluable. Did you call init() after initialization or last knot manipulations?");
 	}
 
 	_TEMPLATE
 	inline
 	void _CLASS::assertConstructing() const {
-		SM_ASSERT_EQ(Exception, internal::state::CONSTRUCTING, getState(), "This spline is currently in constructing state. Did you call init() twice without intermediate knot manipulations?");
+		SM_ASSERT_EQ(Exception, (int)internal::state::CONSTRUCTING, (int)getState(), "This spline is currently in constructing state. Did you call init() twice without intermediate knot manipulations?");
 	}
 
 	_TEMPLATE

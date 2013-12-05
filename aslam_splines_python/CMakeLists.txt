@@ -52,5 +52,7 @@ add_python_export_library(${PROJECT_NAME} python/aslam_splines
   src/spline_module.cpp
   src/BSplineMotionError.cpp
   src/SimpleSplineError.cpp
+  src/OPTBSpline.cpp
+  src/QuadraticIntegralError.cpp
 )
 

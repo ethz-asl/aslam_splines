@@ -95,7 +95,7 @@ class TestBSplines(BSplineTestCase):
             #print "p_0: %s" % p_0
             #print "p_1: %s" % p_1
             # Initialize the spline with these two times 
-            aspl.initUniformSplineFromMatrix(numpy.array([t_0, t_1]), numpy.array([p_0,p_1]).transpose(), 1, 0.1);
+            aspl.initUniformSpline(numpy.array([t_0, t_1]), numpy.array([p_0,p_1]).transpose(), 1, 0.1);
             b_0 = aspl.eval(t_0)
             b_1 = aspl.eval(t_1)
             v_0 = aspl.evalD(t_0,1)

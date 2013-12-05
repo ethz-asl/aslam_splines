@@ -38,6 +38,7 @@ public:
 	typedef aslam::backend::VectorExpression<3> angular_derivative_expression_t;
 
 	DiffManifoldBSpline(const CONF & config = CONF()) : parent_t(config){}
+	DiffManifoldBSpline(int splineOrder) : parent_t(typename CONF::ParentConf(splineOrder)){}
 
 	template <typename FactoryData_>
 	class ExpressionFactory : public parent_t::template ExpressionFactory<FactoryData_> {

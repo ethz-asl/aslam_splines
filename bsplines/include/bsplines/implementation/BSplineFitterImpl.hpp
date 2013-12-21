@@ -441,7 +441,7 @@ namespace internal{
 	template <enum FittingBackend FittingBackend_>
 	void _CLASS::addCurveQuadraticIntegralDiagTo(const TSpline & spline, typename TSpline::SegmentConstIterator start, typename TSpline::SegmentConstIterator end, int startIndex, const point_t & Wdiag, int derivativeOrder, typename internal::FittingBackendTraits<FittingBackend_>::Matrix & toMatrix, typename internal::FittingBackendTraits<FittingBackend_>::Vector & toB)
 	{
-		SM_ASSERT_EQ(Exception,Wdiag.rows(), spline.getPointSize(), "Wdiag must be of control point size");
+		SM_ASSERT_EQ(Exception,Wdiag.rows(), (int)spline.getPointSize(), "Wdiag must be of control point size");
 		SM_ASSERT_EQ(Exception, toMatrix.rows(), toB.rows(), "Wdiag must be of control point size");
 
 		typedef internal::FittingBackendFunctions<FittingBackend_> Backend;

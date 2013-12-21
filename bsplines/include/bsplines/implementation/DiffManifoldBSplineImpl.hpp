@@ -694,7 +694,7 @@ namespace bsplines {
 			return spline.template getEvaluatorAt<0>(t).eval();
 		}
 		inline typename SplineT::point_t  getZeroValue(const SplineT & spline) const {
-			return SplineT::point_t::Zero(spline.getPointSize());
+			return SplineT::point_t::Zero((int)spline.getPointSize());
 		}
 	};
 

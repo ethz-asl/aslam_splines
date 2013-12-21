@@ -110,8 +110,8 @@ struct OPTSplineTester{
 		TestBSpline bsplineCopyConstruct(bspline), bsplineCopyAssign(createMyConf());
 		bsplineCopyAssign = bspline;
 
-		SM_ASSERT_EQ(std::runtime_error, ISplineOrder, bspline.getSplineOrder(), "");
-		SM_ASSERT_EQ(std::runtime_error, IDim, bspline.getDimension(), "");
+		SM_ASSERT_EQ(std::runtime_error, ISplineOrder, (int)bspline.getSplineOrder(), "");
+		SM_ASSERT_EQ(std::runtime_error, IDim, (int)bspline.getDimension(), "");
 	}
 
 	void testUpdate(){
@@ -242,7 +242,7 @@ struct OPTSplineTester{
 
 		for(int i = 0; i < 10; i ++){
 			Eigen::MatrixXd startPoint = manifold.getRandomPoint();
-			Eigen::VectorXd updateVector = Eigen::VectorXd::Random(manifold.getDimension());
+			Eigen::VectorXd updateVector = Eigen::VectorXd::Random((int)manifold.getDimension());
 
 			dv.setParameters(startPoint);
 			dv.update(&updateVector[0], updateVector.size());

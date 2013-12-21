@@ -48,7 +48,7 @@ namespace bsplines {
 	{
 		if(t1 > t2) return -evalIntegral(t2, t1);
 
-		point_t integral = point_t::Zero(this->getDimension());
+		point_t integral = point_t::Zero((int)this->getDimension());
 		if(t1 == t2) return integral;
 
 		const int splineOrder = this->getSplineOrder();
@@ -108,7 +108,7 @@ namespace bsplines {
 				SM_ASSERT_LT_DBG(typename parent_t::Exception, derivativeOrder, IMaximalDerivativeOrder + 1, "only derivatives up to the evaluator's template argument IMaximalDerivativeOrder are allowed");
 		}
 
-		point_t rv(this->_spline.getDimension());
+		point_t rv((int)this->_spline.getDimension());
 		if(derivativeOrder < this->_spline.getSplineOrder())
 			computeControlVertexSequenceLinearCombinationInto<IteratorPosition_last, AddOrSet_set>(this->getLastRelevantSegmentIterator(), this->getLocalBi(derivativeOrder), rv);
 		else rv.setZero();

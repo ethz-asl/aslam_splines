@@ -8,7 +8,7 @@ namespace manifolds {
 _TEMPLATE
 inline typename _CLASS::point_t _CLASS::getIdentity() const
 {
-	point_t p(this->getPointSize());
+	point_t p((int)this->getPointSize());
 	this->getDerived().getIdentityInto(p);
 	return p;
 }
@@ -44,7 +44,7 @@ inline typename _CLASS::point_t _CLASS::exp(const point_t & point, const tangent
 _TEMPLATE
 inline typename _CLASS::point_t _CLASS::expAtId(const tangent_vector_t & vec) const
 {
-	point_t result(this->getPointSize());
+	point_t result((int)this->getPointSize());
 	this->getDerived().expAtIdInto(vec, result);
 	return result;
 }
@@ -73,14 +73,14 @@ inline typename _CLASS::dmatrix_t _CLASS::dexp(const point_t & point, const tang
 
 _TEMPLATE
 inline typename _CLASS::tangent_vector_t _CLASS::log(const point_t & from, const point_t & to) const {
-	tangent_vector_t v(this->getDimension());
+	tangent_vector_t v((int)this->getDimension());
 	this->getDerived().logInto(from, to, v);
 	return v;
 }
 
 _TEMPLATE
 inline typename _CLASS::tangent_vector_t _CLASS::logAtId(const point_t & to) const {
-	tangent_vector_t v(this->getDimension());
+	tangent_vector_t v((int)this->getDimension());
 	this->getDerived().logAtIdInto(to, v);
 	return v;
 }
@@ -93,7 +93,7 @@ inline void _CLASS::logInto(const point_t & from, const point_t & to, tangent_ve
 
 _TEMPLATE
 inline typename _CLASS::dmatrix_transposed_t _CLASS::dlogAtId(const point_t & to) const {
-	dmatrix_transposed_t result(this->getDimension(), this->getPointSize());
+	dmatrix_transposed_t result((int)this->getDimension(), (int)this->getPointSize());
 	this->getDerived().dlogAtIdInto(to, result);
 	return result;
 }
@@ -107,7 +107,7 @@ void _CLASS::dlogInto(const point_t & from, const point_t & to, dmatrix_transpos
 
 _TEMPLATE
 inline typename _CLASS::dmatrix_transposed_t _CLASS::dlog(const point_t & from, const point_t & to) const {
-	dmatrix_transposed_t result(this->getDimension(), this->getPointSize());
+	dmatrix_transposed_t result((int)this->getDimension(), (int)this->getPointSize());
 	this->getDerived().dlogInto(from, to, result);
 	return result;
 }
@@ -115,7 +115,7 @@ inline typename _CLASS::dmatrix_transposed_t _CLASS::dlog(const point_t & from, 
 _TEMPLATE
 inline typename _CLASS::point_t _CLASS::invert(const point_t & p) const
 {
-	point_t result(this->getPointSize());
+	point_t result((int)this->getPointSize());
 	this->getDerived().invertInto(p, result);
 	return result;
 }

@@ -545,7 +545,7 @@ void testDiffManifoldBSplineFitting(int numberOfSegments, double tolerance = 1E-
 	auto p = manifold.getIdentity();
 	for(int i = 0; i < numberOfInterpolationPoints; i ++){
 		timesV.push_back((time_t)times[i]);
-		p = manifold.exp(p, TestSpline::tangent_vector_t::Random(manifold.getDimension()));
+		p = manifold.exp(p, TestSpline::tangent_vector_t::Random((int)manifold.getDimension()));
 		interpolationPointsV.push_back(p);
 	}
 
@@ -569,7 +569,7 @@ void testDiffManifoldBSplineFitting(int numberOfSegments, double tolerance = 1E-
 
 	interpolationPointsV.clear();
 	typename TestSpline::point_t goal;
-	typename TestSpline::tangent_vector_t translation(rbspline.getManifold().getDimension());
+	typename TestSpline::tangent_vector_t translation((int)rbspline.getManifold().getDimension());
 	translation.setZero();
 	const double goalDist = 0.1;
 	translation[0] = goalDist;

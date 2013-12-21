@@ -14,7 +14,7 @@ namespace manifolds {
 
 	_TEMPLATE
 	inline void _CLASS::getIdentityInto(point_t & pt) const {
-		pt = point_t::Zero(this->getPointSize());
+		pt = point_t::Zero((int)this->getPointSize());
 	}
 
 	_TEMPLATE
@@ -25,7 +25,7 @@ namespace manifolds {
 	_TEMPLATE
 	inline typename _CLASS::dmatrix_point2point_t _CLASS::dMultL(const point_t & mult, bool oppositeMult) const
 	{
-		return _CLASS::dmatrix_point2point_t::Identity(this->getPointSize(), this->getPointSize());
+		return _CLASS::dmatrix_point2point_t::Identity((int)this->getPointSize(), (int)this->getPointSize());
 	}
 
 	_TEMPLATE
@@ -75,7 +75,7 @@ namespace manifolds {
 
 	_TEMPLATE
 	inline void _CLASS::randomizePoint(point_t & pt) const {
-		pt = 2 * point_t::Random(this->getDimension()) - point_t::Ones(this->getDimension());
+		pt = 2 * point_t::Random((int)this->getDimension()) - point_t::Ones((int)this->getDimension());
 	}
 
 #undef _CLASS

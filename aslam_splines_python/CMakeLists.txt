@@ -56,3 +56,9 @@ add_python_export_library(${PROJECT_NAME} python/aslam_splines
   src/QuadraticIntegralError.cpp
 )
 
+rosbuild_add_pyunit( 
+  test/OptBSpline.py
+)
+rosbuild_add_pyunit( 
+  test/QuadraticIntegralError.py
+)

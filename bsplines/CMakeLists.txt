@@ -86,8 +86,9 @@ target_link_libraries(${PY_PROJECT_NAME} ${PROJECT_NAME})
 #  test/SplineTests.py
 #)
 
-
-
+rosbuild_add_pyunit( 
+  test/DiffManifoldBSpline.py
+)
 
 SET(DOCSOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/doc/)
 

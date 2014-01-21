@@ -249,5 +249,3 @@ class TestBSplines(BSplineTestCase):
 if __name__ == '__main__':
     import rostest
     rostest.rosrun('splines', 'bspline', TestBSplines)
-    #tb = TestBSplines()
-    #tb.test_constant_init()

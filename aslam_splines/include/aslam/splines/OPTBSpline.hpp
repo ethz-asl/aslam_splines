@@ -51,6 +51,7 @@ namespace internal {
 		typedef typename TDiffManifoldBSplineConfiguration::Manifold Manifold;
 		typedef typename TDiffManifoldBSplineConfiguration::Manifold::point_t point_t;
 		typedef typename TDiffManifoldBSplineConfiguration::Manifold::tangent_vector_t tangent_vector_t;
+		typedef typename parent_t::time_t time_t;
 
 	private:
 		point_t _p_v;

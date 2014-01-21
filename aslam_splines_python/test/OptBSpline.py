@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import aslam_splines
 import numpy
+import scipy
 import scipy.interpolate.fitpack as fp
 import scipy.integrate as si
+import bisect;
 
 import unittest
 
@@ -50,6 +52,26 @@ def createRandomRepeatedKnotBSpline(order,segments,dim):
     return (aspl,(knots,cp,order-1))
 
 
+def evalSplineWithUpdatedCVs(spline, vertices, vI, cV, orgCV, t):
+    vertices[vI] = cV
+    spline.setControlVertices(vertices)
+    return spline.eval(t);
+
+def numericJacobian(spline, t, knots):
+    kn = spline.getFirstRelevantKnot(t);
+    iStart = bisect.bisect_left(knots, kn);
+    order = spline.getSplineOrder();
+    jacobian = numpy.matrix(numpy.zeros((spline.getPointSize(), order)));
+    vertices = spline.getControlVertices();
+    for i in range(0, order):
+        vI = i + iStart;
+        orgCV = numpy.matrix(vertices[vI]);
+        jacobian[:, i] = scipy.misc.derivative(lambda(cV) : evalSplineWithUpdatedCVs(spline, vertices, vI, cV, orgCV, t), orgCV);
+        vertices[vI] = orgCV;
+        
+    spline.setControlVertices(vertices)
+    return jacobian
+
 class BSplineTestCase(unittest.TestCase):
     def runTest(self):
         x=0
@@ -62,7 +84,7 @@ class BSplineTestCase(unittest.TestCase):
         md = numpy.max(numpy.abs(M1 - M2))
         self.assertTrue(md < tolerance, msg= "The matrices\n%s\nand\n%s\nwere not equal to within tolerance %e [%e > %e]: %s" % (M1,M2,tolerance,md,tolerance, msg))
         
-class TestQuadraticIntegralError(BSplineTestCase):
+class TestOptBSpline(BSplineTestCase):
     def test_bounds(self):
         numpy.random.seed(3)
         for order in range(2,10):
@@ -194,16 +216,35 @@ class TestQuadraticIntegralError(BSplineTestCase):
                 cp = numpy.random.random(kc);
                 cpa = numpy.array([cp])
 
-                aspl = aslam_splines.OptEuclideanBSpline(order, 1);
                 aspl.initWithKnotsAndControlVertices(knots, cpa);
                 fspl = (knots,cp,order-1)
-                
                 for a in numpy.arange(aspl.getMinTime(),aspl.getMaxTime()-1e-15,0.4*dt):
                     for i in numpy.arange(aspl.getMinTime(), aspl.getMaxTime()-1e-15, 0.4*dt):
                         #print "Eval at %f\n" % (i)
                         f = fp.splint(a,float(i),fspl)
                         b = aspl.evalI(a,i)
                         self.assertAlmostEqual(b, f, msg="order %d spline integral evaluated on [%f,%f] (%f != %f) was not right" % (order, a,i,float(b),f))
+   
+    def test_jacobian(self):
+        for order in range(2,8,2):
+            for dt in numpy.arange(0.1,2.0,0.1): 
+                # Create a spline with three segments
+                aspl = aslam_splines.OptEuclideanBSpline(order, 1)
+                nSegs = 4
+                kr = aspl.numKnotsRequired(nSegs)
+                kc = aspl.numCoefficientsRequired(nSegs);
+                # Choose a uniform knot sequence.
+                knots = numpy.linspace(0.0, (kr - 1)*dt, kr)
+                cp = numpy.random.random(kc);
+                cpa = numpy.array([cp])
+
+                aspl.initWithKnotsAndControlVertices(knots, cpa)
+            
+                knots = aspl.getKnotsVector();
+                for a in numpy.arange(aspl.getMinTime(),aspl.getMaxTime()-1e-15,0.4*dt):
+                    b = aspl.evalJacobian(a)
+                    f = numericJacobian(aspl, a, knots);
+                    self.assertMatricesEqual(b, f, 1E-6, msg="order %d spline jacobian evaluated at [%f] (%s != %s) was not right" % (order, a, str(b), str(f)))
    
     def test_integral_non_uniform(self):
         for order in range(2,8,2):
@@ -247,6 +288,4 @@ class TestQuadraticIntegralError(BSplineTestCase):
 
 if __name__ == '__main__':
     import rostest
-    rostest.rosrun('splines', 'optBSplines', TestQuadraticIntegralError)
-    #tb = TestQuadraticIntegralError()
-    #tb.test_constant_init()
+    rostest.rosrun('splines', 'optBSplines', TestOptBSpline)

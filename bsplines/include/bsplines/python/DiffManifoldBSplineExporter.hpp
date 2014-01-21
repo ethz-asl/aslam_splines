@@ -49,6 +49,45 @@ class BSplineExporter {
 		}
 	}
 
+	static Eigen::MatrixXd evalJacobianD(const TSpline * bsp, typename TSpline::time_t t, int derivativeOrder){
+		SM_ASSERT_GE(typename TSpline::Exception, t, bsp->getMinTime(), "The time is out of range.");
+		SM_ASSERT_LE(typename TSpline::Exception, t, bsp->getMaxTime(), "The time is out of range.");
+
+		typename TSpline::full_jacobian_t ret;
+		switch(derivativeOrder){
+			case 0:
+				bsp->template getEvaluatorAt<0>(t).evalJacobian(derivativeOrder, ret);
+				break;
+			case 1:
+				bsp->template getEvaluatorAt<1>(t).evalJacobian(derivativeOrder, ret);
+				break;
+			case 2:
+				bsp->template getEvaluatorAt<2>(t).evalJacobian(derivativeOrder, ret);
+				break;
+			default:
+				bsp->template getEvaluatorAt<Eigen::Dynamic>(t).evalJacobian(derivativeOrder, ret);
+		}
+		return ret;
+	}
+
+	static typename Eigen::MatrixXd evalJacobian(const TSpline * bsp, typename TSpline::time_t t){
+		return evalJacobianD(bsp, t, 0);
+	}
+
+	static typename Eigen::MatrixXd evalEvaluatorJacobian(const typename TSpline::template Evaluator<Eigen::Dynamic> * eval, int derivativeOrder){
+		typename TSpline::full_jacobian_t ret;
+		eval->evalJacobian(derivativeOrder, ret);
+		return ret;
+	}
+
+	static double getLastRelevantKnot(const TSpline * bsp, double t){
+		return bsp->getSegmentIterator(t).getTime();
+	}
+
+	static double getFirstRelevantKnot(const TSpline * bsp, double t){
+		return bsp->getFirstRelevantSegmentByLast(bsp->getSegmentIterator(t)).getTime();
+	}
+
 	// Function wrappers turn std::pairs into tuples.
 	static boost::python::tuple timeInterval(const TSpline * bsp)
 	{
@@ -136,22 +175,22 @@ class BSplineExporter {
 	}
 
 
-	static Eigen::VectorXd getKnotsVector(TSpline * bsp)
+	static Eigen::VectorXd getKnotsVector(const TSpline * bsp)
 	{
 		Eigen::VectorXd times(bsp->getNumKnots());
 
 		int c = 0;
-		for(typename TSpline::SegmentIterator it = bsp->getAbsoluteBegin(), end = bsp->getAbsoluteEnd(); it != end; it++){
-			times[c++] = it->getKnot();
+		for(typename TSpline::SegmentConstIterator it = bsp->getAbsoluteBegin(), end = bsp->getAbsoluteEnd(); it != end; it++){
+			times[c++] = it.getKnot();
 		}
 		return times;
 	}
 
-	static Eigen::MatrixXd getControlVertices(TSpline * bsp)
+	static Eigen::MatrixXd getControlVertices(const TSpline * bsp)
 	{
 		Eigen::MatrixXd vertices(bsp->getNumControlVertices(), (int)bsp->getDimension());
 
-		typename TSpline::SegmentIterator it = bsp->getAbsoluteBegin();
+		typename TSpline::SegmentConstIterator it = bsp->getAbsoluteBegin();
 		for(int c = 0, end = vertices.rows(); c != end; c++, it++){
 			vertices.row(c) = it->getControlVertex();
 		}
@@ -200,6 +239,9 @@ class BSplineExporter {
 		evaluatorClass
 		.def("eval", &Evaluator::eval, "Evaluate the spline curve at the evaluators time")
 		.def("evalD", &Evaluator::evalD, "Evaluate a spline curve derivative at the evaluators time")
+		.def("evalJacobian", &evalEvaluatorJacobian, "Matrix evalJacobian(int derivativeOrder)")
+		.def("getKnot", &Evaluator::getKnot, "double getKnot()")
+		.def("getTime", &Evaluator::getTime, "double getTime()")
 		;
 		return evaluatorClass;
 	}
@@ -207,7 +249,9 @@ class BSplineExporter {
 	class_<TSpline> & exportClass(){
 		splineClass
 		.def("init", &TSpline::init)
-		.def("splineOrder", &TSpline::getSplineOrder, "The order of the spline")
+		.def("splineOrder", &TSpline::getSplineOrder, "int splineOrder() - deprecated : use getSplineOrder() instead")
+		.def("getSplineOrder", &TSpline::getSplineOrder, "int getSplineOrder()")
+		.def("getPointSize", &TSpline::getPointSize, "int getPointSize()")
 		//		.def("polynomialDegree", &TSpline::polynomialDegree, "The degree of the polynomial spline")
 		.def("minimumKnotsRequired", &TSpline::getMinimumKnotsRequired, "The minimum number of knots required")
 		.def("numKnotsRequired", &TSpline::getNumKnotsRequired, "The number of knots required for a specified number of valid time segments")
@@ -225,13 +269,14 @@ class BSplineExporter {
 		.def("setControlVertices", static_cast<void (TSpline::*)(const Eigen::MatrixXd &)>(&TSpline::setControlVertices), "Sets the spline's control vertices")
 		.def("getKnotsVector", getKnotsVector, "returns the current knot sequence")
 		.def("knots", getKnotsVector, "returns the current knot sequence")
-		.def("getKnotsVector", getKnotsVector, "returns the current knot sequence")
 		.def("coefficients", getControlVertices, "get the current control vertices as rows of a matrix")
 		.def("getControlVertices", getControlVertices, "get the current control vertices as rows of a matrix")
 		.def("getMinTime", &TSpline::getMinTime, "The minimum time that the spline is well-defined on")
 		.def("getMaxTime", &TSpline::getMaxTime, "The maximum time that the spline is well-defined on")
 		.def("eval", eval, "Evaluate the spline curve at a point in time")
 		.def("evalD", evalD, "Evaluate a spline curve derivative at a point in time")
+		.def("evalJacobian", evalJacobian, "Matrix evalJacobian(double t) :  Evaluate the spline curve evaluation's jacobian with respect to changes in the control vertices at time t.")
+		.def("evalJacobianD", evalJacobianD, "Matrix evalJacobianD(double t, derivativeOrder) :  Evaluate the spline curve derivative's (or evaluation's, for derivativeOrder = 0) jacobian with respect to changes in the control vertices at time t.")
 		.def("getEvaluatorAt", &TSpline::template getEvaluatorAt<Eigen::Dynamic> , "Get a evaluator at a point in time")
 		//		.def("Phi", &TSpline::Phi, "Evaluate the local basis matrix at a point in time")
 		//		.def("localBasisMatrix", &TSpline::localBasisMatrix, "Evaluate the local basis matrix at a point in time")
@@ -247,6 +292,8 @@ class BSplineExporter {
 		//		.def("getTimeInterval", &timeInterval2, "Returns a tuple with the time interval of the ith segment.")
 		.def("appendSegmentsUniformly", &TSpline::appendSegmentsUniformly, "Adds segments assuming uniform knot spacing.")
 		.def("extendAndFitSpline", &extendAndFitSplineFromMatrix, "Extend and fit the initialized spline to smooth a set of points in time.")
+		.def("getFirstRelevantKnot", &getFirstRelevantKnot, "double getFirstRelevantKnot(double forT)")
+		.def("getLastRelevantKnot", &getLastRelevantKnot, "double getLastRelevantKnot(double forT)")
 		//		.def("removeCurveSegment", &TSpline::removeCurveSegment, "removes a curve segment on the left")
 		//		.def("setLocalCoefficientVector", &TSpline::setLocalCoefficientVector, "Sets the local coefficient vector for a specified time")
 		//		.def("localVvCoefficientVectorIndices", &TSpline::localVvCoefficientVectorIndices, "")

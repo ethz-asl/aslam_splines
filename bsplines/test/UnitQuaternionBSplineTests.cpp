@@ -75,54 +75,35 @@ TEST(UnitQuaternionBSplineTestSuite, evalD3)
 TEST(UnitQuaternionBSplineTestSuite, evalAngularVelocityAndAcceleration)
 {
 	UQTestSpline spline;
+	Eigen::Vector3d direction(asin(1) / 2, 0, 0);
 
-	std::vector<UQTestSpline::point_t> points;
-	std::vector<double> times;
-
-	Eigen::Vector3d direction(0.5, 0.5, 0);
-
-	const int numPoints = 4;
+	const int numPoints = 4 + splineOrder - 1;
 
 	Eigen::MatrixXd interpolationPointsE = Eigen::MatrixXd::Zero(4, numPoints);
 	Eigen::VectorXd timesE = Eigen::VectorXd::Zero(numPoints);
 
-	for(int i = -splineOrder; i < numPoints; i++){
-		UQTestSpline::point_t p = spline.getManifold().expAtId(direction * i);
+	for(int i = -splineOrder + 1; i < numPoints; i++){
+		UQTestSpline::point_t p = spline.getManifold().expAtId(direction * (i + splineOrder - 1));
 		spline.addControlVertex(i, p);
 	}
 
 	spline.init();
-
-//	BSplineFitter<UQTestSpline> f;
-//
-//	const int numSegments = numPoints;
-//	for(int i = 0; i < numPoints; i++){
-//		times.push_back(i);
-//		timesE(i, 0) = i;
-//		UQTestSpline::point_t p = spline.getManifold().expAtId(direction * i);
-//		points.push_back(p);
-//		interpolationPointsE.col(i) = p;
-//		spline.addControlVertex(i, p);
-//	}
-
-//	double lambda = 1E-5;
-
-//	f.initUniformSplineDense(spline, times, points, numSegments, lambda);
-
-//
-//	for(UQTestSpline::SegmentIterator i = spline.getAbsoluteBegin(); i != spline.getAbsoluteEnd(); i++){
-//		if(i.getTime() >= numPoints -1) break;
-//	}
+	assert(spline.getMinTime() == 0.0);
 
 	Eigen::VectorXd accel = Eigen::VectorXd::Zero(3);
 
-	const int numTimes = numPoints;
+	const int numTimes = numPoints * 5;
 	for(int i = 0; i < numTimes; i ++){
 		double t = spline.getMinTime() + (spline.getMaxTime() - spline.getMinTime()) * (double) i / (numTimes - 1);
 		UQTestSpline::Evaluator<2> eval = spline.getEvaluatorAt<2>(t);
 
-		sm::eigen::assertNear(eval.evalAngularVelocity() , direction, 1E-9, SM_SOURCE_FILE_POS);
-		sm::eigen::assertNear(eval.evalAngularAcceleration() , accel, 1E-9, SM_SOURCE_FILE_POS);
+		if(splineOrder == 2){
+			sm::eigen::assertNear(eval.eval(), spline.getManifold().expAtId(direction * t), 1E-9, SM_SOURCE_FILE_POS);
+			sm::eigen::assertNear(spline.getEvaluatorAt<0>(t).eval(), spline.getManifold().expAtId(direction * t), 1E-9, SM_SOURCE_FILE_POS);
+		}
+
+		sm::eigen::assertNear(eval.evalAngularVelocity(), direction, 1E-9, SM_SOURCE_FILE_POS);
+		sm::eigen::assertNear(eval.evalAngularAcceleration(), accel, 1E-9, SM_SOURCE_FILE_POS);
 	}
 }
 

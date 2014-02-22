@@ -17,7 +17,7 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineBehavesAsVectorS
 	bspline.initConstantSpline(minTime, maxTime, numberOfSegments, ones);
 
 	Eigen::MatrixXd coefficients = Eigen::MatrixXd::Random(rows, bspline.numVvCoefficients());
-//	Eigen::Matrix<double, rows, Eigen::Dynamic> coefficients = Eigen::VectorXd::LinSpaced(bspline.numVvCoefficients(), 0, 10);
+	// coefficients.block(0, 0, 1, bspline.numVvCoefficients()) = Eigen::VectorXd::LinSpaced(bspline.numVvCoefficients(), 0, 1).transpose();
 
 	bspline.setCoefficientMatrix(coefficients);
 
@@ -336,9 +336,13 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineInitialization)
 
 	Eigen::VectorXd times = Eigen::VectorXd::LinSpaced(numberOfInterpolationPoints, minTime, maxTime);
 	Eigen::MatrixXd interpolationPoints = Eigen::MatrixXd::Random(rows, numberOfInterpolationPoints);
+	//Eigen::MatrixXd interpolationPoints = Eigen::MatrixXd::Zero(rows, numberOfInterpolationPoints);
+	//interpolationPoints.block(0, 0, 1, numberOfInterpolationPoints) = Eigen::VectorXd::LinSpaced(numberOfInterpolationPoints, 0, 1).transpose();
 	const double lambda = 0.1; // 0; //.1;
 
-	bspline.initSpline3(times, interpolationPoints, numberOfSegments, lambda);
+	bspline.initSpline2(times, interpolationPoints, numberOfSegments, lambda);
+// TODO fix the follwoing for splineOrder = 2: 	bspline.initSpline3(times, interpolationPoints, numberOfSegments, lambda);
+// TODO fix the follwoing for splineOrder = 2: 	bspline.initSplineSparse(times, interpolationPoints, numberOfSegments, lambda);
 
 	std::vector<TestSpline::time_t> timesV;
 	std::vector<TestSpline::point_t> interpolationPointsV;

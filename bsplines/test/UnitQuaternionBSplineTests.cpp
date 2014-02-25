@@ -147,8 +147,8 @@ TEST(UnitQuaternionBSplineTestSuite, testAngularAccelerationJacobian)
 TEST(UnitQuaternionBSplineTestSuite, testDiffManifoldBSplineFitting)
 {
 	double tolerance = 0.3; //TODO improve : the unit quaternion fitting is quite bad. this huge tolerance actually checks almost nothing apart from compilation and running without exceptions.
-	testDiffManifoldBSplineFitting<UQTestSpline>(splineOrder, tolerance);
-	testDiffManifoldBSplineFitting<UQTestSpline>(splineOrder * 2, tolerance);
+	testDiffManifoldBSplineFitting<UQTestSpline>(numberOfSegments, tolerance);
+	testDiffManifoldBSplineFitting<UQTestSpline>(numberOfSegments * 2, tolerance);
 }
 
 } // namespace bsplines

@@ -33,8 +33,8 @@ const double minTime = 0;
 const double maxTime = 1;
 const double duration = maxTime - minTime;
 
-const unsigned int numberOfSegments = 20;
-const unsigned int numberOfTimeSteps = 30;
+const unsigned int numberOfSegments = 16;
+const unsigned int numberOfTimeSteps = 32;
 
 
 typedef EuclideanBSpline<>::TYPE TestSplineDD;
@@ -134,7 +134,7 @@ typedef struct {
 	}
 
 	inline static duration_t getOne(){
-		return LongDuration(100);
+		return LongDuration(1000000);
 	}
 
 } LongTimePolicy;
@@ -142,7 +142,7 @@ typedef struct {
 typedef EuclideanBSpline<splineOrder, rows, LongTimePolicy>::TYPE TestSplineLongTime;
 
 const LongTime minTimeLong = LongTime(0);
-const LongTime maxTimeLong = LongTime(100);
+const LongTime maxTimeLong = LongTime(1000000);
 const LongDuration durationLong = LongTimePolicy::computeDuration(maxTimeLong, minTimeLong);
 
 const Eigen::VectorXd zero = Eigen::VectorXd::Zero(rows);
@@ -398,7 +398,7 @@ struct BSplineJacobianEvaluator{
 
 	std::vector<point_t> toBeDisturbedPoints;
 
-	BSplineJacobianEvaluator() : toBeDisturbedPoints(spline.getSplineOrder()){
+	BSplineJacobianEvaluator() :  _t(0), toBeDisturbedPoints(spline.getSplineOrder()) {
 		initMinimalSpline(spline);
 	}
 
@@ -545,7 +545,7 @@ void testDiffManifoldBSplineFitting(int numberOfSegments, double tolerance = 1E-
 	auto p = manifold.getIdentity();
 	for(int i = 0; i < numberOfInterpolationPoints; i ++){
 		timesV.push_back((time_t)times[i]);
-		p = manifold.exp(p, TestSpline::tangent_vector_t::Random((int)manifold.getDimension()));
+		p = manifold.exp(p, 0.05 * TestSpline::tangent_vector_t::Random((int)manifold.getDimension()));
 		interpolationPointsV.push_back(p);
 	}
 
@@ -571,7 +571,7 @@ void testDiffManifoldBSplineFitting(int numberOfSegments, double tolerance = 1E-
 	typename TestSpline::point_t goal;
 	typename TestSpline::tangent_vector_t translation((int)rbspline.getManifold().getDimension());
 	translation.setZero();
-	const double goalDist = 0.1;
+	const double goalDist = 0.01;
 	translation[0] = goalDist;
 	rbspline.getManifold().expInto(p, translation, goal);
 	interpolationPointsV.push_back(goal);

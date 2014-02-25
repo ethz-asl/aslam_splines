@@ -340,9 +340,17 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineInitialization)
 	//interpolationPoints.block(0, 0, 1, numberOfInterpolationPoints) = Eigen::VectorXd::LinSpaced(numberOfInterpolationPoints, 0, 1).transpose();
 	const double lambda = 0.1; // 0; //.1;
 
-	bspline.initSpline2(times, interpolationPoints, numberOfSegments, lambda);
-// TODO fix the follwoing for splineOrder = 2: 	bspline.initSpline3(times, interpolationPoints, numberOfSegments, lambda);
-// TODO fix the follwoing for splineOrder = 2: 	bspline.initSplineSparse(times, interpolationPoints, numberOfSegments, lambda);
+	// TODO fix for splineOrder = 2: 	bspline.initSpline3(times, interpolationPoints, numberOfSegments, lambda);
+	// TODO fix for splineOrder = 2: 	bspline.initSplineSparse(times, interpolationPoints, numberOfSegments, lambda);
+	// TODO fix for splineOrder = 3: 	bspline.initSpline2(times, interpolationPoints, numberOfSegments, lambda);
+	switch(splineOrder){
+		case 2:
+			bspline.initSpline2(times, interpolationPoints, numberOfSegments, lambda);
+			break;
+		default:
+			bspline.initSpline3(times, interpolationPoints, numberOfSegments, lambda);
+			break;
+	}
 
 	std::vector<TestSpline::time_t> timesV;
 	std::vector<TestSpline::point_t> interpolationPointsV;
@@ -431,14 +439,12 @@ TEST(EuclideanBSplineTestSuite, testEuclideanDiffManifoldBSplineInitialization)
 
 TEST(EuclideanBSplineTestSuite, testDiffManifoldBSplineFitting)
 {
-	testDiffManifoldBSplineFitting<TestSpline>(splineOrder);
-	testDiffManifoldBSplineFitting<TestSpline>(splineOrder * 2);
+	testDiffManifoldBSplineFitting<TestSpline>(numberOfSegments);
 }
 
 TEST(EuclideanBSplineTestSuite, testDiffManifoldBSplineFittingNsecTime)
 {
-	testDiffManifoldBSplineFitting<TestSplineNsecTime>(splineOrder);
-	testDiffManifoldBSplineFitting<TestSplineNsecTime>(splineOrder * 2);
+	testDiffManifoldBSplineFitting<TestSplineNsecTime>(numberOfSegments);
 }
 
 

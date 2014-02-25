@@ -239,7 +239,7 @@ TEST(DiffManifoldBSplineTestSuite, testGetBi)
 		TestSpline::Evaluator<0> evaluator = rbspline.getEvaluatorAt<0>(t);
 		Eigen::VectorXd localBiVector = evaluator.getLocalBi();
 		SM_ASSERT_EQ(std::runtime_error, localBiVector.rows(), splineOrder, "");
-		SM_ASSERT_NEAR(std::runtime_error, localBiVector.sum(), 1.0, 1e-10, "the bis at a given time should always sum up to 1")
+		SM_ASSERT_NEAR(std::runtime_error, localBiVector.sum(), 1.0, 1e-10, "the bi at a given time should always sum up to 1")
 
 		Eigen::VectorXd localCumulativeBiVector = evaluator.getLocalCumulativeBi();
 		SM_ASSERT_EQ(std::runtime_error, localCumulativeBiVector.rows(), splineOrder, "");
@@ -271,7 +271,7 @@ TEST(DiffManifoldBSplineTestSuite, testLongTimeBSplineCompilation)
 	TestSplineLongTime::point_t p = zero;
 	p[0] = 1.0;
 	rbspline.initConstantUniformSpline(minTimeLong, maxTimeLong, numberOfSegments, p);
-	sm::eigen::assertEqual(rbspline.getEvaluatorAt<0>(maxTimeLong).eval(), p, SM_SOURCE_FILE_POS);
+	sm::eigen::assertEqual(rbspline.getEvaluatorAt<0>(minTimeLong).eval(), p, SM_SOURCE_FILE_POS);
 }
 
 } //namespace bsplines

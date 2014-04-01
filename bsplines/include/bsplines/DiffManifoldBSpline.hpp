@@ -277,6 +277,8 @@ namespace bsplines {
 		 */
 		inline size_t getNumKnots() const;
 
+		inline bool isInitialized() { return _state == internal::state::SplineState::EVALUABLE; }
+
 		inline time_t getMinTime() const;
 		inline time_t getMaxTime() const;
 
@@ -408,7 +410,6 @@ namespace bsplines {
 
 		inline void assertEvaluable() const;
 		inline void assertConstructing() const;
-		inline bool isInitialized() { return _state == internal::state::SplineState::EVALUABLE; }
 
 		/**
 		 * compute duration

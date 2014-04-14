@@ -1,6 +1,8 @@
 #include "DiffManifoldBSplineTests.hpp"
+#include <algorithm>
 
 namespace bsplines {
+
 
 TEST(UnitQuaternionBSplineTestSuite, testQuaternionBSplineCompilation)
 {
@@ -13,28 +15,41 @@ TEST(UnitQuaternionBSplineTestSuite, testQuaternionBSplineCompilation)
 TEST(UnitQuaternionBSplineTestSuite, differentEvalMethodsEvalTheSame)
 {
 	UQTestSpline spline;
+	UQTestSplineD splineD(splineOrder);
+
 	initMinimalSpline(spline);
+	initMinimalSpline(splineD);
 
 	UQTestSpline::point_t p;
 	for(int i = 0, n = knot_arithmetics::getNumControlVerticesRequired(2, splineOrder) ; i < n; i ++){
 		spline.getManifold().randomizePoint(p);
 		spline.addControlVertex(i, p);
+		splineD.addControlVertex(i, p);
 	}
 
 	UQTestSpline::full_jacobian_t jac1, jac2;
+	UQTestSplineD::full_jacobian_t jac3;
 
 	for(int i = 0, n = 10; i< n; i ++){
 		double t = (spline.getMaxTime() - spline.getMinTime()) / (n - 1) * i + spline.getMinTime();
-		UQTestSpline::Evaluator<2> eval = spline.getEvaluatorAt<2>(t);
+		UQTestSpline::Evaluator<splineOrder + 1> eval = spline.getEvaluatorAt<splineOrder + 1>(t);
+		UQTestSplineD::Evaluator<splineOrder + 1> eval2 = splineD.getEvaluatorAt<splineOrder + 1>(t);
 
 //		std::cout << std::endl << "t = "<< t << std::endl;
 		sm::eigen::assertNear(eval.evalDRecursive(0), eval.evalGeneric(), 1E-9, SM_SOURCE_FILE_POS);
 		sm::eigen::assertNear(eval.evalDRecursive(1), eval.evalD1Special(), 1E-9, SM_SOURCE_FILE_POS);
 
+		for(unsigned i = 0 ;  i < std::min(splineOrder + 1, unsigned(4)); i ++){
+			sm::eigen::assertNear(eval.evalDRecursive(i), eval2.evalDRecursive(i), 0, SM_SOURCE_FILE_POS);
+		}
+		for(unsigned i = 0 ;  i < std::min(splineOrder + 1, unsigned(3)); i ++){
 		//compare generic recursive computation of Jacobian with the optimized one.s
-		eval.evalJacobianDRecursive(0, jac1);
-		eval.evalJacobian(jac2);
-		sm::eigen::assertNear(jac1, jac2, 1E-9, SM_SOURCE_FILE_POS);
+			eval.evalJacobianDRecursive(i, jac1);
+			eval.evalJacobian(i, jac2);
+			eval2.evalJacobian(i, jac3);
+			sm::eigen::assertNear(jac1, jac2, 0, SM_SOURCE_FILE_POS);
+			sm::eigen::assertNear(jac2, jac3, 0, SM_SOURCE_FILE_POS);
+		}
 	}
 }
 

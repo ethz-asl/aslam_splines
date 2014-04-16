@@ -28,3 +28,6 @@ target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
 #--------------------------#
 # Documentation
 #TODO: have catkin auto generate doc
+
+cs_install()
+cs_export()

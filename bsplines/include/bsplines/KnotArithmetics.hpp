@@ -9,6 +9,10 @@
 #define BSPLINEKNOTARITHMETICS_HPP_
 
 #include <sm/assert_macros.hpp>
+#include <deque>
+#include <vector>
+#include <iostream>
+#include <aslam/Exceptions.hpp>
 
 namespace bsplines{
 
@@ -119,6 +123,83 @@ class DeltaUniformKnotGenerator : public KnotGenerator<typename TimePolicy_::tim
 	int _splineOrder;
 	duration_t _delta;
 	time_t _lastKnot, _beyondThisTime;
+};
+
+template <typename TimePolicy_>
+class DeltaFreeKnotGenerator : public KnotGenerator<typename TimePolicy_::time_t> {
+ public:
+	typedef typename TimePolicy_::time_t time_t;
+	typedef typename TimePolicy_::duration_t duration_t;
+	inline DeltaFreeKnotGenerator(int splineOrder, time_t start, time_t beyondThisTime, duration_t delta, bool splineIsAlreadyInitialized = false) :
+			_splineOrder(splineOrder),
+			_delta(delta),
+			_lastKnot(TimePolicy_::addScaledDuration(start, delta, splineIsAlreadyInitialized ? -1: -(knot_arithmetics::getNumRequiredPreambleKnots(splineOrder) + 1)))
+	{
+			_beyondThisTime = getExtendedEndTime(beyondThisTime);
+	}
+
+	DeltaFreeKnotGenerator() = default;
+	virtual bool hasNextKnot() const { return _lastKnot < _beyondThisTime; };
+	virtual time_t getNextKnot()
+	{
+		time_t nextKnot = TimePolicy_::addScaledDuration(_lastKnot, _delta, 1);
+		for(auto it = _predefinedKnots.begin(); it != _predefinedKnots.end(); ++it)
+		{
+			time_t nextPredefinedKnot = *it;
+			if(nextPredefinedKnot > _lastKnot)
+			{
+				nextKnot = nextPredefinedKnot;
+				break;
+			}
+		}
+		_lastKnot = nextKnot;
+		return nextKnot;
+	};
+	virtual void extendBeyondTime(const time_t beyondThisTime)
+	{
+		_beyondThisTime = getExtendedEndTime(beyondThisTime);
+	}
+	virtual bool supportsAppending() const { return true; }
+	virtual ~DeltaFreeKnotGenerator() {}
+	bool addPredefinedKnot(const time_t& t)
+	{
+		if(_predefinedKnots.size() < 1)
+		{
+			_predefinedKnots.push_back(t);
+			return true;
+		}
+		time_t lastPredefinedKnot = _predefinedKnots.back();
+		if(t > lastPredefinedKnot)
+		{
+			_predefinedKnots.push_back(t);
+			return true;
+		}
+		return false;
+	}
+ private:
+	inline time_t getExtendedEndTime(time_t time)
+	{
+		if(_predefinedKnots.size() < 1)
+		{
+			return TimePolicy_::addScaledDuration(time, _delta, _splineOrder - 1);
+		}
+		while(_predefinedKnots.front() < time)
+		{
+			_predefinedKnots.pop_front();
+		}
+		auto it = _predefinedKnots.begin();
+		// increment now by splineorder -1
+		for(int i = 0; i < _splineOrder - 1; i++)
+		{
+			++it;
+			SM_ASSERT_TRUE(aslam::Exception, it != _predefinedKnots.end(), "Not enough predefined knots!");
+		}
+		return *it;
+	}
+	int _splineOrder;
+	duration_t _delta;
+	time_t _lastKnot, _beyondThisTime;
+	typename std::deque<time_t> _predefinedKnots;
 };
 
 }

@@ -21,3 +21,6 @@ catkin_add_nosetests(
 catkin_add_nosetests( 
   test/QuadraticIntegralError.py
 )
+
+cs_install()
+cs_export()

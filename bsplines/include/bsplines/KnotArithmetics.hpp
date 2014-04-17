@@ -9,10 +9,10 @@
 #define BSPLINEKNOTARITHMETICS_HPP_
 
 #include <sm/assert_macros.hpp>
+
 #include <deque>
 #include <vector>
 #include <iostream>
-#include <aslam/Exceptions.hpp>
 
 namespace bsplines{
 
@@ -192,7 +192,7 @@ class DeltaFreeKnotGenerator : public KnotGenerator<typename TimePolicy_::time_t
 		for(int i = 0; i < _splineOrder - 1; i++)
 		{
 			++it;
-			SM_ASSERT_TRUE(aslam::Exception, it != _predefinedKnots.end(), "Not enough predefined knots!");
+			SM_ASSERT_TRUE(std::runtime_error, it != _predefinedKnots.end(), "Not enough predefined knots!");
 		}
 		return *it;
 	}

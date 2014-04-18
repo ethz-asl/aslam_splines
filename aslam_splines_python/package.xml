@@ -10,7 +10,7 @@
   <buildtool_depend>catkin_simple</buildtool_depend>
 
   <build_depend>aslam_splines</build_depend>
-  <build_depend>aslam_splines_python</build_depend>
+  <build_depend>bsplines_python</build_depend>
   <build_depend>bsplines</build_depend>
   <build_depend>numpy_eigen</build_depend>
   <build_depend>eigen</build_depend>

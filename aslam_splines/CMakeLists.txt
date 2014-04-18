@@ -14,6 +14,8 @@ cs_add_library(${PROJECT_NAME}
   src/EuclideanBSplineDesignVariable.cpp
 )
 
+
+add_definitions(-DGTEST_USE_OWN_TR1_TUPLE=0)
 catkin_add_gtest(${PROJECT_NAME}_tests
   test/test_main.cpp
   test/TestBSplineExpressions.cpp

@@ -14,7 +14,7 @@ void import_bspline_python();
 void import_bspline_pose_python();
 void import_bspline_diff_manifold_python();
 
-BOOST_PYTHON_MODULE(libbsplines)
+BOOST_PYTHON_MODULE(libbsplines_python)
 {
 	import_bspline_python();
 	import_bspline_pose_python();

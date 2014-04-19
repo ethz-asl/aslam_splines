@@ -227,7 +227,7 @@ namespace internal{
 			typedef typename FittingBackendTraits<FittingBackend::DENSE>::Matrix Matrix;
 			typedef typename FittingBackendTraits<FittingBackend::DENSE>::Vector Vector;
 
-			inline static Matrix createA(unsigned int constraintSize, unsigned int coefficientDim, unsigned int D) {
+          inline static Matrix createA(unsigned int constraintSize, unsigned int coefficientDim, unsigned int /* D */) {
 				return Matrix::Zero(constraintSize, coefficientDim);
 			}
 			inline static Vector createB(int constraintSize) {
@@ -273,17 +273,17 @@ namespace internal{
 				return Matrix(rows,cols, true);
 			}
 
-			inline Vector createB(int constraintSize) {
+          inline Vector createB(int /* constraintSize */) {
 				std::vector<int> bcols(1);
 				bcols[0] = 1;
 				return Vector(rows,bcols, true);
 			}
 
-			inline static typename Matrix::SparseMatrixBlock & blockA(Matrix & A, int row, int col, int D, int size = 1){
+          inline static typename Matrix::SparseMatrixBlock & blockA(Matrix & A, int row, int col, int /* D */, int size = 1){
 				SM_ASSERT_EQ(std::runtime_error, 1, size, "This function should does not support size != 1");
 				return *A.block(row, col, allocateBlock);
 			}
-			inline static typename Vector::SparseMatrixBlock & segmentB(Vector & b, int row, int D){
+          inline static typename Vector::SparseMatrixBlock & segmentB(Vector & b, int row, int /* D */){
 				return *b.block(row, 0, allocateBlock);
 			}
 			template <typename DERIVED>

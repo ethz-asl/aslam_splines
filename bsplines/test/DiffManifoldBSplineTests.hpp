@@ -182,7 +182,7 @@ struct InputTypeTraits<double> {
 	inline static double ones(){
 		return 1;
 	}
-	inline static void update(double & input, int c, double delta){
+  inline static void update(double & input, int /* c */, double delta){
 		input += delta;
  	}
 };

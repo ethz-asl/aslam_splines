@@ -160,7 +160,7 @@ namespace bsplines {
 		DiffManifoldBSpline(const configuration_t & configuration) : _configuration(configuration), _state(internal::state::CONSTRUCTING), _manifold(configuration), _segments(new segment_map_t()) {}
 
 		DiffManifoldBSpline(const DiffManifoldBSpline & other) : _configuration(other._configuration), _state(other._state), _manifold(other._manifold), _segments(new segment_map_t(*other._segments)) { if(isInitialized()) initIterators();}
-		DiffManifoldBSpline(DiffManifoldBSpline && other) = default;
+      DiffManifoldBSpline(DiffManifoldBSpline && /* other */) = default;
 
 		DiffManifoldBSpline & operator=(const DiffManifoldBSpline & other);
 		DiffManifoldBSpline & operator=(DiffManifoldBSpline && other) = default;

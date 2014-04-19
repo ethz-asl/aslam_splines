@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import roslib; roslib.load_manifest('aslam_splines_python'); 
+import aslam_backend
 import aslam_splines
 import numpy
 import scipy

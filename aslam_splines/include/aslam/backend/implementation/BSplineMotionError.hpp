@@ -26,7 +26,7 @@ namespace aslam {
         }
 
         template<class SPLINE_T>
-        void BSplineMotionError<SPLINE_T>::initialize(spline_t * splineDV, Eigen::MatrixXd W, unsigned int errorTermOrder) {
+        void BSplineMotionError<SPLINE_T>::initialize(spline_t * /* splineDV */, Eigen::MatrixXd /* W */, unsigned int errorTermOrder) {
 
         	// check spline order:
         	int splineOrder = _splineDV->spline().splineOrder();
@@ -79,7 +79,7 @@ namespace aslam {
 
         /// \brief evaluate the jacobians
         template<class SPLINE_T>
-        void BSplineMotionError<SPLINE_T>::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & _jacobians)
+        void BSplineMotionError<SPLINE_T>::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & /* _jacobians */)
         {
                       
           // this is an error...
@@ -90,7 +90,7 @@ namespace aslam {
           
           
         template<class SPLINE_T>
-        void BSplineMotionError<SPLINE_T>::buildHessianImplementation(SparseBlockMatrix & outHessian, Eigen::VectorXd & outRhs, bool useMEstimator) {
+        void BSplineMotionError<SPLINE_T>::buildHessianImplementation(SparseBlockMatrix & outHessian, Eigen::VectorXd & outRhs, bool /* useMEstimator */) {
             
             
             // get the coefficients:

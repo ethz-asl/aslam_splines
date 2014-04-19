@@ -17,8 +17,6 @@ add_python_export_library(${PY_PROJECT_NAME} ${PY_PACKAGE_DIR}
   src/BSplinePosePython.cpp
 )
 
-#rosbuild_link_boost(${PY_PROJECT_NAME} python thread filesystem)
-#target_link_libraries(${PY_PROJECT_NAME} ${PROJECT_NAME})
 
 
 ## Add nosetest based cpp test target.

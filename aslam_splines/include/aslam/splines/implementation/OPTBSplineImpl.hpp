@@ -109,7 +109,7 @@ namespace internal {
 
 	template <typename TJacobian, int IPointSize, int IDimension, bool Dynamic = TJacobian::SizeAtCompileTime == Eigen::Dynamic>
 	struct AddJac {
-		static inline void addJac(TJacobian & J, const int col, const DesignVariable * designVariable, JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule, int pointSize, int dimension){
+      static inline void addJac(TJacobian & J, const int col, const DesignVariable * designVariable, JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule, int /* pointSize */, int /* dimension */){
 			addJacImpl(designVariable, outJacobians, applyChainRule, J.template block<IPointSize,IDimension>(0,col));
 		}
 	};

@@ -32,7 +32,7 @@ class KnotGenerator{
 	virtual bool hasKnotIndexResolver() { return false; }
 	virtual const KnotIndexResolver<Time_>& getKnotIndexResolver() const { throw std::runtime_error("unsupported operation");};
 	virtual bool supportsAppending() const { return false; }
-	virtual void extendBeyondTime(const Time_ beyondThisTime) { throw std::runtime_error("unsupported operation"); }
+  virtual void extendBeyondTime(const Time_ /* beyondThisTime */) { throw std::runtime_error("unsupported operation"); }
 	virtual ~KnotGenerator() {}
 };
 

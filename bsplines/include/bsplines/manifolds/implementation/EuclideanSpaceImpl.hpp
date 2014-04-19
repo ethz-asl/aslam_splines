@@ -23,7 +23,7 @@ namespace manifolds {
 	}
 
 	_TEMPLATE
-	inline typename _CLASS::dmatrix_point2point_t _CLASS::dMultL(const point_t & mult, bool oppositeMult) const
+	inline typename _CLASS::dmatrix_point2point_t _CLASS::dMultL(const point_t & /* mult */, bool /* oppositeMult */ ) const
 	{
 		return _CLASS::dmatrix_point2point_t::Identity((int)this->getPointSize(), (int)this->getPointSize());
 	}
@@ -49,7 +49,7 @@ namespace manifolds {
 	}
 
 	_TEMPLATE
-	void _CLASS::dlogAtIdInto(const tangent_vector_t & vec, dmatrix_transposed_t & result) const {
+	void _CLASS::dlogAtIdInto(const tangent_vector_t & /* vec */, dmatrix_transposed_t & result) const {
 		result = dmatrix_t::Identity(result.rows(), result.cols());
 	}
 
@@ -64,7 +64,7 @@ namespace manifolds {
 	}
 
 	_TEMPLATE
-	inline void _CLASS::dexpAtIdInto(const tangent_vector_t & vec, dmatrix_t & result) const {
+	inline void _CLASS::dexpAtIdInto(const tangent_vector_t & /* vec */, dmatrix_t & result) const {
 		result = dmatrix_t::Identity(result.rows(), result.cols());
 	}
 

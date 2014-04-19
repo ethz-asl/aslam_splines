@@ -44,6 +44,8 @@ namespace bsplines {
 	      BiVector(int startIndex, const Eigen::VectorXd & localBi, double endValue) : startIndex_(startIndex), endValue_(endValue), localBi_(localBi){};
 
 	      double operator() (int i, int j = 0) const {
+            // kill unused parameter warning
+            static_cast<void>(j);
 		      i -= startIndex_;
 		      if(i < 0){
 			      return endValue_;

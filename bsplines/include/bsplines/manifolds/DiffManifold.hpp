@@ -105,8 +105,8 @@ namespace manifolds {
 		static inline void scaleVectorInto(const tangent_vector_t & vec, const scalar_t scalar, tangent_vector_t & result){ result = vec * scalar;}
 		static inline tangent_vector_t scaleVector(const tangent_vector_t & vec, const scalar_t scalar){ return vec * scalar; }
 
-		bool isInManifold(const point_t & pt) const { return true; }
-		void projectIntoManifold(point_t & pt) const { }
+      bool isInManifold(const point_t & /* pt */) const { return true; }
+      void projectIntoManifold(point_t & /* pt */) const { }
 		void randomizePoint(point_t & pt) const { pt = point_t::random(getPointSize()); }
 		point_t getRandomPoint() const { point_t p((int)getPointSize());  getDerived().randomizePoint(p); return p; }
 	protected:

@@ -18,7 +18,6 @@ add_python_export_library(${PY_PROJECT_NAME} ${PY_PACKAGE_DIR}
 )
 
 
-
 ## Add nosetest based cpp test target.
 catkin_add_nosetests(test/DiffManifoldBSpline.py)
 

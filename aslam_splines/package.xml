@@ -18,4 +18,5 @@
   <build_depend>eigen</build_depend>
   <build_depend>sm_common</build_depend>
   <build_depend>sm_kinematics</build_depend>
+  <build_depend>sm_timing</build_depend>
 </package>

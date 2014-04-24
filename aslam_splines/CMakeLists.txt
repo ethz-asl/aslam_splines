@@ -1,41 +1,12 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 2.8.3)
+project(aslam_splines)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
-#set(ROS_BUILD_TYPE Debug)
-set(ROS_BUILD_TYPE Release)
-# just write one of the upper lines into LocalBuildType.cmake to have a ROS_BUILD_TYPE not under version control as it should be.
-include(LocalBuildType.cmake OPTIONAL)
-message("ROS_BUILD_TYPE=" ${ROS_BUILD_TYPE})
-rosbuild_init()
+find_package(catkin_simple REQUIRED)
+catkin_simple()
 
-set(CMAKE_CXX_FLAGS "-std=c++0x")
+include_directories(${EIGEN_INCLUDE_DIRS})
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
-
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})
-
-rosbuild_add_library(${PROJECT_NAME} 
+cs_add_library(${PROJECT_NAME}
   src/BSplinePoseDesignVariable.cpp
   src/BSplineRSPoseDesignVariable.cpp
   src/BSplineExpressions.cpp
@@ -43,15 +14,13 @@ rosbuild_add_library(${PROJECT_NAME}
   src/EuclideanBSplineDesignVariable.cpp
 )
 
-# Avoid clash with tr1::tuple: https://code.google.com/p/googletest/source/browse/trunk/README?r=589#257
-add_definitions(-DGTEST_USE_OWN_TR1_TUPLE=0)
-
-rosbuild_add_gtest(${PROJECT_NAME}_test
+catkin_add_gtest(${PROJECT_NAME}_tests
   test/test_main.cpp
   test/TestBSplineExpressions.cpp
   test/TestOPTBSpline.cpp
   test/TestErrors.cpp
 )
+target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
 
-target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})
-
+cs_install()
+cs_export()

@@ -35,7 +35,7 @@ namespace internal {
 	inline void addErrorTermToProblem(OptimizationProblem & problem, ErrorTerm *et, bool problemOwnsErrorTerms){
 		problem.addErrorTerm(et, problemOwnsErrorTerms);
 	}
-	inline void addErrorTermToProblem(OptimizationProblem & problem, boost::shared_ptr<ErrorTerm> et, bool problemOwnsErrorTerms){
+	inline void addErrorTermToProblem(OptimizationProblem & problem, boost::shared_ptr<ErrorTerm> et, bool /* problemOwnsErrorTerms */){
 		problem.addErrorTerm(et);
 	}
 }

@@ -532,7 +532,7 @@ void testBSplineJacobianD(TestSplineDD & bs, Eigen::MatrixXd & J, Eigen::VectorX
 		sm::eigen::assertNear(J, estJ, 1e-5, SM_SOURCE_FILE_POS);
 	}
 }
-template<> void testBSplineJacobianD<-1>(TestSplineDD & bs, Eigen::MatrixXd & J, Eigen::VectorXd & coefficients, int dim){};
+template<> void testBSplineJacobianD<-1>(TestSplineDD & /* bs */, Eigen::MatrixXd & /* J */, Eigen::VectorXd & /* coefficients */, int /* dim */){};
 
 template<int ISplineOrder>
 void testBSplineJacobiansSO(){

@@ -38,6 +38,7 @@ class TestQuadraticIntegralError(unittest.TestCase):
         W = sqrtW.T * sqrtW;
         for derivativeOrder in range(0, splineOrder - 1):
             p = aslam_backend.OptimizationProblem()
+            for i in range(0, sdv.numDesignVariables()) : p.addDesignVariable(sdv.designVariable(i))
             aslam_splines.addQuadraticIntegralEuclideanExpressionErrorTermsToProblem(p, tMin, tMax, 100, lambda(time) : sdv.toEuclideanExpression(time, derivativeOrder), sqrtW)
             E = 0;
             for i in range(0, p.numErrorTerms()):

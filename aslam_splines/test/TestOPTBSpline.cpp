@@ -65,7 +65,7 @@ struct OPTSplineSpecializationTester
 	typedef typename OPTBSpline<typename TSplineMap::CONF>::BSpline TestBSpline;
 	typedef typename TestBSpline::TimeExpression TimeExpression;
 	typedef GenericScalar<typename TimeExpression::Scalar> TimeDesignVariable;
-	static void test(TestBSpline & spline, double t, typename TestBSpline::TimeExpression timeExpression){}
+	static void test(TestBSpline & /* spline */, double /* t */, typename TestBSpline::TimeExpression /* timeExpression */){}
 };
 
 

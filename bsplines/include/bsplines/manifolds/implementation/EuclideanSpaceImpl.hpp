@@ -69,7 +69,7 @@ namespace manifolds {
 	}
 
 	_TEMPLATE
-	inline void _CLASS::dexpInto(const point_t & from, const tangent_vector_t & vec, dmatrix_t & result) const {
+	inline void _CLASS::dexpInto(const point_t & /* from */, const tangent_vector_t & /* vec */, dmatrix_t & result) const {
 		result = dmatrix_t::Identity(result.rows(), result.cols());
 	}
 

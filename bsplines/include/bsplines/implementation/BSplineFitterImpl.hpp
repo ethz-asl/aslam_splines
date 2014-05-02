@@ -133,9 +133,9 @@ namespace internal{
 
 namespace internal{
 	template<typename TSpline>
-	int getNumberOfRelevantControlVertices(TSpline& spline, typename TSpline::time_t startTime, const typename TSpline::time_t& upToTime, std::function<void(typename TSpline::SegmentIterator it)> apply = std::function<void(typename TSpline::SegmentIterator it)>())
+	unsigned int getNumberOfRelevantControlVertices(TSpline& spline, typename TSpline::time_t startTime, const typename TSpline::time_t& upToTime, std::function<void(typename TSpline::SegmentIterator it)> apply = std::function<void(typename TSpline::SegmentIterator it)>())
 	{
-		int fixFirstVertices = 0;
+		unsigned int fixFirstVertices = 0;
 		for (auto it = spline.getFirstRelevantSegmentByLast(spline.getSegmentIterator(startTime));it->getKnot() < upToTime;fixFirstVertices++, it++) {
 			if(apply) apply(it);
 		}
@@ -161,7 +161,7 @@ namespace internal{
 		}
 
 		if(honorCurrentValuePercentage == 0 || honorCurrentValuePercentage == 100){
-			int fixFirstVertices;
+			unsigned int fixFirstVertices;
 			if(honorCurrentValuePercentage) {
 				if(lastTime > oldMaxTime){
 					fixFirstVertices = internal::getNumberOfRelevantControlVertices(spline, times[0], oldMaxTime);
@@ -173,7 +173,7 @@ namespace internal{
 			else{// ignore former values
 				fixFirstVertices = 0;
 			}
-			fitSpline(spline, times, points, lambda, fixFirstVertices, std::function<scalar_t(int i) >(), fittingBackend, calculateControlVertexOffsets);
+			fitSpline(spline, times, points, lambda, (int)fixFirstVertices, std::function<scalar_t(int i) >(), fittingBackend, calculateControlVertexOffsets);
 		}else{
 			vector<scalar_t> weights;
 			scalar_t baseWeight = scalar_t(honorCurrentValuePercentage) / scalar_t(100 - honorCurrentValuePercentage);
@@ -182,7 +182,7 @@ namespace internal{
 			std::vector<point_t> newPoints;
 			const time_t minTime = spline.getMinTime();
 
-			const int relevantOldVCs = internal::getNumberOfRelevantControlVertices<TSpline>(spline, times[0], oldMaxTime,
+			const unsigned int relevantOldVCs = internal::getNumberOfRelevantControlVertices<TSpline>(spline, times[0], oldMaxTime,
 				[&](typename TSpline::SegmentIterator it)
 				{
 					it++;
@@ -203,7 +203,7 @@ namespace internal{
 			newPoints.resize(points.size() + relevantOldVCs);
 			copy(points.begin(), points.end(), newPoints.begin() + relevantOldVCs);
 
-			fitSpline(spline, newTimes, newPoints, lambda, 0, [relevantOldVCs, &weights](int i){ return i < relevantOldVCs ? weights[i]: scalar_t(1.0);}, fittingBackend, calculateControlVertexOffsets);
+			fitSpline(spline, newTimes, newPoints, lambda, 0, [relevantOldVCs, &weights](int i){ return i < (int)relevantOldVCs ? weights[i]: scalar_t(1.0);}, fittingBackend, calculateControlVertexOffsets);
 		}
 	}
 

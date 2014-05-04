@@ -11,6 +11,10 @@ cs_add_library(${PROJECT_NAME}
   src/exampleBST.cpp
 )
 
+find_package(Boost REQUIRED COMPONENTS system) 
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+
+
 cs_add_executable(${PROJECT_NAME}_exec
   src/exampleBST.cpp
 )

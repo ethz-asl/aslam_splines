@@ -304,7 +304,7 @@ namespace bsplines{
 		Eigen::Vector3d deps = qeps(d);
 		point_t v = this->eval();
 		Eigen::Vector3d veps = qeps(v);
-		auto tmp = (qeta(v) * deps - qeta(d) * veps - veps.cross(deps));
+		Eigen::Vector3d tmp = (qeta(v) * deps - qeta(d) * veps - veps.cross(deps));
 
 		switch(IDerivativeOrder){
 			case 1:

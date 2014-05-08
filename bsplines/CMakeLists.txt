@@ -5,7 +5,7 @@ find_package(catkin_simple REQUIRED)
 
 catkin_simple()
 
-include_directories(${Eigen_INCLUDE_DIRS})
+
 
 cs_add_library(${PROJECT_NAME} 
   src/BSpline.cpp

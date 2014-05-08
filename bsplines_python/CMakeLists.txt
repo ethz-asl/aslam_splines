@@ -4,8 +4,6 @@ project(bsplines_python)
 find_package(catkin_simple REQUIRED)
 catkin_simple()
 
-include_directories(${Eigen_INCLUDE_DIRS})
-
 # Set up the python exports.
 SET(PY_PROJECT_NAME bsplines_python)
 SET(PY_PACKAGE_DIR python/bsplines)

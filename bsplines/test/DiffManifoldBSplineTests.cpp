@@ -34,10 +34,10 @@ namespace bsplines {
 
 	TEST(DiffManifoldBSplineTestSuite, testManifolds)
 	{
-		testManifolds<3, Eigen::Dynamic, double>();
-		testManifolds<3, 3, double>();
-		testManifolds<3, Eigen::Dynamic, float>();
-		testManifolds<3, 3, float>();
+		testManifolds<3, true, double>();
+		testManifolds<3, false, double>();
+		testManifolds<3, true, float>();
+		testManifolds<3, false, float>();
 	}
 }
 

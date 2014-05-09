@@ -404,9 +404,8 @@ namespace internal{
 			++brow;
 		}
 
-		auto At = A.transpose();
-		b = (At * b).eval();
-		A = (At * A).eval();
+		b = A.transpose() * b;
+		A = A.transpose() * A;
 
 		if(lambda != 0.0){
 			// Add the motion constraint.

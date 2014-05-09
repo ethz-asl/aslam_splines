@@ -11,7 +11,6 @@
 #include <aslam/backend/DesignVariableMappedVector.hpp>
 #include <bsplines/DiffManifoldBSpline.hpp>
 #include <Eigen/StdVector>
-#include <boost/ptr_container/ptr_vector.hpp>
 #include <aslam/backend/TransformationExpression.hpp>
 #include <aslam/backend/RotationExpression.hpp>
 #include <aslam/backend/EuclideanExpression.hpp>

@@ -142,6 +142,7 @@ namespace numeric_integrator {
 
 		auto integrator = Algorithm().template getIntegrator<double>(a, b, numberOfPoints);
 
+		SM_ASSERT_TRUE(std::runtime_error, numberOfPoints>2, "too few integration points given : " << numberOfPoints);
 		SM_ASSERT_TRUE_DBG(std::runtime_error, !integrator.isAtEnd(), "too few integration points given : " << numberOfPoints);
 
 		TValue sum = f(integrator.getIntegrationScalar()) * integrator.getValueFactor();

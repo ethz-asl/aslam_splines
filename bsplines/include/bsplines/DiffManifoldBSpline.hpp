@@ -82,8 +82,8 @@ namespace bsplines {
 
 		template <typename TDiffManifoldBSplineConfiguration>
 		struct SegmentMap : public std::map<typename TDiffManifoldBSplineConfiguration::TimePolicy::time_t, SegmentData<TDiffManifoldBSplineConfiguration> > {
-			typedef std::map<typename TDiffManifoldBSplineConfiguration::TimePolicy::time_t, SegmentData<TDiffManifoldBSplineConfiguration> > parent_t;
 			typedef SegmentData<TDiffManifoldBSplineConfiguration> segment_data_t;
+			typedef std::map<typename TDiffManifoldBSplineConfiguration::TimePolicy::time_t, segment_data_t> parent_t;
 			typedef typename segment_data_t::point_t point_t;
 			typedef typename segment_data_t::basis_matrix_t basis_matrix_t;
 			typedef typename TDiffManifoldBSplineConfiguration::TimePolicy::time_t time_t;
@@ -277,6 +277,8 @@ namespace bsplines {
 		 */
 		inline size_t getNumKnots() const;
 
+		inline bool isInitialized() { return _state == internal::state::SplineState::EVALUABLE; }
+
 		inline time_t getMinTime() const;
 		inline time_t getMaxTime() const;
 
@@ -408,7 +410,6 @@ namespace bsplines {
 
 		inline void assertEvaluable() const;
 		inline void assertConstructing() const;
-		inline bool isInitialized() { return _state == internal::state::SplineState::EVALUABLE; }
 
 		/**
 		 * compute duration

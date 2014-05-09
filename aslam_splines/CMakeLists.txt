@@ -4,7 +4,8 @@ project(aslam_splines)
 find_package(catkin_simple REQUIRED)
 catkin_simple()
 
-include_directories(${EIGEN_INCLUDE_DIRS})
+find_package(Boost REQUIRED COMPONENTS system )
+
 
 cs_add_library(${PROJECT_NAME}
   src/BSplinePoseDesignVariable.cpp
@@ -14,6 +15,7 @@ cs_add_library(${PROJECT_NAME}
   src/EuclideanBSplineDesignVariable.cpp
 )
 
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 
 add_definitions(-DGTEST_USE_OWN_TR1_TUPLE=0)
 catkin_add_gtest(${PROJECT_NAME}_tests

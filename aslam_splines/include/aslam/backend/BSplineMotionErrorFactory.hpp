@@ -13,7 +13,7 @@ namespace aslam {
 namespace backend {
 
 template<class BSplineDesignVariable>
-void addMotionErrorTerms(OptimizationProblem & problem, BSplineDesignVariable & spline, Eigen::MatrixXd W, unsigned int errorTermOrder);
+void addMotionErrorTerms(OptimizationProblemBase & problem, BSplineDesignVariable & spline, Eigen::MatrixXd W, unsigned int errorTermOrder);
 
 } // namespace backend
 } // namespace aslam

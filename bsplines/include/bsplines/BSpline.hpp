@@ -400,6 +400,16 @@ namespace bsplines {
       Eigen::VectorXd localCoefficientVector(double t) const;
 
       /** 
+       * Get the local coefficient vector for segment i
+       * 
+       * @param segmentIdx the segment index
+       * 
+       * @return The local coefficient vector active on time segment i
+       */
+      Eigen::VectorXd segmentCoefficientVector(int segmentIdx) const;
+
+
+      /** 
        * Update the local coefficient vector
        * 
        * @param t The time used to select the local coefficients.
@@ -416,6 +426,16 @@ namespace bsplines {
        */
       Eigen::VectorXi localCoefficientVectorIndices(double t) const;
 
+
+      /**
+       * Get the indices of the local coefficients active on segment i
+       *
+       * @param segmentIdx The segment being queried.
+       * 
+       * @return The indices of the local coefficients active on this segment.
+       */
+      Eigen::VectorXi segmentCoefficientVectorIndices(int segmentIdx) const;
+
       /** 
        * Get the indices of the local vector-valued coefficients active at time t.
        * 
@@ -424,6 +444,15 @@ namespace bsplines {
        * @return The indices of the local vector-valued coefficients active at time t.
        */
       Eigen::VectorXi localVvCoefficientVectorIndices(double t) const;
+
+      /**
+       * Get the indices of the local vector-valued coefficients active on segment i
+       *
+       * @param segmentIdx The segment being queried.
+       * 
+       * @return The indices of the local vector-valued coefficients active on this segment.
+       */
+      Eigen::VectorXi segmentVvCoefficientVectorIndices(int segmentIdx) const;
 
 
       int coefficientVectorLength() const;
@@ -542,6 +571,8 @@ namespace bsplines {
 	      return Eigen::CwiseNullaryOp <BiVector, Eigen::VectorXd>(numValidTimeSegments(), 1, BiVector(segmentIndex(t), getLocalCumulativeBiVector(t), 1));
       }
 
+      Eigen::MatrixXd segmentIntegral(int segmentIdx, const Eigen::MatrixXd& W, int derivativeOrder) const;
+      
       Eigen::MatrixXd segmentQuadraticIntegral(const Eigen::MatrixXd & W, int segmentIdx, int derivativeOrder) const;
       Eigen::MatrixXd segmentQuadraticIntegralDiag(const Eigen::VectorXd & Wdiag, int segmentIdx, int derivativeOrder) const;
       Eigen::MatrixXd curveQuadraticIntegral(const Eigen::MatrixXd & W, int derivativeOrder) const;

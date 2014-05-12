@@ -8,10 +8,7 @@
 //#include <asrl/string_routines.hpp>
 // boost::tie()
 #include <boost/tuple/tuple.hpp>
-//#include <Eigen/Sparse>
-
-
-
+#include <Eigen/SVD> 
 
 namespace bsplines {
     
@@ -425,6 +422,17 @@ namespace bsplines {
       return c;
     }
 
+Eigen::VectorXd BSpline::segmentCoefficientVector(int segmentIdx) const {
+  SM_ASSERT_GE_LT(std::runtime_error, segmentIdx, 0, numValidTimeSegments(), "segment index out of bounds");
+  int bidx = segmentIdx;
+  Eigen::VectorXd c(splineOrder_ * coefficients_.rows());
+  for(int i = 0; i < splineOrder_; i++) {
+    c.segment(i*coefficients_.rows(), coefficients_.rows()) = coefficients_.col(i + bidx);
+  }
+  return c;
+}
+
+
     Eigen::VectorXi BSpline::localCoefficientVectorIndices(double t) const
     {
       std::pair<double,int> ui = computeTIndex(t);
@@ -433,12 +441,25 @@ namespace bsplines {
       return Eigen::VectorXi::LinSpaced(splineOrder_*D,bidx*D,(bidx + splineOrder_)*D - 1);
     }
 
+Eigen::VectorXi BSpline::segmentCoefficientVectorIndices(int segmentIdx) const {
+  SM_ASSERT_GE_LT(std::runtime_error, segmentIdx, 0, numValidTimeSegments(), "segment index out of bounds");
+  int bidx = segmentIdx;
+  int D = coefficients_.rows();
+  return Eigen::VectorXi::LinSpaced(splineOrder_*D,bidx*D,(bidx + splineOrder_)*D - 1);
+}
+
     Eigen::VectorXi BSpline::localVvCoefficientVectorIndices(double t) const
     {
       std::pair<double,int> ui = computeTIndex(t);
       int bidx = ui.second - splineOrder_ + 1;
       return Eigen::VectorXi::LinSpaced(splineOrder_,bidx,(bidx + splineOrder_) - 1);
     }
+
+Eigen::VectorXi BSpline::segmentVvCoefficientVectorIndices(int segmentIdx) const {
+  SM_ASSERT_GE_LT(std::runtime_error, segmentIdx, 0, numValidTimeSegments(), "segment index out of bounds");
+  int bidx = segmentIdx;
+  return Eigen::VectorXi::LinSpaced(splineOrder_,bidx,(bidx + splineOrder_) - 1);
+}
 
     Eigen::MatrixXd BSpline::Phi(double t, int derivativeOrder) const
     {
@@ -1477,6 +1498,16 @@ namespace bsplines {
 
       return D;
     }
+
+Eigen::MatrixXd BSpline::segmentIntegral(int segmentIdx, const Eigen::MatrixXd & W, int derivativeOrder) const {
+  // Let's do this quick and dirty.
+
+  auto svd = segmentQuadraticIntegral(W, segmentIdx, derivativeOrder).jacobiSvd(Eigen::ComputeFullU);
+  return (svd.matrixU() * svd.singularValues().array().sqrt().matrix().asDiagonal()).transpose();
+}
+
+
+
 
     Eigen::MatrixXd BSpline::segmentQuadraticIntegral(const Eigen::MatrixXd & W, int segmentIdx, int derivativeOrder) const
     {

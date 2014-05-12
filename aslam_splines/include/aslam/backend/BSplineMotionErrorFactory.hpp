@@ -2,7 +2,6 @@
 #define _BSPLINEMOTIONERRORFACTORY_H_
 
 #include <aslam/backend/ErrorTerm.hpp>
-XZ
 #include <aslam/backend/OptimizationProblem.hpp>
 #include <bsplines/BSplinePose.hpp>
 #include <aslam/splines/BSplinePoseDesignVariable.hpp>

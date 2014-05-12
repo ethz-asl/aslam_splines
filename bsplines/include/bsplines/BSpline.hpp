@@ -571,9 +571,7 @@ namespace bsplines {
 	      return Eigen::CwiseNullaryOp <BiVector, Eigen::VectorXd>(numValidTimeSegments(), 1, BiVector(segmentIndex(t), getLocalCumulativeBiVector(t), 1));
       }
 
-      
-
-      Eigen::MatrixXd segmentIntegral(int segmentIdx, const Eigen::MatrixXd & W, int derivativeOrder) const;
+      Eigen::MatrixXd segmentIntegral(int segmentIdx, const Eigen::MatrixXd& W, int derivativeOrder) const;
       
       Eigen::MatrixXd segmentQuadraticIntegral(const Eigen::MatrixXd & W, int segmentIdx, int derivativeOrder) const;
       Eigen::MatrixXd segmentQuadraticIntegralDiag(const Eigen::VectorXd & Wdiag, int segmentIdx, int derivativeOrder) const;

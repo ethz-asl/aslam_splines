@@ -8,13 +8,7 @@
 //#include <asrl/string_routines.hpp>
 // boost::tie()
 #include <boost/tuple/tuple.hpp>
-
 #include <Eigen/SVD> 
-
-
-
-
-
 
 namespace bsplines {
     
@@ -465,7 +459,6 @@ Eigen::VectorXi BSpline::segmentVvCoefficientVectorIndices(int segmentIdx) const
   SM_ASSERT_GE_LT(std::runtime_error, segmentIdx, 0, numValidTimeSegments(), "segment index out of bounds");
   int bidx = segmentIdx;
   return Eigen::VectorXi::LinSpaced(splineOrder_,bidx,(bidx + splineOrder_) - 1);
-
 }
 
     Eigen::MatrixXd BSpline::Phi(double t, int derivativeOrder) const

@@ -2,7 +2,7 @@
 #define _BSPLINEMOTIONERRORFACTORY_H_
 
 #include <aslam/backend/ErrorTerm.hpp>
-
+XZ
 #include <aslam/backend/OptimizationProblem.hpp>
 #include <bsplines/BSplinePose.hpp>
 #include <aslam/splines/BSplinePoseDesignVariable.hpp>
@@ -13,7 +13,7 @@ namespace aslam {
 namespace backend {
 
 template<class BSplineDesignVariable>
-void addMotionErrorTerms(OptimizationProblemBase & problem, BSplineDesignVariable & spline, Eigen::MatrixXd W, unsigned int errorTermOrder);
+void addMotionErrorTerms(OptimizationProblemBase& problem, BSplineDesignVariable& spline, const Eigen::MatrixXd& W, unsigned int errorTermOrder);
 
 } // namespace backend
 } // namespace aslam

@@ -3,7 +3,7 @@ namespace aslam {
 namespace backend {
 
 template<class SplineDv>
-void addMotionErrorTerms(OptimizationProblemBase & problem, SplineDv & splineDv, Eigen::MatrixXd W, unsigned int errorTermOrder) {
+void addMotionErrorTerms(OptimizationProblemBase& problem, SplineDv& splineDv, const Eigen::MatrixXd& W, unsigned int errorTermOrder) {
   // Add one error term for each segment
   auto spline = splineDv.spline();
 
@@ -17,7 +17,7 @@ void addMotionErrorTerms(OptimizationProblemBase & problem, SplineDv & splineDv,
     for(unsigned i = 0; i < idxs.size(); ++i) {
       dvs.push_back(splineDv.designVariable(idxs[i]));
     }
-    boost::shared_ptr< MarginalizationPriorErrorTerm > err( 
+    MarginalizationPriorErrorTerm::Ptr err( 
         new MarginalizationPriorErrorTerm( dvs, R*c, R ));
     problem.addErrorTerm(err);
             

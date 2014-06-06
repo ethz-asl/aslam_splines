@@ -5,6 +5,7 @@
 */.settings/org.eclipse.cdt.core.prefs
 */.settings/org.eclipse.cdt.ui.prefs
 */.settings/org.eclipse.ltk.core.refactoring.prefs
+*/.settings/language.settings.xml
 *~
 *.so
 aslam_spline_design_variables/build/

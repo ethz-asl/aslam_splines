@@ -303,6 +303,8 @@ namespace bsplines {
 		inline SegmentIterator getSegmentIterator(const time_t & t);
 		inline SegmentConstIterator getSegmentIterator(const time_t & t) const;
 
+		time_t getMinimalDistanceToNeighborKnots(const time_t & t) const;
+
 		inline SegmentConstIterator getFirstRelevantSegmentByLast(const SegmentConstIterator & first) const;
 		inline SegmentIterator getFirstRelevantSegmentByLast(const SegmentIterator & first);
 

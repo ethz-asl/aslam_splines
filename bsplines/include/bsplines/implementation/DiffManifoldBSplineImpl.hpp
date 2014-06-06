@@ -645,6 +645,12 @@ namespace bsplines {
 
 
 	_TEMPLATE
+	inline typename _CLASS::time_t _CLASS::getMinimalDistanceToNeighborKnots(const time_t & t) const {
+		auto it = getSegmentIterator(t);
+		return std::min(t - it->getKnot(), getMovedIterator(it, getAbsoluteEnd(), 1)->getKnot() - t);
+	}
+
+	_TEMPLATE
 	inline typename _CLASS::SegmentConstIterator _CLASS::getFirstRelevantSegmentByLast(const SegmentConstIterator & first) const
 	{
 		return internal::getMovedIterator(first, getAbsoluteBegin(), -(getSplineOrder() - 1));

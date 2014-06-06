@@ -5,7 +5,11 @@
  *      Author: hannes
  */
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include <type_traits>
+#include <algorithm>
 #include <sm/eigen/gtest.hpp>
 #include <sm/eigen/NumericalDiff.hpp>
 #include <sm/kinematics/Transformation.hpp>
@@ -14,6 +18,7 @@
 #include <bsplines/EuclideanBSpline.hpp>
 #include <bsplines/UnitQuaternionBSpline.hpp>
 #include <bsplines/NsecTimePolicy.hpp>
+#include <bsplines/BSplineFitter.hpp>
 
 #include <aslam/backend/TransformationBasic.hpp>
 #include <aslam/backend/EuclideanPoint.hpp>
@@ -31,14 +36,18 @@
 #include <aslam/backend/VectorExpressionToGenericMatrixTraits.hpp>
 
 
+//#define NO_T1
+//#define NO_T2
+//#define COMPILE_FAST
+
 using namespace aslam::backend;
 using namespace sm::kinematics;
 using namespace aslam::splines;
 using namespace bsplines;
 using namespace std;
 
-const int numSegments = 3, numberOfTimesToProbe = 10;
-const double duration = numSegments / 2.0;
+const int numSegments = 10, numberOfTimesToProbe = 30;
+const double duration = 10;
 const bool randomizeControlVertices = true;
 
 template <typename TConf, int ISplineOrder, int IDim, bool BDimRequired> struct ConfCreator {
@@ -65,7 +74,7 @@ struct OPTSplineSpecializationTester
 	typedef typename OPTBSpline<typename TSplineMap::CONF>::BSpline TestBSpline;
 	typedef typename TestBSpline::TimeExpression TimeExpression;
 	typedef GenericScalar<typename TimeExpression::Scalar> TimeDesignVariable;
-	static void test(TestBSpline & /* spline */, double /* t */, typename TestBSpline::TimeExpression /* timeExpression */){}
+	static void test(TestBSpline & /* spline */, double /* t */, typename TestBSpline::TimeExpression /* timeExpression */, time_t /* timeExpLowerBound */, time_t /* timeExpUpperBound */){}
 };
 
 
@@ -74,6 +83,15 @@ struct MaxDerivative {
 	enum { VALUE = ISplineOrder };
 };
 
+template <typename TSpline, typename TExpression>
+bool isNumericallyDifferentiableAt(const TSpline & spline, const TExpression & /* expression */, int derivativeOrder, typename TSpline::time_t t){
+	if(test::ExpressionTraits<TExpression>::defaulEps() * 2 < spline.getMinimalDistanceToNeighborKnots(t)){
+		return true;
+	}
+	else {
+		return derivativeOrder < spline.getSplineOrder() - 1;
+	}
+}
 
 template <typename TSplineMap, int ISplineOrder, int IDim>
 struct OPTSplineTester{
@@ -146,6 +164,7 @@ struct OPTSplineTester{
 		const int pointSize = bspline.getPointSize();
 
 		for(int k = 0; k < numberOfTimesToProbe; k++){
+			static_assert(numberOfTimesToProbe > 2, "use at lease three numberOfTimesToProbe");
 			time_t t = ((k % 2 == 0) ? ((double) (k / 2) / ((numberOfTimesToProbe - 1)/ 2)) : ((double) rand() / RAND_MAX)) * (duration * TimePolicy::getOne());
 			const int maxDerivativeOrder = MaxDerivative<TSplineMap, ISplineOrder>::VALUE;
 
@@ -161,7 +180,11 @@ struct OPTSplineTester{
 			ASSERT_DOUBLE_EQ(typename TestBSpline::TimeExpression::Scalar(t), timeExpression.evaluate());
 
 			auto fact = bspline.template getExpressionFactoryAt<maxDerivativeOrder> (t);
-			auto factTimeExp = bspline.template getExpressionFactoryAt<maxDerivativeOrder> (timeExpression, t / 2,  t == bspline.getMaxTime() ? bspline.getMaxTime() + 1: (t + bspline.getMaxTime()) / 2);
+
+			time_t timeExpLowerBound = t / 2;
+			time_t timeExpUpperBound = t == bspline.getMaxTime() ? bspline.getMaxTime() + 1: (t + bspline.getMaxTime()) / 2;
+
+			auto factTimeExp = bspline.template getExpressionFactoryAt<maxDerivativeOrder> (timeExpression, timeExpLowerBound, timeExpUpperBound);
 
 			typename TestBSpline::template Evaluator<maxDerivativeOrder> eval = bspline.template getEvaluatorAt <maxDerivativeOrder > (t);
 
@@ -204,26 +227,28 @@ struct OPTSplineTester{
 				fact.getEvaluator().evalJacobian(derivativeOrder, J);
 				sm::eigen::assertEqual(J, jac.asDenseMatrix(), SM_SOURCE_FILE_POS);
 
+				if(isNumericallyDifferentiableAt(bspline, expression, derivativeOrder, t))
 				{
-					SCOPED_TRACE("");
+					SCOPED_TRACE(::testing::Message() << "derivativeOrder=" << derivativeOrder << ", t=" << t);
 					testJacobian(expression, dvIndexCounter);
 				}
 
-				if(t != bspline.getMaxTime() && t != bspline.getMinTime()){
-					for(auto dv : setTimeExp){
-						if(!set.count(dv)){
-							dv->setActive(true);
-							dv->setBlockIndex(dvIndexCounter++);
-							varVec.push_back(dv);
-						}
+				for(auto dv : setTimeExp){
+					if(!set.count(dv)){
+						dv->setActive(true);
+						dv->setBlockIndex(dvIndexCounter++);
+						varVec.push_back(dv);
 					}
-					SCOPED_TRACE("");
-					testJacobian(expressionTimeExp, dvIndexCounter, false, test::ExpressionTraits<decltype(expressionTimeExp)>::defaultTolerance(), std::numeric_limits<time_t>::is_integer ?  1E-7 : test::ExpressionTraits<decltype(expressionTimeExp)>::defaulEps());
+				}
+
+				if(isNumericallyDifferentiableAt(bspline, expressionTimeExp, derivativeOrder + 1, t) && t != bspline.getMaxTime() && t != bspline.getMinTime()){
+					SCOPED_TRACE(::testing::Message() << "derivativeOrder=" << derivativeOrder << ", t=" << t);
+					testJacobian(expressionTimeExp, dvIndexCounter, false, test::ExpressionTraits<decltype(expressionTimeExp)>::defaultTolerance() * 2, std::numeric_limits<time_t>::is_integer ?  1E-7 : test::ExpressionTraits<decltype(expressionTimeExp)>::defaulEps());
 				}
 
 				{
-					SCOPED_TRACE("");
-					OPTSplineSpecializationTester<TSplineMap, ISplineOrder, IDim>::test(bspline, t, timeExpression);
+					SCOPED_TRACE(::testing::Message() << "derivativeOrder=" << derivativeOrder << ", t=" << t);
+					OPTSplineSpecializationTester<TSplineMap, ISplineOrder, IDim>::test(bspline, t, timeExpression, timeExpLowerBound, timeExpUpperBound);
 				}
 
 				for(auto dv : varVec){
@@ -266,12 +291,13 @@ template <int IEigenSplineOrder, int ISplineOrder, int IDim>
 struct OPTSplineSpecializationTester<UnitQuaternionBSpline<IEigenSplineOrder>, ISplineOrder, IDim>
 {
 	typedef typename OPTBSpline<typename UnitQuaternionBSpline<IEigenSplineOrder>::CONF>::BSpline TestBSpline;
+	typedef typename TestBSpline::time_t time_t;
 	typedef GenericScalar<typename TestBSpline::TimeExpression::Scalar> TimeDesignVariable;
 
-	static void test(TestBSpline & bspline, double t, typename TestBSpline::TimeExpression timeExpression){
+	static void test(TestBSpline & bspline, time_t t, typename TestBSpline::TimeExpression timeExpression, time_t timeExpLowerBound, time_t timeExpUpperBound){
 
 		auto fact = bspline.template getExpressionFactoryAt < 2 > (t);
-		auto factTimeExp = bspline.template getExpressionFactoryAt<3> (timeExpression, t / 2,  t == bspline.getMaxTime() ? bspline.getMaxTime() + 1: (t + bspline.getMaxTime()) / 2);
+		auto factTimeExp = bspline.template getExpressionFactoryAt<3> (timeExpression, timeExpLowerBound, timeExpUpperBound);
 
 		auto avexpression = fact.getAngularVelocityExpression();
 		auto aaexpression = fact.getAngularAccelerationExpression();
@@ -296,35 +322,39 @@ struct OPTSplineSpecializationTester<UnitQuaternionBSpline<IEigenSplineOrder>, I
 		eval.evalAngularAccelerationJacobian(J);
 		sm::eigen::assertEqual(J, jac.asDenseMatrix(), SM_SOURCE_FILE_POS);
 
+		if(isNumericallyDifferentiableAt(bspline, avexpression, 1, t))
 		{
-			SCOPED_TRACE("");
-			testJacobian(avexpression);
+			SCOPED_TRACE(""); testJacobian(avexpression, bspline.getSplineOrder());
 		}
+
+		if(isNumericallyDifferentiableAt(bspline, aaexpression, 2, t))
 		{
-			SCOPED_TRACE("");
-			testJacobian(aaexpression);
+			SCOPED_TRACE(""); testJacobian(aaexpression, bspline.getSplineOrder());
 		}
 
 		if(t != bspline.getMaxTime() && t != bspline.getMinTime()){
+			int expectedNumberOfDVs = bspline.getSplineOrder() + std::distance(bspline.getSegmentIterator(timeExpLowerBound), bspline.getSegmentIterator(timeExpUpperBound)) + 1; // number of control vertices relevant for the interval + 1 for the time design variable!
+			if(isNumericallyDifferentiableAt(bspline, avexpressionTE, 2, t))
 			{
-				SCOPED_TRACE("");
-				testJacobian(avexpressionTE);
+				SCOPED_TRACE(""); testJacobian(avexpressionTE, expectedNumberOfDVs);
 			}
+			if(isNumericallyDifferentiableAt(bspline, aaexpressionTE, 3, t))
 			{
-				SCOPED_TRACE("");
-				testJacobian(aaexpressionTE);
+				SCOPED_TRACE(""); testJacobian(aaexpressionTE, expectedNumberOfDVs);
 			}
 		}
 	}
+
 };
+
+
+#ifndef NO_T1
 
 template <typename Tester>
 class OPTBSplineTestSuiteT : public ::testing::Test  {
  protected:
 	Tester tester;
 };
-
-//#define COMPILE_FAST
 
 typedef ::testing::Types<
 #ifndef COMPILE_FAST
@@ -338,6 +368,7 @@ typedef ::testing::Types<
 	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2, NsecTimePolicy>, 5, 2>,
 	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 6, 2>,
 #endif
+//	OPTSplineTester<EuclideanBSpline<2, 1>, 2, 1>
 	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2, NsecTimePolicy>, 6, 2>,
 	OPTSplineTester<UnitQuaternionBSpline<2>, 2, 3>
 #ifndef COMPILE_FAST
@@ -356,18 +387,34 @@ typedef ::testing::Types<
 TYPED_TEST_CASE(OPTBSplineTestSuiteT, Testers);
 
 TYPED_TEST(OPTBSplineTestSuiteT, update) {
-	SCOPED_TRACE("");
-	this->tester.testUpdate();
+	try{
+		SCOPED_TRACE(""); this->tester.testUpdate();
+	}
+	catch(const std::exception & e)
+	{
+		FAIL() << e.what();
+	}
 }
 
 TYPED_TEST(OPTBSplineTestSuiteT, expressions) {
-	SCOPED_TRACE("");
-	this->tester.testExpressions();
+	try{
+		SCOPED_TRACE("");this->tester.testExpressions();
+	}
+	catch(const std::exception & e)
+	{
+		FAIL() << e.what();
+	}
 }
 
 TYPED_TEST(OPTBSplineTestSuiteT, minimalDifferences) {
-	SCOPED_TRACE("");
-	this->tester.testMinimalDifference();
+	try{
+		SCOPED_TRACE(""); this->tester.testMinimalDifference();
+	}
+	catch(const std::exception & e)
+	{
+		FAIL() << e.what();
+	}
+
 }
 
 TEST(OPTBSplineTestSuite, testPoseErrorWithOPTSplines)
@@ -460,29 +507,17 @@ TEST(OPTBSplineTestSuite, testAppendingUpdatesDesignVariableList)
 	}
 }
 
+#endif
+
+#ifndef NO_T2
+
 template <typename Tester>
 class OPTBSplineTestSuiteT2 : public ::testing::Test  {
-};
-
-typedef ::testing::Types<
-#ifndef COMPILE_FAST
-	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 4, 2>,
-	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2, NsecTimePolicy>, 4, 2>,
-	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 5, 2>,
-	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2, NsecTimePolicy>, 5, 2>,
-	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 6, 2>,
-#endif
-	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2, NsecTimePolicy>, 6, 2>
-> Testers2;
-TYPED_TEST_CASE(OPTBSplineTestSuiteT2, Testers2);
-
-TYPED_TEST(OPTBSplineTestSuiteT2, testOptimizingEvaluationTime)
-{
-	try {
-
-		typedef typename TypeParam::TestBSpline TestBSpline;
+ public:
+	void testOptimizingEvaluationTimeSmall(){
+		typedef typename Tester::TestBSpline TestBSpline;
 		typedef typename TestBSpline::TimePolicy TimePolicy;
-		TestBSpline testSpline(TypeParam::createMyConf());
+		TestBSpline testSpline(Tester::createMyConf());
 		typedef typename TimePolicy::time_t time_t;
 		const time_t endTime = 4 * TimePolicy::getOne(), halfTime = endTime / 2;
 
@@ -501,7 +536,7 @@ TYPED_TEST(OPTBSplineTestSuiteT2, testOptimizingEvaluationTime)
 			problem.addDesignVariable(dv, false);
 		}
 
-		typename TypeParam::TimeDesignVariable timeVar(typename TypeParam::TimeDesignVariable(endTime/4));
+		typename Tester::TimeDesignVariable timeVar(endTime/4);
 		problem.addDesignVariable(&timeVar, false);
 		timeVar.setActive(true);
 
@@ -514,10 +549,118 @@ TYPED_TEST(OPTBSplineTestSuiteT2, testOptimizingEvaluationTime)
 		opt.options().convergenceDeltaX = 1E-9;
 		opt.optimize();
 
-		ASSERT_NEAR(typename TypeParam::TimeDesignVariable::Scalar(halfTime), timeVar.toScalar(), 1E-5);
+		ASSERT_NEAR(typename Tester::TimeDesignVariable::Scalar(halfTime), timeVar.toScalar(), 1E-5);
+	}
+
+	void testOptimizingEvaluationTimeLarge(){
+		typedef typename Tester::TestBSpline TestBSpline;
+		typedef typename TestBSpline::TimePolicy TimePolicy;
+		TestBSpline groundTrouth(Tester::createMyConf());
+		TestBSpline estimate(Tester::createMyConf());
+		typedef typename TimePolicy::time_t time_t;
+		typedef typename Tester::TimeDesignVariable::Scalar TimeScalar;
+
+		typedef Eigen::Vector2d Vec;
+		const double duration = 10;
+
+		const time_t endTime = duration * TimePolicy::getOne(), halfTime = endTime / 2;
+
+		auto zero = Vec::Zero();
+
+		groundTrouth.initConstantUniformSpline(0, endTime, groundTrouth.getSplineOrder(), zero);
+		estimate.initConstantUniformSpline(0, endTime, estimate.getSplineOrder(), zero);
+
+		const int numPoints = 1000;
+		const double initNoiseMagnitude = 0.1;
+		const double velNoiseMagnitude = 0.0001;
+		const double posNoiseMagnitude = 0.001;
+
+		std::vector<time_t> times;
+		std::vector<Vec> points;
+		std::vector<Vec> velMeasurements;
+		for(int i = 0; i < numPoints; i++){
+			times.push_back(TestBSpline::TimePolicy::linearlyInterpolate(0, endTime, numPoints, i));
+			double phase = M_PI * i / (numPoints -1);
+			points.push_back(Vec(cos(phase), sin(phase)));
+		}
+		BSplineFitter<TestBSpline>::fitSpline(groundTrouth, times, points, 0.01);
+
+		OptimizationProblem problem;
+
+		const double realDelay = 0.1;
+		typename Tester::TimeDesignVariable timeVar(TimeScalar(0.0));
+
+		problem.addDesignVariable(&timeVar, false);
+		timeVar.setActive(true);
+
+		int numPointsTooCloseToEachBound = std::ceil(realDelay/ (duration / numPoints));
+
+		for(int i = 0; i < numPoints; i++){
+			points[i] += Vec::Random() * initNoiseMagnitude;
+			if(i > numPointsTooCloseToEachBound && i < numPoints - numPointsTooCloseToEachBound){ // error terms too close to the bounds might hit the spline bounds
+				Vec posMeasurement = groundTrouth.template getEvaluatorAt<0>(times[i]).evalD(0) + Vec::Random() * posNoiseMagnitude;
+				problem.addErrorTerm(toErrorTerm(convertToGME(estimate.template getExpressionFactoryAt<0>(times[i]).getValueExpression(0)) - GenericMatrixExpression<2, 1>(posMeasurement), Eigen::Matrix2d::Identity() / posNoiseMagnitude));
+
+				Vec velMeasurement = groundTrouth.template getEvaluatorAt<1>(times[i]).evalD(1) + Vec::Random() * velNoiseMagnitude;
+				problem.addErrorTerm(toErrorTerm(convertToGME(estimate.template getExpressionFactoryAt<1>(timeVar.toExpression() + GenericScalarExpression<TimeScalar>(TimeScalar(times[i]) - TimeScalar(realDelay)), 0, endTime).getValueExpression(1)) - GenericMatrixExpression<2, 1>(velMeasurement), Eigen::Matrix2d::Identity() / velNoiseMagnitude));
+			}
+		}
+		BSplineFitter<TestBSpline>::fitSpline(estimate, times, points, 0.01);
+
+		auto exp = timeVar.toExpression() - GenericScalarExpression<TimeScalar>(TimeScalar(0.0));
+		auto timeModelError = toErrorTerm(exp, Eigen::Matrix<double, 1, 1>::Ones() / realDelay);
+		problem.addErrorTerm(timeModelError);
+
+		for(auto & dv : estimate.getDesignVariables()){
+			problem.addDesignVariable(dv, false);
+			dv->setActive(true);
+		}
+
+		Optimizer opt;
+		opt.setProblem(&problem, false);
+		opt.options().verbose = false;
+		opt.options().convergenceDeltaJ = 0;
+		opt.options().convergenceDeltaX = 1E-9;
+		opt.options().maxIterations = 20;
+		opt.optimize();
+
+		ASSERT_NEAR(TimeScalar(realDelay), timeVar.toScalar(), 1E-3);
+	}
+};
+
+typedef ::testing::Types<
+#ifndef COMPILE_FAST
+	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 4, 2>,
+	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2, NsecTimePolicy>, 4, 2>,
+	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 5, 2>,
+	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2, NsecTimePolicy>, 5, 2>,
+	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 6, 2>,
+#endif
+	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2>, 6, 2>,
+	OPTSplineTester<EuclideanBSpline<Eigen::Dynamic, 2, NsecTimePolicy>, 6, 2>
+> Testers2;
+TYPED_TEST_CASE(OPTBSplineTestSuiteT2, Testers2);
+
+TYPED_TEST(OPTBSplineTestSuiteT2, testOptimizingEvaluationTimeSmall)
+{
+	try {
+		SCOPED_TRACE(""); this->testOptimizingEvaluationTimeSmall();
 	}
 	catch(const std::exception & e)
 	{
 		FAIL() << e.what();
 	}
 }
+
+TYPED_TEST(OPTBSplineTestSuiteT2, testOptimizingEvaluationTimeLarge)
+{
+	try {
+		SCOPED_TRACE(""); this->testOptimizingEvaluationTimeLarge();
+	}
+	catch(const std::exception & e)
+	{
+		FAIL() << e.what();
+	}
+}
+
+#endif

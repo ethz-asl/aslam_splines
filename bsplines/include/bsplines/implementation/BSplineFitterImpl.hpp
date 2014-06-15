@@ -175,7 +175,7 @@ namespace internal{
 			}
 			fitSpline(spline, times, points, lambda, (int)fixFirstVertices, std::function<scalar_t(int i) >(), fittingBackend, calculateControlVertexOffsets);
 		}else{
-			vector<scalar_t> weights;
+			std::vector<scalar_t> weights;
 			scalar_t baseWeight = scalar_t(honorCurrentValuePercentage) / scalar_t(100 - honorCurrentValuePercentage);
 
 			std::vector<time_t> newTimes;
@@ -469,8 +469,8 @@ namespace internal{
 				 * its left most index in M is : max(0, 0 + brow).
 				 * its right most index in M is : min(cols(M) - 1, cols(Q) - 1 + brow).
 				 */
-				const int overlappingBlocksLeftIndex = max(0, blockRow);
-				const int overlappingBlocksRightIndex = min(blockRows, blocksInQ + blockRow) - 1;
+				const int overlappingBlocksLeftIndex = std::max(0, blockRow);
+				const int overlappingBlocksRightIndex = std::min(blockRows, blocksInQ + blockRow) - 1;
 				const int numOverlappingBlocks = overlappingBlocksRightIndex - overlappingBlocksLeftIndex + 1;
 				if(numOverlappingBlocks > 0){
 					Backend::addBlockToBlock(toMatrix, overlappingBlocksLeftIndex, overlappingBlocksLeftIndex, Q, overlappingBlocksLeftIndex - blockRow, overlappingBlocksLeftIndex - blockRow, numOverlappingBlocks, numOverlappingBlocks, D, false);

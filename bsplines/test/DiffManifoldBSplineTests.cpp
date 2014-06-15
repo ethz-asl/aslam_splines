@@ -150,7 +150,7 @@ TEST(DiffManifoldBSplineTestSuite, testAddingSegments)
 	} pointSource(false);
 
 	rbspline.initConstantUniformSpline(minTime, maxTime, numberOfSegments, ones * -1);
-	vector<TestSpline::point_t> vertices;
+	std::vector<TestSpline::point_t> vertices;
 	for(int i = rbspline.getNumControlVertices(); i != 0; i --){
 		vertices.push_back(pointSource.getNext());
 	}

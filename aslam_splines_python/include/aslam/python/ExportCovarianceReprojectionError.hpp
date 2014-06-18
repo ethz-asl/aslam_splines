@@ -18,9 +18,9 @@ void exportCovarianceReprojectionError(const std::string & camName)
   using namespace aslam;
   using namespace aslam::backend;
   typedef CAMERA_GEOMETRY_T geometry_t;
-  typedef DescriptorBase descriptor_t;
+  //typedef DescriptorBase descriptor_t;
   typedef Frame<geometry_t> frame_t;
-  typedef typename frame_t::keypoint_t keypoint_t;
+  //typedef typename frame_t::keypoint_t keypoint_t;
 
   class_< CovarianceReprojectionError<frame_t>, boost::shared_ptr<CovarianceReprojectionError<frame_t> >, bases< ErrorTerm > >(
       name.c_str(),

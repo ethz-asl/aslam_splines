@@ -179,7 +179,7 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 	 protected:
 		inline ConstTimeFactoryData() = default;
 	 private:
-		friend DiffManifoldBSpline;
+		friend class DiffManifoldBSpline;
 		eval_t _eval;
 		void makeSureForEveryDesignVariableAJacobianGetsAdded(aslam::backend::JacobianContainer & /*outJacobians*/) const {}
 	};
@@ -196,7 +196,7 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 		inline bool hasTimeExpression(){ return true; }
 		inline const TimeExpression & getTimeExpression(){ return _timeExp; }
 	 private:
-		friend DiffManifoldBSpline;
+		friend class DiffManifoldBSpline;
 		TimeExpression _timeExp;
 		time_t _lowerBound;
 		time_t _upperBound;

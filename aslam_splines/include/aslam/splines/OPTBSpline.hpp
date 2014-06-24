@@ -181,7 +181,7 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 	 private:
 		friend class DiffManifoldBSpline;
 		eval_t _eval;
-		void makeSureForEveryDesignVariableAJacobianGetsAdded(aslam::backend::JacobianContainer & /*outJacobians*/) const {}
+		void makeSureForEveryDesignVariableAJacobianGetsAdded(aslam::backend::JacobianContainer & /*outJacobians*/, int /*rows*/) const {}
 	};
 
 	template<int IMaxDerivativeOrder>
@@ -195,6 +195,9 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 		const eval_t & getEvaluator() const;
 		inline bool hasTimeExpression(){ return true; }
 		inline const TimeExpression & getTimeExpression(){ return _timeExp; }
+		/* the following is only public because of a bug in gcc4.6's c++0x impl. */
+		inline SegmentConstIterator begin() const { return _spline.getFirstRelevantSegmentByLast(_spline.getSegmentIterator(std::max(_spline.getMinTime(), _lowerBound))); }
+		inline SegmentConstIterator end() const { auto end = _spline.getSegmentIterator(std::min(_spline.getMaxTime(),_upperBound)); if(end != _spline.end()) end++; return end; }
 	 private:
 		friend class DiffManifoldBSpline;
 		TimeExpression _timeExp;
@@ -202,12 +205,10 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 		time_t _upperBound;
 		mutable eval_t * evalPtr;
 		const spline_t & _spline;
-		inline SegmentConstIterator begin() const { return _spline.getFirstRelevantSegmentByLast(_spline.getSegmentIterator(std::max(_spline.getMinTime(), _lowerBound))); }
-		inline SegmentConstIterator end() const { auto end = _spline.getSegmentIterator(std::min(_spline.getMaxTime(),_upperBound)); if(end != _spline.end()) end++; return end; }
 		/* hack around the problem with the aslam optimizer and not adding Jacobians for all design variables to the JacobianContainer
 		 * See :  https://github.com/ethz-asl/aslam_optimizer/issues/38.
 		 * */
-		void makeSureForEveryDesignVariableAJacobianGetsAdded(aslam::backend::JacobianContainer & outJacobians) const;
+		void makeSureForEveryDesignVariableAJacobianGetsAdded(aslam::backend::JacobianContainer & outJacobians, int rows) const;
 	};
 
  public:

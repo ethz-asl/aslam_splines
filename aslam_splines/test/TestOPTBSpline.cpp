@@ -563,7 +563,7 @@ class OPTBSplineTestSuiteT2 : public ::testing::Test  {
 		typedef Eigen::Vector2d Vec;
 		const double duration = 10;
 
-		const time_t endTime = duration * TimePolicy::getOne(), halfTime = endTime / 2;
+		const time_t endTime = duration * TimePolicy::getOne();
 
 		auto zero = Vec::Zero();
 

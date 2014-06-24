@@ -85,6 +85,14 @@ void _CLASS::TimeExpressionFactoryData<IMaxDerivativeOrder>::getDesignVariables(
 	for(auto & i: *this) { designVariables.insert(const_cast<aslam::backend::DesignVariable *>(&i.getDesignVariable())); }; _timeExp.getDesignVariables(designVariables);
 }
 
+_TEMPLATE
+template<int IMaxDerivativeOrder>
+void _CLASS::TimeExpressionFactoryData<IMaxDerivativeOrder>::makeSureForEveryDesignVariableAJacobianGetsAdded(aslam::backend::JacobianContainer & outJacobians) const {
+	for(SegmentConstIterator i = this->begin(), end = this->end(); i != end; ++i)
+	{
+		outJacobians.add(const_cast<aslam::backend::DesignVariable *>(&i->getDesignVariable()), Eigen::MatrixXd::Zero(getSpline().getPointSize(), getSpline().getDimension()));
+	}
+}
 
 namespace internal {
 	template <typename TDiffManifoldBSplineConfiguration, typename TDiffManifoldBSplineConfigurationDerived>
@@ -147,6 +155,11 @@ typename _CLASS::expression_t _CLASS::ExpressionFactory<FactoryData_>::getValueE
 				col+=dimension;
 			}
 			if(_dataPtr->hasTimeExpression()){
+				/* hack around the problem with the aslam optimizer and not adding Jacobians for all design variables to the JacobianContainer
+				 * See :  https://github.com/ethz-asl/aslam_optimizer/issues/38.
+				 * */
+				_dataPtr->makeSureForEveryDesignVariableAJacobianGetsAdded(outJacobians);
+				/* hack end */
 				auto evalJac = eval.evalD(_derivativeOrder + 1);
 				_dataPtr->getTimeExpression().evaluateJacobians(outJacobians, applyChainRule ? Eigen::MatrixXd(*applyChainRule * evalJac) : Eigen::MatrixXd(evalJac));
 			}

@@ -179,7 +179,9 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 	 protected:
 		inline ConstTimeFactoryData() = default;
 	 private:
+		friend DiffManifoldBSpline;
 		eval_t _eval;
+		void makeSureForEveryDesignVariableAJacobianGetsAdded(aslam::backend::JacobianContainer & /*outJacobians*/) const {}
 	};
 
 	template<int IMaxDerivativeOrder>
@@ -193,14 +195,19 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 		const eval_t & getEvaluator() const;
 		inline bool hasTimeExpression(){ return true; }
 		inline const TimeExpression & getTimeExpression(){ return _timeExp; }
-		inline SegmentConstIterator begin() const { return _spline.getFirstRelevantSegmentByLast(_spline.getSegmentIterator(std::max(_spline.getMinTime(), _lowerBound))); }
-		inline SegmentConstIterator end() const { auto end = _spline.getSegmentIterator(std::min(_spline.getMaxTime(),_upperBound)); if(end != _spline.end()) end++; return end; }
 	 private:
+		friend DiffManifoldBSpline;
 		TimeExpression _timeExp;
 		time_t _lowerBound;
 		time_t _upperBound;
 		mutable eval_t * evalPtr;
 		const spline_t & _spline;
+		inline SegmentConstIterator begin() const { return _spline.getFirstRelevantSegmentByLast(_spline.getSegmentIterator(std::max(_spline.getMinTime(), _lowerBound))); }
+		inline SegmentConstIterator end() const { auto end = _spline.getSegmentIterator(std::min(_spline.getMaxTime(),_upperBound)); if(end != _spline.end()) end++; return end; }
+		/* hack around the problem with the aslam optimizer and not adding Jacobians for all design variables to the JacobianContainer
+		 * See :  https://github.com/ethz-asl/aslam_optimizer/issues/38.
+		 * */
+		void makeSureForEveryDesignVariableAJacobianGetsAdded(aslam::backend::JacobianContainer & outJacobians) const;
 	};
 
  public:

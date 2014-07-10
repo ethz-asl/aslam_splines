@@ -380,7 +380,9 @@ typedef ::testing::Types<
 	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 4, 3>,
 	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic, NsecTimePolicy>, 4, 3>,
 	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 5, 3>,
-	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic, NsecTimePolicy>, 5, 3>
+	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic, NsecTimePolicy>, 5, 3>,
+	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 8, 3>,
+	OPTSplineTester<UnitQuaternionBSpline<Eigen::Dynamic>, 9, 3>
 #endif
 > Testers;
 
@@ -593,6 +595,11 @@ class OPTBSplineTestSuiteT2 : public ::testing::Test  {
 		problem.addDesignVariable(&timeVar, false);
 		timeVar.setActive(true);
 
+		for(auto & dv : estimate.getDesignVariables()){
+			problem.addDesignVariable(dv, false);
+			dv->setActive(true);
+		}
+
 		int numPointsTooCloseToEachBound = std::ceil(realDelay/ (duration / numPoints));
 
 		for(int i = 0; i < numPoints; i++){
@@ -611,10 +618,6 @@ class OPTBSplineTestSuiteT2 : public ::testing::Test  {
 		auto timeModelError = toErrorTerm(exp, Eigen::Matrix<double, 1, 1>::Ones() / realDelay);
 		problem.addErrorTerm(timeModelError);
 
-		for(auto & dv : estimate.getDesignVariables()){
-			problem.addDesignVariable(dv, false);
-			dv->setActive(true);
-		}
 
 		Optimizer opt;
 		opt.setProblem(&problem, false);

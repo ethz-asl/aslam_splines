@@ -128,7 +128,9 @@ namespace bsplines{
 	template<int IMaximalDerivativeOrder>
 	typename _CLASS::point_t _CLASS::Evaluator<IMaximalDerivativeOrder>::evalD(int derivativeOrder) const {
 		SM_ASSERT_GE_LT_DBG(Exception, derivativeOrder, 0, 4, "only derivatives up to 3 are supported yet");
-		SM_ASSERT_LT_DBG(Exception, derivativeOrder, IMaximalDerivativeOrder + 1, "only derivatives up to the evaluator's template argument IMaximalDerivativeOrder are allowed");
+		if(IMaximalDerivativeOrder != Eigen::Dynamic) {
+			SM_ASSERT_LT_DBG(Exception, derivativeOrder, IMaximalDerivativeOrder + 1, "only derivatives up to the evaluator's template argument IMaximalDerivativeOrder are allowed");
+		}
 
 		switch(derivativeOrder){
 		case 0:

@@ -19,7 +19,6 @@ void addOptSplineFunctions (BSplineExporter<Spline> & splineExporter){
 }
 
 void exportOptBSplines() {
-
   class_<DesignVariables>("DesignVariables")
       .def(boost::python::vector_indexing_suite<DesignVariables>() );
 

@@ -321,7 +321,7 @@ namespace internal{
 	void _CLASS::calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotIndexResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, std::function<scalar_t(int i) > weights, double lambda, int fixNFirstRelevantControlVertices, const bool calculateControlVertexOffsets)
 	{
 		if(calculateControlVertexOffsets){
-			//TODO implement : support calculateControlVertexOffsets in addCurveQuadraticIntegralDiagTo and revove this check!
+			//TODO implement : support calculateControlVertexOffsets in addCurveQuadraticIntegralDiagTo and remove this check!
 			SM_ASSERT_EQ(Exception, 0.0, lambda, "control vertex offsets aren't supported together with lambda != 0, yet!");
 		}
 
@@ -383,13 +383,13 @@ namespace internal{
 			}
 
 			for(int j = 0; j < splineOrder; j ++){
-				int col = knotIndex + j;
+				const int col = knotIndex + j;
 				if(col >= 0){ // this control vertex is not fixed
 					if(bi[j] != 0.0)
 						backend.blockA(A, brow, col, D).diagonal().setConstant(bi[j]);
 				}
 				if(col < 0 || calculateControlVertexOffsets){
-					int vertexIndex = fixNFirstRelevantControlVertices + col;
+					const int vertexIndex = fixNFirstRelevantControlVertices + col;
 					SM_ASSERT_GE_DBG(std::runtime_error, vertexIndex, 0, "BUG in BSplineFitter");
 					SM_ASSERT_LT_DBG(std::runtime_error, vertexIndex, capturedCurrentControlVertices, "BUG in BSplineFitter");
 					backend.segmentB(b, brow, D) -= (*currentControlVertices[vertexIndex]) * bi[j];

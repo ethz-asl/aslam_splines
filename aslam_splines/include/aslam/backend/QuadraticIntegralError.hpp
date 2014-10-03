@@ -23,6 +23,7 @@
 #include <bsplines/BSplinePose.hpp>
 #include <bsplines/UnitQuaternionBSpline.hpp>
 #include <bsplines/NumericIntegrator.hpp>
+#include <sm/boost/null_deleter.hpp>
 
 namespace aslam {
 namespace backend {
@@ -32,10 +33,10 @@ namespace algorithms = ::numeric_integrator::algorithms;
 typedef algorithms::Default DefaultAlgorithm;
 
 namespace internal {
-	inline void addErrorTermToProblem(OptimizationProblem & problem, ErrorTerm *et, bool problemOwnsErrorTerms){
-		problem.addErrorTerm(et, problemOwnsErrorTerms);
+	inline void addErrorTermToProblem(OptimizationProblemBase & problem, ErrorTerm *et, bool problemOwnsErrorTerms){
+		problem.addErrorTerm(problemOwnsErrorTerms ? boost::shared_ptr<ErrorTerm>(et) : boost::shared_ptr<ErrorTerm>(et, sm::null_deleter()));
 	}
-	inline void addErrorTermToProblem(OptimizationProblem & problem, boost::shared_ptr<ErrorTerm> et, bool /* problemOwnsErrorTerms */){
+	inline void addErrorTermToProblem(OptimizationProblemBase & problem, boost::shared_ptr<ErrorTerm> et, bool /* problemOwnsErrorTerms */){
 		problem.addErrorTerm(et);
 	}
 }
@@ -60,7 +61,7 @@ So don't forget to take the square root of factor when you use the setSqrtInvR m
 When a shared_ptr is returned the problemOwnsErrorTerms flag is ignored. Otherwise true makes the problem deleting the error terms in its destructor.
  */
 template <typename Algorithm = DefaultAlgorithm, typename TTime, typename ErrorTermFactory>
-void addQuadraticIntegralErrorTerms(OptimizationProblem & problem, const TTime & a, const TTime & b, int numberOfPoints, const ErrorTermFactory & errorTermFactory, bool problemOwnsErrorTerms = true)
+void addQuadraticIntegralErrorTerms(OptimizationProblemBase & problem, const TTime & a, const TTime & b, int numberOfPoints, const ErrorTermFactory & errorTermFactory, bool problemOwnsErrorTerms = true)
 {
 	if(a == b) return;
 
@@ -75,7 +76,7 @@ void addQuadraticIntegralErrorTerms(OptimizationProblem & problem, const TTime &
 }
 
 template <typename TTime, typename ErrorTermFactory>
-void addQuadraticIntegralErrorTerms(OptimizationProblem & problem, const TTime & a, const TTime & b, int numberOfPoints, const ErrorTermFactory & errorTermFactory, bool problemOwnsErrorTerms = true){
+void addQuadraticIntegralErrorTerms(OptimizationProblemBase & problem, const TTime & a, const TTime & b, int numberOfPoints, const ErrorTermFactory & errorTermFactory, bool problemOwnsErrorTerms = true){
 	addQuadraticIntegralErrorTerms(problem, a, b, numberOfPoints, errorTermFactory, problemOwnsErrorTerms);
 }
 
@@ -95,7 +96,7 @@ or
 member that returns E(t).
  */
 template <typename Algorithm, typename TTime, typename ExpressionFactory, typename DerivedMatrix>
-void addQuadraticIntegralExpressionErrorTerms(OptimizationProblem & problem, const TTime & a, const TTime & b, int numberOfPoints, const ExpressionFactory & expressionFactory, const Eigen::MatrixBase<DerivedMatrix> & sqrtInvR)
+void addQuadraticIntegralExpressionErrorTerms(OptimizationProblemBase & problem, const TTime & a, const TTime & b, int numberOfPoints, const ExpressionFactory & expressionFactory, const Eigen::MatrixBase<DerivedMatrix> & sqrtInvR)
 {
 	addQuadraticIntegralErrorTerms<Algorithm>(
 			problem, a, b, numberOfPoints,
@@ -107,7 +108,7 @@ void addQuadraticIntegralExpressionErrorTerms(OptimizationProblem & problem, con
 
 // to specify a default for the algorithm,
 template <typename TTime, typename ExpressionFactory, typename DerivedMatrix>
-void addQuadraticIntegralExpressionErrorTerms(OptimizationProblem & problem, const TTime & a, const TTime & b, int numberOfPoints, const ExpressionFactory & expressionFactory, const Eigen::MatrixBase<DerivedMatrix> & sqrtInvR){
+void addQuadraticIntegralExpressionErrorTerms(OptimizationProblemBase & problem, const TTime & a, const TTime & b, int numberOfPoints, const ExpressionFactory & expressionFactory, const Eigen::MatrixBase<DerivedMatrix> & sqrtInvR){
 	addQuadraticIntegralExpressionErrorTerms<DefaultAlgorithm>(problem, a, b, numberOfPoints, expressionFactory, sqrtInvR);
 }
 

@@ -134,14 +134,16 @@ class BSplineExporter {
 
 	static void fitSplineFromMatrix(TSpline * bsp, const Eigen::VectorXd & times, const Eigen::MatrixXd & interpolationPoints, double lambda, int fixNFirstRelevantPoints, const Eigen::VectorXd & weights)
 	{
+    const int dim = (int)bsp->getDimension();
 		const int numPoints = interpolationPoints.cols();
 		const int numTimes= times.size();
 		const int numWeights = weights.size();
-
-		SM_ASSERT_GE(typename TSpline::Exception, numTimes, numPoints, "The there must be as much times as points.");
+    
+    SM_ASSERT_EQ(typename TSpline::Exception, interpolationPoints.rows(), dim, "The layout of the interpolation points is (dim x nPoints).");
+		SM_ASSERT_GE(typename TSpline::Exception, numTimes, numPoints, "There must be as much times as points. The layout of the interpolation points is (dim x nPoints).");
 
 		if(numWeights){
-			SM_ASSERT_GE(typename TSpline::Exception, numWeights, numTimes, "The there must be no or as much weights as points!");
+			SM_ASSERT_GE(typename TSpline::Exception, numWeights, numTimes, "There must be no or as much weights as points!");
 		}
 		std::vector<typename TSpline::time_t> timesVector(numTimes);
 		for(int i = 0, end = numTimes; i != end; i++){
@@ -157,10 +159,12 @@ class BSplineExporter {
 
 	static void extendAndFitSplineFromMatrix(TSpline * bsp, bsplines::DeltaUniformKnotGenerator<typename TSpline::TimePolicy> & knotGenerator, const Eigen::VectorXd & times, const Eigen::MatrixXd & interpolationPoints, double lambda, unsigned char honorCurrentValueCoefficient)
 	{
+    const int dim = (int)bsp->getDimension();
 		const int numPoints = interpolationPoints.cols();
 		const int numTimes= times.size();
 
-		SM_ASSERT_GE(typename TSpline::Exception, numTimes, numPoints, "The there must be as much times as points.");
+    SM_ASSERT_EQ(typename TSpline::Exception, interpolationPoints.rows(), dim, "The layout of the interpolation points is (dim x nPoints).");
+		SM_ASSERT_GE(typename TSpline::Exception, numTimes, numPoints, "There must be as much times as points. The layout of the interpolation points is (dim x nPoints).");
 
 		std::vector<typename TSpline::time_t> timesVector(numTimes);
 		for(int i = 0, end = numTimes; i != end; i++){
@@ -284,7 +288,7 @@ class BSplineExporter {
 		//		.def("localCoefficientVector", &TSpline::localCoefficientVector, "Get the stacked vector of locally-active coefficients for a specified time.")
 		.def("initUniformSpline", &initUniformSplineFromMatrix, "Initialize the spline to smooth a set of points in time")
 		.def("initUniformSplineWithKnotDelta", &initUniformSplineFromMatrixWithKnotDelta, "Initialize the spline to smooth a set of points in time")
-		.def("fitSpline", &fitSplineFromMatrix, "Fit the initialized spline to smooth a set of points in time")
+		.def("fitSpline", &fitSplineFromMatrix, "fitSplineFromMatrix(np.array times, np.array interpolationPoints, double lambda, int fixNFirstRelevantPoints, np.array weights): Fit the initialized spline to smooth a set of points in time")
 		//		.def("basisMatrix", &TSpline::basisMatrix, "Get the basis matrix active on the ith time segment.", return_value_policy<copy_const_reference>())
 		.def("timeInterval", &timeInterval, "Returns a tuple with the time interval that the spline is well-defined on.")
 		//		.def("timeInterval", &timeInterval2, "Returns a tuple with the time interval of the ith segment.")

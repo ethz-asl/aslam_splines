@@ -446,6 +446,8 @@ namespace bsplines {
 
 		template<int IMaximalDerivativeOrder> friend class Evaluator;
 
+		//friends:
+		template<typename TSpline> friend class BSplineFitter;
 	private:
 		void initIterators();
 	};

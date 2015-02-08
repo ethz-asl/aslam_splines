@@ -26,6 +26,7 @@ namespace bsplines{
 //TODO improve : support different containers of times and points
 _TEMPLATE
 inline void _CLASS::initUniformSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda, FittingBackend backend){
+	spline.assertConstructing();
 	SM_ASSERT_GE(Exception, times.size(), 2, "There must be at least two time point pairs");
 	IntervalUniformKnotGenerator<TimePolicy> knotGenerator(spline.getSplineOrder(), *times.begin(), *--times.end(), numSegments);
 	initSpline(spline, knotGenerator, times, points, lambda, backend);
@@ -33,6 +34,7 @@ inline void _CLASS::initUniformSpline(TSpline & spline, const std::vector<time_t
 
 _TEMPLATE
 inline DeltaUniformKnotGenerator<typename _CLASS::TimePolicy> _CLASS::initUniformSplineWithKnotDelta(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, const duration_t knotDelta, double lambda, FittingBackend backend){
+	spline.assertConstructing();
 	SM_ASSERT_GE(Exception, times.size(), 2, "There must be at least two time point pairs");
 	DeltaUniformKnotGenerator<TimePolicy> knotGenerator(spline.getSplineOrder(), *times.begin(), *--times.end(), knotDelta);
 	initSpline(spline, knotGenerator, times, points, lambda, backend);
@@ -80,6 +82,7 @@ namespace internal{
 
 	_TEMPLATE
 	void _CLASS::initSpline(TSpline & spline, KnotGenerator<time_t> & knotGenerator, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, FittingBackend fittingBackend){
+		spline.assertConstructing();
 		const size_t numPoints = points.size();
 
 		SM_ASSERT_EQ(Exception, times.size(), numPoints, "The number of times and the number of points must be equal");
@@ -110,6 +113,7 @@ namespace internal{
 
 	_TEMPLATE
 	void _CLASS::fitSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, int fixNFirstRelevantControlVertices, std::function<scalar_t(int i) > weights, FittingBackend fittingBackend, const bool calculateControlVertexOffsets){
+		spline.assertEvaluable();
 		const size_t numPoints = points.size();
 		SM_ASSERT_GE(Exception, numPoints, 1, "The must be at least one time point pair!");
 		SM_ASSERT_EQ(Exception, times.size(), numPoints, "The number of times and the number of points must be equal");

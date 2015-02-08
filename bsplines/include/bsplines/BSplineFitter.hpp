@@ -66,7 +66,8 @@ public :
 	 * @param lambda the acceleration integral's weight (@see #initSpline)
 	 * @param fixNFirstRelevantControlVertices Normally (i.e. this param = 0) all control vertices are optimized that are relevant for the splines value in the period times[0]..times[times.size() - 1]. With this great then zero the first relevant control vertices can be hold fixed.
 	 * @param weights a function mapping an time point pairs' index to its weight. The empty function is semantically equivalently treated as returning always 1.0.
-	 * @param fittingBackend the fitting backend. Usually one wants FittingBackend::SPARSE.
+	 * @param fittingBackend selects the fitting backend. Usually one wants FittingBackend::SPARSE.
+	 * @param calculateControlVertexOffsets decides whether in the fitting backend the vertices are globally calculated or only offsets for them. If the fitting is under constrained that makes a difference. Globally (false case) the vertices will be pulled towards zero otherwise this happens to the offsets only!
 	 */
 	static void fitSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, int fixNFirstRelevantControlVertices = 0, std::function<scalar_t(int i) > weights = std::function<scalar_t(int i) >(), FittingBackend fittingBackend = FittingBackend::DEFAULT, const bool calculateControlVertexOffsets = false);
 	/**
@@ -77,7 +78,8 @@ public :
 	 * @param points the points to fit. The control vertices will be optimized to minimize the distance of the spline to these points. The lambda parameter (s. below) can add an additional term to this cost function.
 	 * @param lambda the acceleration integral's weight (@see #initSpline)
 	 * @param honorCurrentValuePercentage The current spline's value is considered according to honorCurrentValueCoefficient (0 = ignore current value, 100 = ignore points where the spline is already defined).
-	 * @param fittingBackend the fitting backend. Usually one wants FittingBackend::SPARSE.
+	 * @param fittingBackend selects the fitting backend. Usually one wants FittingBackend::SPARSE.
+	 * @param calculateControlVertexOffsets decides whether in the fitting backend the vertices are globally calculated or only offsets for them. If the fitting is under constrained that makes a difference. Globally (false case) the vertices will be pulled towards zero otherwise this happens to the offsets only!
 	 */
 	static void extendAndFitSpline(TSpline & spline, KnotGenerator<time_t> & knotGenerator, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, unsigned char honorCurrentValuePercentage, FittingBackend fittingBackend = FittingBackend::DEFAULT, const bool calculateControlVertexOffsets = false);
 

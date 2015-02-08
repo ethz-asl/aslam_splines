@@ -26,6 +26,7 @@ namespace bsplines{
 //TODO improve : support different containers of times and points
 _TEMPLATE
 inline void _CLASS::initUniformSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda, FittingBackend backend){
+	spline.assertConstructing();
 	SM_ASSERT_GE(Exception, times.size(), 2, "There must be at least two time point pairs");
 	IntervalUniformKnotGenerator<TimePolicy> knotGenerator(spline.getSplineOrder(), *times.begin(), *--times.end(), numSegments);
 	initSpline(spline, knotGenerator, times, points, lambda, backend);
@@ -33,6 +34,7 @@ inline void _CLASS::initUniformSpline(TSpline & spline, const std::vector<time_t
 
 _TEMPLATE
 inline DeltaUniformKnotGenerator<typename _CLASS::TimePolicy> _CLASS::initUniformSplineWithKnotDelta(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, const duration_t knotDelta, double lambda, FittingBackend backend){
+	spline.assertConstructing();
 	SM_ASSERT_GE(Exception, times.size(), 2, "There must be at least two time point pairs");
 	DeltaUniformKnotGenerator<TimePolicy> knotGenerator(spline.getSplineOrder(), *times.begin(), *--times.end(), knotDelta);
 	initSpline(spline, knotGenerator, times, points, lambda, backend);
@@ -80,6 +82,7 @@ namespace internal{
 
 	_TEMPLATE
 	void _CLASS::initSpline(TSpline & spline, KnotGenerator<time_t> & knotGenerator, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, FittingBackend fittingBackend){
+		spline.assertConstructing();
 		const size_t numPoints = points.size();
 
 		SM_ASSERT_EQ(Exception, times.size(), numPoints, "The number of times and the number of points must be equal");
@@ -110,6 +113,7 @@ namespace internal{
 
 	_TEMPLATE
 	void _CLASS::fitSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, int fixNFirstRelevantControlVertices, std::function<scalar_t(int i) > weights, FittingBackend fittingBackend, const bool calculateControlVertexOffsets){
+		spline.assertEvaluable();
 		const size_t numPoints = points.size();
 		SM_ASSERT_GE(Exception, numPoints, 1, "The must be at least one time point pair!");
 		SM_ASSERT_EQ(Exception, times.size(), numPoints, "The number of times and the number of points must be equal");
@@ -321,7 +325,7 @@ namespace internal{
 	void _CLASS::calcFittedControlVertices(TSpline & spline, const KnotIndexResolver<time_t> & knotIndexResolver, const std::vector<time_t> & times, const std::vector<point_t> & points, std::function<scalar_t(int i) > weights, double lambda, int fixNFirstRelevantControlVertices, const bool calculateControlVertexOffsets)
 	{
 		if(calculateControlVertexOffsets){
-			//TODO implement : support calculateControlVertexOffsets in addCurveQuadraticIntegralDiagTo and revove this check!
+			//TODO implement : support calculateControlVertexOffsets in addCurveQuadraticIntegralDiagTo and remove this check!
 			SM_ASSERT_EQ(Exception, 0.0, lambda, "control vertex offsets aren't supported together with lambda != 0, yet!");
 		}
 
@@ -383,13 +387,13 @@ namespace internal{
 			}
 
 			for(int j = 0; j < splineOrder; j ++){
-				int col = knotIndex + j;
+				const int col = knotIndex + j;
 				if(col >= 0){ // this control vertex is not fixed
 					if(bi[j] != 0.0)
 						backend.blockA(A, brow, col, D).diagonal().setConstant(bi[j]);
 				}
 				if(col < 0 || calculateControlVertexOffsets){
-					int vertexIndex = fixNFirstRelevantControlVertices + col;
+					const int vertexIndex = fixNFirstRelevantControlVertices + col;
 					SM_ASSERT_GE_DBG(std::runtime_error, vertexIndex, 0, "BUG in BSplineFitter");
 					SM_ASSERT_LT_DBG(std::runtime_error, vertexIndex, capturedCurrentControlVertices, "BUG in BSplineFitter");
 					backend.segmentB(b, brow, D) -= (*currentControlVertices[vertexIndex]) * bi[j];

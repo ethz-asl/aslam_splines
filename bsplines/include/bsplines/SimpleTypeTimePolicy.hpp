@@ -31,13 +31,20 @@ namespace bsplines {
 		inline static time_t linearlyInterpolate(time_t from, time_t till, int segments, int pos)
 		{
 			if(pos == segments) return till;
-			return from + computeDuration(from, till) / segments * pos;
+			return from + (computeDuration(from, till) * pos) / segments;
 		}
 
 		inline static int getSegmentNumber(time_t from, time_t till, int segments, time_t t)
 		{
-			double dt = (till - from) / segments;
-			return std::floor((t - from) / dt);
+			duration_t duration = computeDuration(from, till);
+			assert(duration * segments / duration == segments);
+			// The above assertion fails if the type time_t is not capable to carry out the following operation precise enough for the duration given by (from,till). I.e. to correctly invert the linearlyInterpolate method above.
+			// This basically means the spline is too large (in duration or resolution) to be used with this time policy. So either shorten it or implement a better time policy.
+			// For example with nanoseconds as signed 64 bit integers this holds if 
+			// duration * segments = duration * duration / T <= ~9.22e9 seconds. // where T is the uniform knot distance.
+			// I.e. for 1000s the maximum supported knot rate is around 9kHz.
+			// TODO increase the maximal supported duration^2 * knotFreq.
+			return ((t - from) * segments) / duration;
 		}
 
 		constexpr inline static duration_t getZero(){

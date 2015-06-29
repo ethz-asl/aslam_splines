@@ -68,17 +68,17 @@ template <typename TConf, int ISplineOrder, int IDim> inline TConf createConf(){
 }
 
 
-template <typename TSplineMap, int ISplineOrder, int IDim>
+template <typename TSplineConfig, int ISplineOrder, int IDim>
 struct OPTSplineSpecializationTester
 {
-	typedef typename OPTBSpline<typename TSplineMap::CONF>::BSpline TestBSpline;
+	typedef typename OPTBSpline<TSplineConfig>::BSpline TestBSpline;
 	typedef typename TestBSpline::TimeExpression TimeExpression;
 	typedef GenericScalar<typename TimeExpression::Scalar> TimeDesignVariable;
 	static void test(TestBSpline & /* spline */, double /* t */, typename TestBSpline::TimeExpression /* timeExpression */, time_t /* timeExpLowerBound */, time_t /* timeExpUpperBound */){}
 };
 
 
-template <typename TSplineMap, int ISplineOrder>
+template <typename TSplineConfig, int ISplineOrder>
 struct MaxDerivative {
 	enum { VALUE = ISplineOrder };
 };
@@ -91,6 +91,11 @@ bool isNumericallyDifferentiableAt(const TSpline & spline, const TExpression & /
 	else {
 		return derivativeOrder < spline.getSplineOrder() - 1;
 	}
+}
+
+template<typename TTime, typename TExpression>
+inline void testJacobian(TExpression expression, int expectedNumberOfDesignVariables = -1, double toleranceFactor = 1.0) {
+  aslam::backend::testJacobian(expression, expectedNumberOfDesignVariables, false, test::ExpressionTraits<TExpression>::defaultTolerance() * toleranceFactor, std::numeric_limits<TTime>::is_integer ?  1E-7 : test::ExpressionTraits<TExpression>::defaulEps());
 }
 
 template <typename TSplineMap, int ISplineOrder, int IDim>
@@ -166,7 +171,7 @@ struct OPTSplineTester{
 		for(int k = 0; k < numberOfTimesToProbe; k++){
 			static_assert(numberOfTimesToProbe > 2, "use at lease three numberOfTimesToProbe");
 			time_t t = ((k % 2 == 0) ? ((double) (k / 2) / ((numberOfTimesToProbe - 1)/ 2)) : ((double) rand() / RAND_MAX)) * (duration * TimePolicy::getOne());
-			const int maxDerivativeOrder = MaxDerivative<TSplineMap, ISplineOrder>::VALUE;
+			const int maxDerivativeOrder = MaxDerivative<typename TSplineMap::configuration_t, ISplineOrder>::VALUE;
 
 			TimeDesignVariable offsetVar(1000000);
 			offsetVar.setActive(true);
@@ -243,12 +248,12 @@ struct OPTSplineTester{
 
 				if(isNumericallyDifferentiableAt(bspline, expressionTimeExp, derivativeOrder + 1, t) && t != bspline.getMaxTime() && t != bspline.getMinTime()){
 					SCOPED_TRACE(::testing::Message() << "derivativeOrder=" << derivativeOrder << ", t=" << t);
-					testJacobian(expressionTimeExp, dvIndexCounter, false, test::ExpressionTraits<decltype(expressionTimeExp)>::defaultTolerance() * 2, std::numeric_limits<time_t>::is_integer ?  1E-7 : test::ExpressionTraits<decltype(expressionTimeExp)>::defaulEps());
+					testJacobian<time_t>(expressionTimeExp, dvIndexCounter, 2);
 				}
 
 				{
 					SCOPED_TRACE(::testing::Message() << "derivativeOrder=" << derivativeOrder << ", t=" << t);
-					OPTSplineSpecializationTester<TSplineMap, ISplineOrder, IDim>::test(bspline, t, timeExpression, timeExpLowerBound, timeExpUpperBound);
+					OPTSplineSpecializationTester<typename TSplineMap::CONF, ISplineOrder, IDim>::test(bspline, t, timeExpression, timeExpLowerBound, timeExpUpperBound);
 				}
 
 				for(auto dv : varVec){
@@ -282,15 +287,16 @@ struct OPTSplineTester{
 	}
 };
 
-template <int IEigenSplineOrder, int ISplineOrder, typename TTimePolicy, typename TScalar>
-struct MaxDerivative<UnitQuaternionBSpline<IEigenSplineOrder, TTimePolicy, TScalar>, ISplineOrder> {
-	enum { LIMIT=UnitQuaternionBSpline<IEigenSplineOrder>::TYPE::MaxSupportedDerivativeOrderJacobian, VALUE = LIMIT < ISplineOrder ? LIMIT : ISplineOrder };
+template <typename TDiffManifoldConfiguration, int IEigenSplineOrder, typename TTimePolicy, int ISplineOrder>
+struct MaxDerivative<UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, IEigenSplineOrder, TTimePolicy>, ISplineOrder> {
+	enum { LIMIT=UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, IEigenSplineOrder, TTimePolicy>::BSpline::MaxSupportedDerivativeOrderJacobian, VALUE = LIMIT < ISplineOrder ? LIMIT : ISplineOrder };
 };
 
-template <int IEigenSplineOrder, int ISplineOrder, int IDim>
-struct OPTSplineSpecializationTester<UnitQuaternionBSpline<IEigenSplineOrder>, ISplineOrder, IDim>
+template <typename TDiffManifoldConfiguration, int IEigenSplineOrder, typename TTimePolicy, int ISplineOrder, int IDim>
+struct OPTSplineSpecializationTester<UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, IEigenSplineOrder, TTimePolicy>, ISplineOrder, IDim>
 {
-	typedef typename OPTBSpline<typename UnitQuaternionBSpline<IEigenSplineOrder>::CONF>::BSpline TestBSpline;
+	typedef UnitQuaternionBSplineConfiguration<TDiffManifoldConfiguration, IEigenSplineOrder, TTimePolicy> CONF;
+	typedef typename OPTBSpline<CONF>::BSpline TestBSpline;
 	typedef typename TestBSpline::time_t time_t;
 	typedef GenericScalar<typename TestBSpline::TimeExpression::Scalar> TimeDesignVariable;
 
@@ -336,11 +342,11 @@ struct OPTSplineSpecializationTester<UnitQuaternionBSpline<IEigenSplineOrder>, I
 			int expectedNumberOfDVs = bspline.getSplineOrder() + std::distance(bspline.getSegmentIterator(timeExpLowerBound), bspline.getSegmentIterator(timeExpUpperBound)) + 1; // number of control vertices relevant for the interval + 1 for the time design variable!
 			if(isNumericallyDifferentiableAt(bspline, avexpressionTE, 2, t))
 			{
-				SCOPED_TRACE(""); testJacobian(avexpressionTE, expectedNumberOfDVs);
+				SCOPED_TRACE(""); testJacobian<time_t>(avexpressionTE, expectedNumberOfDVs, 2);
 			}
 			if(isNumericallyDifferentiableAt(bspline, aaexpressionTE, 3, t))
 			{
-				SCOPED_TRACE(""); testJacobian(aaexpressionTE, expectedNumberOfDVs);
+				SCOPED_TRACE(""); testJacobian<time_t>(aaexpressionTE, expectedNumberOfDVs, 2);
 			}
 		}
 	}
@@ -666,4 +672,18 @@ TYPED_TEST(OPTBSplineTestSuiteT2, testOptimizingEvaluationTimeLarge)
 	}
 }
 
+#endif
+
+#if __cplusplus >= 201103L
+TEST(OPTBSplineTestSuite, cpp11ConfortAndBackCompatibility)
+{
+	typedef OPTBSpline<typename EuclideanBSpline<1, 3>::CONF> Spline;
+	Spline::BSpline(Spline::CONF::Conf(Spline::CONF::ManifoldConf(3), 1)); // old way needs to be still possible
+	Spline::BSpline(Spline::CONF(Spline::CONF::ManifoldConf(3), 1)); // better thanks to constructor inheritance in DesignVariableSegmentBSplineConf
+	Spline::BSpline(1, 3); // better thanks to constructor inheritance in OPTBSpline
+
+	// awesome: thanks to the new type aliasing nature of OPTBSpline
+	Spline(1, 3);
+	Spline(1); // even inheriting default constructor arguments
+}
 #endif

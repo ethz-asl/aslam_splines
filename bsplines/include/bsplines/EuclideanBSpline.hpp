@@ -20,7 +20,11 @@ namespace bsplines {
 		typedef EuclideanBSplineConfiguration<TDiffManifoldConfiguration, ISplineOrder, TTimePolicy> Conf;
 		typedef DiffManifoldBSpline<Conf> BSpline;
 
+#if __cplusplus >= 201103L
+		using ParentConf::ParentConf;
+#else
 		EuclideanBSplineConfiguration(TDiffManifoldConfiguration manifoldConfiguration = TDiffManifoldConfiguration(), int splineOrder = ISplineOrder) : ParentConf(manifoldConfiguration, splineOrder) {}
+#endif
 	};
 
 	template <typename TDiffManifoldConfiguration, int ISplineOrder, typename TTimePolicy, typename TConfigurationDerived>
@@ -76,11 +80,16 @@ namespace bsplines {
 
 
 	template <int ISplineOrder = Eigen::Dynamic, int IDimension = Eigen::Dynamic, typename TTimePolicy = DefaultTimePolicy, typename TScalar = double>
+
+#if __cplusplus >= 201103L
+	using EuclideanBSpline = typename EuclideanBSplineConfiguration<manifolds::EuclideanSpaceConf<IDimension, TScalar>, ISplineOrder, TTimePolicy>::BSpline;
+#else
 	class EuclideanBSpline {
 	public:
 		typedef EuclideanBSplineConfiguration<manifolds::EuclideanSpaceConf<IDimension, TScalar>, ISplineOrder, TTimePolicy> CONF;
 		typedef typename CONF::BSpline TYPE;
 	};
+#endif
 }
 
 #include "implementation/EuclideanBSplineImpl.hpp"

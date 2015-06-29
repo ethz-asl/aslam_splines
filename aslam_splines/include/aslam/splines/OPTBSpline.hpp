@@ -33,7 +33,13 @@ namespace aslam {
 
 			typedef typename TDiffManifoldBSplineConfigurationDerived::ManifoldConf ManifoldConf;
 
+#if __cplusplus >= 201103L
+			using TDiffManifoldBSplineConfigurationDerived::TDiffManifoldBSplineConfigurationDerived;
+			DesignVariableSegmentBSplineConf(const TDiffManifoldBSplineConfigurationDerived & derivedConf) : ParentConf(derivedConf) {}
+			DesignVariableSegmentBSplineConf() = default;
+#else
 			DesignVariableSegmentBSplineConf(TDiffManifoldBSplineConfigurationDerived derivedConf = TDiffManifoldBSplineConfigurationDerived()) : ParentConf(derivedConf) {}
+#endif
 		};
 	}
 }
@@ -136,7 +142,13 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 	typedef aslam::backend::VectorExpression<PointSize> expression_t;
 
 
+
+#if __cplusplus >= 201103L
+	using parent_t::parent_t;
+	DiffManifoldBSpline(const typename configuration_t::ParentConf & config = configuration_t()) : parent_t(configuration_t(config)){}
+#else
 	DiffManifoldBSpline(const configuration_t & config = configuration_t()) : parent_t(config){}
+#endif
 
 	size_t numDesignVariables();
 	dv_t * designVariable(size_t i);
@@ -227,6 +239,12 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 
 namespace aslam {
 namespace splines {
+
+#if __cplusplus >= 201103L
+	template <typename TBSplineConf>
+	using OPTBSpline = typename aslam::splines::DesignVariableSegmentBSplineConf<TBSplineConf>::BSpline;
+#else
+
 	template <typename TBSplineConf>
 	class OPTBSpline {
 	public:
@@ -234,6 +252,8 @@ namespace splines {
 //		typedef ::bsplines::DiffManifoldBSpline<CONF> BSpline;
 		typedef typename CONF::BSpline BSpline;
 	};
+#endif
+
 } // namespace splines
 } // namespace aslam
 

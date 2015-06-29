@@ -120,11 +120,15 @@ namespace bsplines {
 
 
 	template <int ISplineOrder = Eigen::Dynamic, typename TTimePolicy = DefaultTimePolicy, typename TScalar = double>
+#if __cplusplus >= 201103L
+	using UnitQuaternionBSpline = typename UnitQuaternionBSplineConfiguration<manifolds::UnitQuaternionManifoldConf<TScalar>, ISplineOrder, TTimePolicy>::BSpline;
+#else
 	class UnitQuaternionBSpline {
 	public:
 		typedef UnitQuaternionBSplineConfiguration<manifolds::UnitQuaternionManifoldConf<TScalar>, ISplineOrder, TTimePolicy> CONF;
 		typedef typename CONF::BSpline TYPE;
 	};
+#endif
 }
 
 #include "implementation/UnitQuaternionBSplineImpl.hpp"

@@ -213,10 +213,10 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 
  public:
 	template <int IMaxDerivativeOrder> inline ExpressionFactory<ConstTimeFactoryData<IMaxDerivativeOrder> > getExpressionFactoryAt(const time_t & t) const {
-		return ExpressionFactory<ConstTimeFactoryData<IMaxDerivativeOrder> >(ConstTimeFactoryData<IMaxDerivativeOrder>(*this, t));
+		return ExpressionFactory<ConstTimeFactoryData<IMaxDerivativeOrder> >(ConstTimeFactoryData<IMaxDerivativeOrder>(this->getDerived(), t));
 	}
 	template <int IMaxDerivativeOrder> inline ExpressionFactory<TimeExpressionFactoryData<IMaxDerivativeOrder> > getExpressionFactoryAt(const TimeExpression & t, time_t lowerBound, time_t upperBound) const {
-		return ExpressionFactory<TimeExpressionFactoryData<IMaxDerivativeOrder> >(TimeExpressionFactoryData<IMaxDerivativeOrder>(*this, t, lowerBound, upperBound));
+		return ExpressionFactory<TimeExpressionFactoryData<IMaxDerivativeOrder> >(TimeExpressionFactoryData<IMaxDerivativeOrder>(this->getDerived(), t, lowerBound, upperBound));
 	}
 
  private:

@@ -540,9 +540,7 @@ class OPTBSplineTestSuiteT2 : public ::testing::Test  {
 		sm::eigen::assertNear(zero, testSpline.template getEvaluatorAt<1>(halfTime).evalD(1), 1E-8, SM_SOURCE_FILE_POS);
 
 		OptimizationProblem problem;
-		for(auto & dv : testSpline.getDesignVariables()){
-			problem.addDesignVariable(dv, false);
-		}
+		testSpline.addDesignVariables(problem);
 
 		typename Tester::TimeDesignVariable timeVar(endTime/4);
 		problem.addDesignVariable(&timeVar, false);
@@ -601,8 +599,8 @@ class OPTBSplineTestSuiteT2 : public ::testing::Test  {
 		problem.addDesignVariable(&timeVar, false);
 		timeVar.setActive(true);
 
+		estimate.addDesignVariables(problem);
 		for(auto & dv : estimate.getDesignVariables()){
-			problem.addDesignVariable(dv, false);
 			dv->setActive(true);
 		}
 

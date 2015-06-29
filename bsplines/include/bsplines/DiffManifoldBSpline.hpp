@@ -36,6 +36,10 @@ namespace bsplines {
 		typedef TTimePolicy TimePolicy;
 
 		DiffManifoldBSplineConfiguration(TDiffManifoldConfiguration manifoldConfiguration, int splineOrder = ISplineOrder) : TDiffManifoldConfiguration(manifoldConfiguration), _splineOrder(splineOrder) {}
+#if __cplusplus >= 201103L
+		DiffManifoldBSplineConfiguration(const DiffManifoldBSplineConfiguration&) = default;
+		DiffManifoldBSplineConfiguration() = default;
+#endif
 
 		const SplineOrder getSplineOrder() const { return _splineOrder; }
 
@@ -143,6 +147,14 @@ namespace bsplines {
 		typedef Eigen::Matrix<scalar_t, manifold_t::PointSize, multiplyEigenSize(Dimension, SplineOrder) > full_jacobian_t;
 		typedef Eigen::Matrix<scalar_t, SplineOrder, 1> SplineOrderVector;
 		typedef Eigen::Matrix<scalar_t, SplineOrder, SplineOrder> SplineOrderSquareMatrix;
+
+#if __cplusplus >= 201103L
+	public:
+		// Deprecated: Only for compatibility with the pre C++11 type maps, which are template aliases when c++11 is available.
+		typedef TConfigurationDerived CONF;
+		typedef typename CONF::BSpline TYPE;
+		typedef typename CONF::BSpline BSpline;
+#endif
 
 	public:
 		typedef internal::SegmentMap<configuration_t> segment_map_t;

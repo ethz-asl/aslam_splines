@@ -156,7 +156,15 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 	void init();
 
 	const std::vector<dv_t *> & getDesignVariables();
+	template <typename OptimizationProblem> 
+	void addDesignVariables(OptimizationProblem & problem) {
+		for(auto dvp : getDesignVariables()) problem.addDesignVariable(dvp, false);
+	}
 	std::vector<dv_t *> getDesignVariables(time_t time);
+	template <typename OptimizationProblem> 
+	void addDesignVariables(time_t time, OptimizationProblem & problem) {
+		for(auto dvp : getDesignVariables(time)) problem.addDesignVariable(dvp, false);
+	}
 
 	// add one Segment at the end of the Spline
 	time_t appendSegments(KnotGenerator<time_t> & knotGenerator, int numSegments, const point_t * value);

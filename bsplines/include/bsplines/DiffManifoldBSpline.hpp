@@ -116,6 +116,13 @@ namespace bsplines {
 				SegmentIterator(const SegmentMapIterator & it) : SegmentIteratorT<segment_data_t, SegmentMapIterator>(it) {}
 			};
 		};
+		
+		template <typename Spline>
+		struct AssertInitializedSpline{
+			AssertInitializedSpline(const Spline & s){
+				s.assertEvaluable();
+			}
+		};
 	}
 
 	template <typename TSpline> class BSplineFitter;
@@ -336,7 +343,7 @@ namespace bsplines {
 		inline point_t evalI(const time_t & t1, const time_t & t2) const { return evalIntegral(t1, t2); }
 
 		template<int IMaximalDerivativeOrder>
-		class Evaluator {
+		class Evaluator : private internal::AssertInitializedSpline<spline_t> {
 		public:
 			EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -456,9 +463,9 @@ namespace bsplines {
 		inline duration_t computeSegmentLength(SegmentMapConstIterator segmentIt) const;
 		inline static void computeLocalViInto(const SplineOrderVector & v, SplineOrderVector& localVi, const SegmentMapConstIterator & it);
 
-		template<int IMaximalDerivativeOrder> friend class Evaluator;
-
 		//friends:
+		template<int IMaximalDerivativeOrder> friend class Evaluator;
+		friend class internal::AssertInitializedSpline<spline_t>;
 		template<typename TSpline> friend class BSplineFitter;
 	private:
 		void initIterators();

@@ -464,12 +464,6 @@ namespace bsplines{
 		evalAngularDerivativeJacobian<2>(jacobian);
 	}
 
-	_TEMPLATE
-	template<int IMaximalDerivativeOrder>
-	inline _CLASS::Evaluator<IMaximalDerivativeOrder> _CLASS::getEvaluatorAt(const time_t & t) const{
-		return typename _CLASS::template Evaluator<IMaximalDerivativeOrder>(this->getDerived(), t);
-	}
-
 	#undef _CLASS
 	#undef _TEMPLATE
 } // namespace bsplines

@@ -116,7 +116,12 @@ namespace bsplines {
 				SegmentIterator(const SegmentMapIterator & it) : SegmentIteratorT<segment_data_t, SegmentMapIterator>(it) {}
 			};
 		};
-		
+
+		template <typename Spline, int IMaximalDerivativeOrder>
+		struct get_evaluator {
+			typedef typename Spline::template Evaluator<IMaximalDerivativeOrder> type;
+		};
+
 		template <typename Spline>
 		struct AssertInitializedSpline{
 			AssertInitializedSpline(const Spline & s){
@@ -409,7 +414,7 @@ namespace bsplines {
 		};
 
 		template<int IMaximalDerivativeOrder>
-		inline Evaluator<IMaximalDerivativeOrder> getEvaluatorAt(const time_t & t) const;
+		inline typename internal::get_evaluator<spline_t, IMaximalDerivativeOrder>::type getEvaluatorAt(const time_t & t) const;
 
 	protected:
 		typedef typename knot_arithmetics::UniformTimeCalculator<TimePolicy> UniformTimeCalculator;

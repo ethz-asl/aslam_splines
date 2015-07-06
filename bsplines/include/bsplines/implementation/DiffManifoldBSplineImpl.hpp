@@ -731,6 +731,7 @@ namespace bsplines {
 	_TEMPLATE
 	template <int IMaximalDerivativeOrder>
 	_CLASS::Evaluator<IMaximalDerivativeOrder >::Evaluator(const spline_t & spline, const time_t & t) :
+		internal::AssertInitializedSpline<spline_t>(spline),
 		_tmp(spline.getSplineOrder()),
 		_spline(spline),
 		_t(t),
@@ -1014,9 +1015,8 @@ namespace bsplines {
 
 	_TEMPLATE
 	template<int IMaximalDerivativeOrder>
-	inline _CLASS::Evaluator<IMaximalDerivativeOrder> _CLASS::getEvaluatorAt(const time_t & t) const {
-		assertEvaluable();
-		return Evaluator<IMaximalDerivativeOrder>(this->getDerived(), t);
+	inline typename internal::get_evaluator<typename _CLASS::spline_t, IMaximalDerivativeOrder>::type _CLASS::getEvaluatorAt(const time_t & t) const {
+		return typename _CLASS::spline_t::template Evaluator<IMaximalDerivativeOrder>(this->getDerived(), t);
 	}
 
 #undef _TEMPLATE

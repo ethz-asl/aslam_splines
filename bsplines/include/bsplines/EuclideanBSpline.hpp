@@ -63,7 +63,7 @@ namespace bsplines {
 		};
 
 		template<int IMaximalDerivativeOrder>
-		inline Evaluator<IMaximalDerivativeOrder> getEvaluatorAt(const time_t & t) const;
+		inline Evaluator<IMaximalDerivativeOrder> getEvaluatorAt(const time_t & t) const { return parent_t::template getEvaluatorAt<IMaximalDerivativeOrder>(t); }
 
 	protected:
 		enum IteratorPosition { IteratorPosition_first, IteratorPosition_last, IteratorPosition_end };

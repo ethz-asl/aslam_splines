@@ -301,7 +301,7 @@ namespace bsplines {
 		 */
 		inline size_t getNumKnots() const;
 
-		inline bool isInitialized() { return _state == internal::state::SplineState::EVALUABLE; }
+		inline bool isInitialized() const { return _state == internal::state::SplineState::EVALUABLE; }
 
 		inline time_t getMinTime() const;
 		inline time_t getMaxTime() const;

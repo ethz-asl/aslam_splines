@@ -65,7 +65,8 @@ _TEMPLATE
 template<int IMaxDerivativeOrder>
 auto _CLASS::TimeExpressionFactoryData<IMaxDerivativeOrder>::getEvaluator() const -> const eval_t & {
 	time_t t = TimeExpEvaluator<typename TimeExpression::Scalar>::eval(_timeExp.evaluate());
-	SM_ASSERT_GE_LT(std::runtime_error, t, _lowerBound, _upperBound, "The evaluation time expression evaluated to a value outside its declared bounds");
+	SM_ASSERT_GE(std::runtime_error, t, _lowerBound, "The evaluation time expression evaluated to a value below its lower bound");
+	SM_ASSERT_LE(std::runtime_error, t, _upperBound, "The evaluation time expression evaluated to a value above its upper bound");
 	if(evalPtr) {
 		if(evalPtr->getKnot() != t) {
 			delete evalPtr;
@@ -117,8 +118,8 @@ namespace internal {
 
 	template <typename TJacobian, int IPointSize, int IDimension, bool Dynamic = TJacobian::SizeAtCompileTime == Eigen::Dynamic>
 	struct AddJac {
-      static inline void addJac(TJacobian & J, const int col, const DesignVariable * designVariable, JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule, int /* pointSize */, int /* dimension */){
-			addJacImpl(designVariable, outJacobians, applyChainRule, J.template block<IPointSize,IDimension>(0,col));
+			static inline void addJac(TJacobian & J, const int col, const DesignVariable * designVariable, JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule, int /* pointSize */, int /* dimension */){
+			addJacImpl(designVariable, outJacobians, applyChainRule, J.template block<IPointSize, IDimension>(0,col));
 		}
 	};
 

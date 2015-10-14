@@ -150,7 +150,7 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 	DiffManifoldBSpline(const configuration_t & config = configuration_t()) : parent_t(config){}
 #endif
 
-	size_t numDesignVariables();
+	size_t numDesignVariables() const;
 	dv_t * designVariable(size_t i);
 
 	void init();

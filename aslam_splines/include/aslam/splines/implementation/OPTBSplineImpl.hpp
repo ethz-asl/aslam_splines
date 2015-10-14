@@ -34,7 +34,7 @@ void _CLASS::init() {
 }
 
 _TEMPLATE
-size_t _CLASS::numDesignVariables() {
+size_t _CLASS::numDesignVariables() const {
 	return _designVariables.size();
 }
 

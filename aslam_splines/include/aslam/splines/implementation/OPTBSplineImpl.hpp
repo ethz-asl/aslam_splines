@@ -47,6 +47,12 @@ typename _CLASS::dv_t * _CLASS::designVariable(
 }
 
 _TEMPLATE
+const typename _CLASS::dv_t * _CLASS::designVariable(size_t i) const {
+  SM_ASSERT_LT(aslam::Exception, i, _designVariables.size(), "Index out of bounds");
+  return _designVariables[i];
+}
+
+_TEMPLATE
 const std::vector<typename _CLASS::dv_t *> & _CLASS::getDesignVariables() {
 	return _designVariables;
 }

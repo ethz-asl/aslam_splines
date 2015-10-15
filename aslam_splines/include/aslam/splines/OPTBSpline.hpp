@@ -150,6 +150,10 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 	DiffManifoldBSpline(const configuration_t & config = configuration_t()) : parent_t(config){}
 #endif
 
+	DiffManifoldBSpline(const DiffManifoldBSpline & other) : parent_t(other) {
+		if(this->isInitialized()) updateDesignVariablesVector();
+	}
+
 	size_t numDesignVariables() const;
 	dv_t * designVariable(size_t i);
 	const dv_t * designVariable(size_t i) const;
@@ -241,8 +245,10 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 	}
 
  private:
+
 	/// \brief the vector of design variables.
 	std::vector< dv_t * > _designVariables;
+	void updateDesignVariablesVector();
 };
 }
 

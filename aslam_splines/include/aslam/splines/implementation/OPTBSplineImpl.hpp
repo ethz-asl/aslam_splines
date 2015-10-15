@@ -24,8 +24,11 @@ namespace bsplines {
 _TEMPLATE
 void _CLASS::init() {
 	parent_t::init();
-	// Create all of the design variables as maps into the vector of spline coefficients.
+	updateDesignVariablesVector();
+}
 
+_TEMPLATE
+void _CLASS::updateDesignVariablesVector() {
 	_designVariables.clear();
 	for(SegmentIterator i = this->firstRelevantSegment(), end = this->end(); i != end; i++)
 	{

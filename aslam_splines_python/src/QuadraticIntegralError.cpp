@@ -15,7 +15,7 @@
 using namespace boost::python;
 
 template <int dim, typename Expression = aslam::backend::VectorExpression<dim>>
-inline void addQuadraticIntegralExpressionErrorTerms(OptimizationProblem & problem, double a, double b, int numberOfPoints, const object & expressionFactory, const Eigen::Matrix<double, dim, dim> & sqrtInvR){
+inline void addQuadraticIntegralExpressionErrorTerms(aslam::backend::OptimizationProblem & problem, double a, double b, int numberOfPoints, const object & expressionFactory, const Eigen::Matrix<double, dim, dim> & sqrtInvR){
   using namespace aslam::backend::integration;
 
   struct ExpressionFactoryAdapter {
@@ -55,7 +55,7 @@ void exportAddQuadraticIntegralExpressionErrorTerms(){
 
   boost::python::def(
       "addQuadraticIntegralEuclideanExpressionErrorTermsToProblem",
-      &addQuadraticIntegralExpressionErrorTerms<3, EuclideanExpression>,
+      &addQuadraticIntegralExpressionErrorTerms<3, aslam::backend::EuclideanExpression>,
       boost::python::args("problem, timeA, timeB, nIntegrationPoints, expressionFactory, sqrtInvR")
    );
 }

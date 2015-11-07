@@ -173,7 +173,7 @@ struct OPTSplineTester{
 			time_t t = ((k % 2 == 0) ? ((double) (k / 2) / ((numberOfTimesToProbe - 1)/ 2)) : ((double) rand() / RAND_MAX)) * (duration * TimePolicy::getOne());
 			const int maxDerivativeOrder = MaxDerivative<typename TSplineMap::configuration_t, ISplineOrder>::VALUE;
 
-			TimeDesignVariable offsetVar(1000000);
+			TimeDesignVariable offsetVar(1000000L);
 			offsetVar.setActive(true);
 
 			typename TestBSpline::TimeExpression

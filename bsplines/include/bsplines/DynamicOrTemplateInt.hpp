@@ -1,16 +1,7 @@
-/*
- * DynamicOrTemplateInt.hpp
- *
- *  Created on: May 10, 2012
- *      Author: hannes
- */
-
 #ifndef DYNAMICORTEMPLATEINT_HPP_
 #define DYNAMICORTEMPLATEINT_HPP_
 #include <sm/assert_macros.hpp>
 #include <Eigen/Core>
-#include <boost/typeof/typeof.hpp>
-#include <boost/static_assert.hpp>
 
 namespace eigenTools {
 	struct DynamicOrTemplateIntBase {

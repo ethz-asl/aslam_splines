@@ -1,12 +1,4 @@
-/*
- * NumericIntegratorTests.cpp
- *
- *  Created on: Oct 7, 2012
- *      Author: hannes
- */
-
 #include "gtest/gtest.h"
-#include "boost/typeof/typeof.hpp"
 #include "bsplines/NumericIntegrator.hpp"
 #include <sm/assert_macros.hpp>
 #include <cmath>

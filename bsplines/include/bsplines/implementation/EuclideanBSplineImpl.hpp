@@ -66,9 +66,9 @@ namespace bsplines {
 		// central time segments.
 		for(int i = 0; i < splineOrder; i++) v(i) = 1.0/(i + 1.0);
 
-		BOOST_AUTO(it, eval1.getLastRelevantSegmentIterator());
+		auto it = eval1.getLastRelevantSegmentIterator();
 		Evaluator<0> eval2 = this->getEvaluatorAt<0>(t2);
-		BOOST_AUTO(end, eval2.getLastRelevantSegmentIterator());
+		const auto end = eval2.getLastRelevantSegmentIterator();
 
 		SplineOrderVector localVi(splineOrder);
 		for(; it != end; it++)
@@ -105,7 +105,7 @@ namespace bsplines {
 	{
 		SM_ASSERT_GE(typename parent_t::Exception, derivativeOrder, 0, "To integrate, use the integral function");
 		if(IMaximalDerivativeOrder != Eigen::Dynamic){
-				SM_ASSERT_LT_DBG(typename parent_t::Exception, derivativeOrder, IMaximalDerivativeOrder + 1, "only derivatives up to the evaluator's template argument IMaximalDerivativeOrder are allowed");
+			SM_ASSERT_LT(typename parent_t::Exception, derivativeOrder, IMaximalDerivativeOrder + 1, "only derivatives up to the evaluator's template argument IMaximalDerivativeOrder are allowed");
 		}
 
 		point_t rv((int)this->_spline.getDimension());
@@ -120,13 +120,15 @@ namespace bsplines {
 	void _CLASS::Evaluator<IMaximalDerivativeOrder>::evalJacobian(int derivativeOrder, full_jacobian_t & jacobian) const
 	{
 		SM_ASSERT_GE(typename parent_t::Exception, derivativeOrder, 0, "To integrate, use the integral function");
-		SM_ASSERT_LT_DBG(typename parent_t::Exception, derivativeOrder, IMaximalDerivativeOrder + 1, "only derivatives up to the evaluator's template argument IMaximalDerivativeOrder are allowed");
+		if(IMaximalDerivativeOrder != Eigen::Dynamic){
+			SM_ASSERT_LT(typename parent_t::Exception, derivativeOrder, IMaximalDerivativeOrder + 1, "only derivatives up to the evaluator's template argument IMaximalDerivativeOrder are allowed");
+		}
 		// The Jacobian
 		const int D = this->_spline.getDimension(), splineOrder = this->_spline.getSplineOrder();
 		if(jacobian.rows() != D || jacobian.cols() != D * splineOrder) jacobian.resize(D, D * splineOrder);
 		const SplineOrderVector & u = this->getLocalBi(derivativeOrder);
 
-		BOOST_AUTO(id, (Eigen::Matrix<double, parent_t::Dimension, parent_t::Dimension>::Identity(D, D)));
+		const auto id = (Eigen::Matrix<double, parent_t::Dimension, parent_t::Dimension>::Identity(D, D));
 		for(int i = 0; i < splineOrder; i++)
 		{
 			jacobian.block(0, i*D, D, D) = id * u[i];

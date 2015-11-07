@@ -8,8 +8,8 @@
 #ifndef NODEDISTRIBUTEDCACHE_HPP_
 #define NODEDISTRIBUTEDCACHE_HPP_
 
+#include <memory>
 #include <vector>
-#include <boost/shared_ptr.hpp>
 #include <sm/assert_macros.hpp>
 #include <Eigen/Core>
 
@@ -126,8 +126,8 @@ public:
 	};
 
 	template <typename TValue>
-	inline boost::shared_ptr<NodeCacheSlot<TValue> > registerCacheableValue(){
-		return boost::shared_ptr<NodeCacheSlot<TValue> >(new NodeCacheSlot<TValue>(getNextFreeIndex(), *this));
+	inline std::shared_ptr<NodeCacheSlot<TValue> > registerCacheableValue(){
+		return std::shared_ptr<NodeCacheSlot<TValue> >(new NodeCacheSlot<TValue>(getNextFreeIndex(), *this));
 	}
 private:
 	std::vector<bool> slotUsage;

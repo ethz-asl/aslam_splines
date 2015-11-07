@@ -5,7 +5,6 @@
  *      Author: hannes
  */
 #include "gtest/gtest.h"
-#include "boost/typeof/typeof.hpp"
 #include "bsplines/NodeDistributedCache.hpp"
 #include <sm/assert_macros.hpp>
 
@@ -39,7 +38,7 @@ TEST(NodeDistributedCacheTestSuite, testInitialization)
 	TestCache cache;
 
 	{
-		BOOST_AUTO(testSlot, cache.registerCacheableValue<TestValue>());
+		auto testSlot = cache.registerCacheableValue<TestValue>();
 
 		TestNode testNode;
 

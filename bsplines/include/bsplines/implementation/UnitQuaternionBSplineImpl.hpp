@@ -57,7 +57,7 @@ namespace bsplines{
 
 		CalculationCache(const Evaluator * eval) : localPhiVectors(eval->getNumVectors()), localRiPoints(eval->getNumVectors()), localControlVertices(eval->_spline.getSplineOrder())
 		{
-			BOOST_AUTO(geo, eval->_spline.getManifold());
+			const auto & geo = eval->_spline.getManifold();
 			SegmentMapConstIterator it = eval->_firstRelevantControlVertexIt;
 			const point_t * lastControlVertex = & it->second.getControlVertex();
 			localControlVertices[0] = lastControlVertex;
@@ -368,13 +368,13 @@ namespace bsplines{
 		if(jacobian.rows() != D || jacobian.cols() != dim * splineOrder) jacobian.resize(D, dim * splineOrder);
 
 		CalculationCache cache(this);
-		BOOST_AUTO(geo, this->_spline.getManifold());
+		const auto & geo = this->_spline.getManifold();
 		dmatrix_t riQuaternionJacobian;
 		Eigen::Matrix<double, spline_t::PointSize, spline_t::PointSize> riProduct;
 
 		for(int j = 0; j < n; j++)
 		{
-			BOOST_AUTO(block, jacobian.block(0, j*dim, D, dim));
+			auto block = jacobian.block(0, j*dim, D, dim);
 			if(j == 0)
 				block = quatOPlus(qplus(cache.getLocalStartPoint(), evalDRecursiveProductRest(cache, derivativeOrder, 1, factorial(derivativeOrder)))) * geo.V();
 			else block.setZero();
@@ -392,13 +392,13 @@ namespace bsplines{
 		if(jacobian.rows() != D || jacobian.cols() != dim * splineOrder) jacobian.resize(D, dim * splineOrder);
 
 		CalculationCache cache(this);
-		BOOST_AUTO(geo, this->_spline.getManifold());
+		const auto & geo = this->_spline.getManifold();
 		dmatrix_t riQuaternionJacobian;
 		Eigen::Matrix<double, spline_t::PointSize, spline_t::PointSize> riProduct;
 
 		for(int j = 0; j < n; j++)
 		{
-			BOOST_AUTO(block, jacobian.block(0, j*dim, D, dim));
+			auto block = jacobian.block(0, j*dim, D, dim);
 			if(j == 0)
 				block = quatOPlus(qplus(cache.getLocalStartPoint(), getRiQuaternionProduct(cache, 1, n))) * geo.V();
 			else block.setZero();
@@ -426,7 +426,7 @@ namespace bsplines{
 	template<int IMaximalDerivativeOrder>
 	template <int IDerivativeOrder>
 	void _CLASS::Evaluator<IMaximalDerivativeOrder>::evalAngularDerivativeJacobian(angular_jacobian_t & jacobian) const{
-		BOOST_STATIC_ASSERT_MSG(IDerivativeOrder <= IMaximalDerivativeOrder, "You have to set the evaluator's IMaximalDerivativeOrder template argument to at least the requested angular derivative's order!");
+		static_assert(IDerivativeOrder <= IMaximalDerivativeOrder, "You have to set the evaluator's IMaximalDerivativeOrder template argument to at least the requested angular derivative's order!");
 		point_t d = evalD(IDerivativeOrder);
 		Eigen::Vector3d deps = qeps(d);
 		point_t v = this->eval();
@@ -436,12 +436,12 @@ namespace bsplines{
 		full_jacobian_t qJac(pointSize, dim * splineOrder), dqJac(pointSize, dim * splineOrder);
 		evalJacobian(IDerivativeOrder, dqJac);
 
-		BOOST_AUTO(depsJac, dqJac.block(0, 0, dim, splineOrder * dim));
-		BOOST_AUTO(etaDJac, dqJac.block(dim, 0, 1, splineOrder * dim));
+		const auto depsJac = dqJac.block(0, 0, dim, splineOrder * dim);
+		const auto etaDJac = dqJac.block(dim, 0, 1, splineOrder * dim);
 
 		evalJacobian(0, qJac);
-		BOOST_AUTO(vepsJac, qJac.block(0, 0, dim, splineOrder * dim));
-		BOOST_AUTO(etaJac, qJac.block(dim, 0, 1, splineOrder * dim));
+		const auto vepsJac = qJac.block(0, 0, dim, splineOrder * dim);
+		const auto etaJac = qJac.block(dim, 0, 1, splineOrder * dim);
 
 		//TODO optimize : move the factor 2 to the d and v terms to save a big matrix scaling
 //				return 2 * (qeta(v) * deps - qeta(d) * veps - veps.cross(deps));

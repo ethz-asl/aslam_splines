@@ -150,7 +150,7 @@ int main(int argc, char ** argv)
       // Create some optimization options.
       aslam::backend::Optimizer2Options options;
       options.verbose = true;
-      options.linearSystemSolver.reset(new DenseQrLinearSystemSolver());
+      options.linearSystemSolver.reset(new aslam::backend::DenseQrLinearSystemSolver());
 //      options.levenbergMarquardtLambdaInit = 10;
       options.doSchurComplement = false;
 //      options.doLevenbergMarquardt = true;

@@ -11,8 +11,6 @@
 #include "aslam/backend/JacobianContainer.hpp"
 #include "boost/typeof/typeof.hpp"
 
-using namespace aslam::backend;
-
 namespace bsplines {
 
 #define _TEMPLATE template <typename TDiffManifoldConfiguration, int ISplineOrder, typename TTimePolicy, typename TModifiedDerivedConf>
@@ -29,7 +27,7 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<Facto
 	private:
 		typedef typename node_t::vector_t vector_t;
 		const DataSharedPtr _dataPtr;
-		inline void evaluateJacobiansImplementation(JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule) const {
+		inline void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule) const {
 			const int dimension=_dataPtr->getSpline().getDimension(), pointSize = dimension, splineOrder = _dataPtr->getSpline().getSplineOrder();
 			typename _CLASS::angular_jacobian_t J(pointSize, dimension * splineOrder);
 			auto & eval = _dataPtr->getEvaluator();
@@ -52,15 +50,15 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<Facto
 			return _dataPtr->getEvaluator().evalAngularVelocity();
 		}
 
-		virtual void evaluateJacobiansImplementation(JacobianContainer & outJacobians) const {
+		virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const {
 			evaluateJacobiansImplementation(outJacobians, NULL);
 		}
 
-		virtual void evaluateJacobiansImplementation(JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const {
+		virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const {
 			evaluateJacobiansImplementation(outJacobians, &applyChainRule);
 		}
 
-		virtual void getDesignVariablesImplementation(DesignVariable::set_t & designVariables) const {
+		virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const {
 			_dataPtr->getDesignVariables(designVariables);
 		}
 	};
@@ -80,7 +78,7 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<Facto
 		ExpressionNode(const DataSharedPtr & dataPtr) : _dataPtr(dataPtr){}
 		virtual ~ExpressionNode(){};
 	private:
-		inline void evaluateJacobiansImplementation(JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule) const {
+		inline void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule) const {
 			const int dimension=_dataPtr->getSpline().getDimension(), pointSize = dimension, splineOrder = _dataPtr->getSpline().getSplineOrder();
 			typename _CLASS::angular_jacobian_t J(pointSize, dimension * splineOrder);
 			auto & eval = _dataPtr->getEvaluator();
@@ -103,15 +101,15 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<Facto
 			return _dataPtr->getEvaluator().evalAngularAcceleration();
 		}
 
-		virtual void evaluateJacobiansImplementation(JacobianContainer & outJacobians) const {
+		virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const {
 			evaluateJacobiansImplementation(outJacobians, NULL);
 		}
 
-		virtual void evaluateJacobiansImplementation(JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const {
+		virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const {
 			evaluateJacobiansImplementation(outJacobians, &applyChainRule);
 		}
 
-		virtual void getDesignVariablesImplementation(DesignVariable::set_t & designVariables) const {
+		virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const {
 			_dataPtr->getDesignVariables(designVariables);
 		}
 	};

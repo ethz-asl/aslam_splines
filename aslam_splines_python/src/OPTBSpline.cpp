@@ -5,7 +5,7 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <vector>
 
-typedef std::vector<DesignVariable *> DesignVariables;
+typedef std::vector<aslam::backend::DesignVariable *> DesignVariables;
 
 using namespace bspline_exporter;
 using namespace bsplines;

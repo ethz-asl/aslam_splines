@@ -1,15 +1,7 @@
-/*
- * OPTBSplineImpl.hpp
- *
- *  Created on: 05.08.2012
- *      Author: hannes
- */
-
 #ifndef OPTUNITQUATERNIONBSPLINEIMPL_HPP_
 #define OPTUNITQUATERNIONBSPLINEIMPL_HPP_
 
 #include "aslam/backend/JacobianContainer.hpp"
-#include "boost/typeof/typeof.hpp"
 
 namespace bsplines {
 

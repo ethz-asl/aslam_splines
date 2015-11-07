@@ -18,7 +18,7 @@ namespace bsplines {
 		_state = other._state;
 		_configuration = other._configuration;
 		_manifold = other._manifold;
-		_segments = boost::shared_ptr<segment_map_t>(new segment_map_t(*other._segments));
+		_segments = std::shared_ptr<segment_map_t>(new segment_map_t(*other._segments));
 		if(isInitialized()){
 			initIterators();
 		}
@@ -595,8 +595,8 @@ namespace bsplines {
 		SM_ASSERT_GE_LT_DBG(Exception, segmentIt.getKnot(), getMinTime(), getMaxTime(), "Out of range");
 //			SM_ASSERT_GE_LT_DBG(Exception, segmentIndex, 0, getNumValidTimeSegments(), "Segment index out of bounds");
 
-		BOOST_AUTO_TPL(twiceSplineOrder, getSplineOrder() * eigenTools::DynamicOrTemplateInt<2>());
-		typedef BOOST_TYPEOF_TPL(twiceSplineOrder) TwiceSplineOrder;
+		const auto twiceSplineOrder = getSplineOrder() * eigenTools::DynamicOrTemplateInt<2>();
+		typedef decltype(twiceSplineOrder) TwiceSplineOrder;
 		Eigen::Matrix<double, TwiceSplineOrder::VALUE, 1> vals(twiceSplineOrder);
 		for (int i = 0, n = vals.rows(); i < n; ++i)
 		{
@@ -742,7 +742,7 @@ namespace bsplines {
 		_positionInSegment(computeDuration(_ti.getKnot(), t)),
 		_relativePositionInSegment(((duration_t) (_segmentLength) == (duration_t) (TTimePolicy::getZero())) ? 0 : divideDurations(_positionInSegment, _segmentLength))
 	{
-		BOOST_AUTO(splineOrder, _spline.getSplineOrder());
+		const auto splineOrder = _spline.getSplineOrder();
 		//TODO optimize : set cache while calculating the u
 		for(int derivativeOrder = 0; derivativeOrder < NumberOfPreparedDerivatives; derivativeOrder++){
 			SplineOrderVector & lBi = _localBi[derivativeOrder];
@@ -875,7 +875,7 @@ namespace bsplines {
 	template<bool BCumulative>
 	inline const typename _CLASS::SplineOrderVector & _CLASS::Evaluator<IMaximalDerivativeOrder>::getLocalBiT(int derivativeOrder) const {
 		SM_ASSERT_GE_DBG(Exception, derivativeOrder, 0, "");
-		BOOST_AUTO(splineOrder, _spline.getSplineOrder());
+		const auto splineOrder = _spline.getSplineOrder();
 
 		if(NeedsCumulativeBasisMatrices == BCumulative && derivativeOrder < NumberOfPreparedDerivatives){
 			return _localBi[derivativeOrder];

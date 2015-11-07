@@ -13,14 +13,11 @@
 
 // Bring in gtest
 #include <gtest/gtest.h>
-#include <boost/cstdint.hpp>
 
 // Helpful functions from libsm
 #include <sm/eigen/gtest.hpp>
 #include <sm/eigen/NumericalDiff.hpp>
 #include <sm/timing/Timer.hpp>
-
-#include <boost/tuple/tuple.hpp>
 
 #include <ctime>
 
@@ -292,7 +289,7 @@ struct SplineEvalRiDTester : public JacobianTester<Eigen::Matrix<double, 1, 1>, 
 	}
 
 	template<int IDerivativeOrder2> inline void e(Eigen::Matrix<double, 1, 1> t, typename TSpline::point_t & result) const {
-		BOOST_AUTO(eval, spline.template getEvaluatorAt<IDerivativeOrder2>(t[0]));
+		const auto eval = spline.template getEvaluatorAt<IDerivativeOrder2>(t[0]);
 		typename TSpline::template Evaluator<IDerivativeOrder2>::CalculationCache cache(&eval);
 		cache.localPhiVectors[vectorPos] = vec;
 		cache.localRiPoints[vectorPos] = spline.getManifold().expAtId(vec * eval.getLocalCumulativeBi(0)[vectorPos + 1]);
@@ -343,13 +340,13 @@ struct SplineEvalRiDJacobianTester : public JacobianTester<typename TSpline::tan
 
 	inline void eval(const input_t & vec, typename TSpline::point_t & result) {
 		updateControlVertex(vec);
-		BOOST_AUTO(eval, spline.template getEvaluatorAt<IDerivativeOrder>(_t));
+		const auto eval = spline.template getEvaluatorAt<IDerivativeOrder>(_t);
 		typename TSpline::template Evaluator<IDerivativeOrder>::CalculationCache cache(&eval);
 		result = eval.evalRiD(cache, IDerivativeOrder, vectorPos);
 	}
 	inline void evalJac(const input_t & vec, typename TSpline::dmatrix_t & result) {
 		updateControlVertex(vec);
-		BOOST_AUTO(eval, spline.template getEvaluatorAt<IDerivativeOrder>(_t));
+		const auto eval = spline.template getEvaluatorAt<IDerivativeOrder>(_t);
 		typename TSpline::template Evaluator<IDerivativeOrder>::CalculationCache cache(&eval);
 		result = eval.getRiDJacobian(cache, IDerivativeOrder, vectorPos) * (vectorPos == controlVertexPos ? 1 : -1);
 	}

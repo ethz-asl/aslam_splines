@@ -446,8 +446,8 @@ namespace internal{
 		const int blocksInQ = spline.getSplineOrder();
 		SM_ASSERT_EQ(Exception,Wdiag.rows(), D, "Wdiag must be of control point size");
 
-		BOOST_AUTO(qiSize, spline.getSplineOrder() * spline.getPointSize());
-		typedef BOOST_TYPEOF_TPL(qiSize) QiSize;
+		const auto qiSize = spline.getSplineOrder() * spline.getPointSize();
+		typedef decltype(qiSize) QiSize;
 		typedef Eigen::Matrix<double, QiSize::VALUE, QiSize::VALUE> Q_T;
 		Q_T Q((int)qiSize, (int)qiSize);
 
@@ -519,8 +519,8 @@ namespace internal{
 			V = (Dm.transpose() * V * Dm).eval();
 		}
 
-		BOOST_AUTO(splineOrderTimesPointSize, spline.getSplineOrder() * spline.getPointSize());
-		typedef BOOST_TYPEOF_TPL(splineOrderTimesPointSize) SplineOrderTimesPointSize;
+		const auto splineOrderTimesPointSize = spline.getSplineOrder() * spline.getPointSize();
+		typedef decltype(splineOrderTimesPointSize) SplineOrderTimesPointSize;
 		typedef Eigen::Matrix<double, SplineOrderTimesPointSize::VALUE, SplineOrderTimesPointSize::VALUE> MType;
 
 		MType WV((int)splineOrderTimesPointSize, (int)splineOrderTimesPointSize);

@@ -422,7 +422,7 @@ namespace bsplines {
 		TConfigurationDerived _configuration;
 		enum internal::state::SplineState _state;
 		manifold_t _manifold;
-		boost::shared_ptr<segment_map_t> _segments;
+		std::shared_ptr<segment_map_t> _segments;
 		SegmentIterator _begin, _end, _firstRelevantSegment;
 
 		inline const spline_t & getDerived() const { return *static_cast<const spline_t *>(this); }

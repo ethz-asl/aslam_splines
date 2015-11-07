@@ -6,9 +6,8 @@
 #include <vector>
 #include <map>
 #include <deque>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <sm/assert_macros.hpp>
 #include <sm/kinematics/quaternion_algebra.hpp>
-#include <boost/typeof/typeof.hpp>
 
 #endif

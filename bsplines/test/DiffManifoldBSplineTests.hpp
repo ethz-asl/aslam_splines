@@ -43,18 +43,20 @@ typedef EuclideanBSpline<splineOrder, rows, NsecTimePolicy>::TYPE TestSplineNsec
 typedef UnitQuaternionBSpline<>::TYPE UQTestSplineD;
 typedef UnitQuaternionBSpline<splineOrder>::TYPE UQTestSpline;
 
+struct LongDuration {
+	long v;
+	LongDuration(long v) : v(v){
+
+	}
+};
 
 struct LongTime {
 	long v;
 	LongTime(long v) : v(v){
 
 	}
-};
-
-struct LongDuration {
-	long v;
-	LongDuration(long v) : v(v){
-
+	LongTime operator + (const LongDuration & d) const {
+		return v + d.v;
 	}
 };
 

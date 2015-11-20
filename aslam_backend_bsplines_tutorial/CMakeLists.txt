@@ -5,7 +5,6 @@ find_package(catkin_simple REQUIRED)
 catkin_simple()
 
 cs_add_library(${PROJECT_NAME}
-  src/ErrorTermObservationBST.cpp
   src/ErrorTermMotionBST.cpp
   src/ErrorTermPriorBST.cpp
   src/exampleBST.cpp

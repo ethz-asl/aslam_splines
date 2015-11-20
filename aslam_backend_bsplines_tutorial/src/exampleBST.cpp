@@ -1,6 +1,6 @@
-#include <aslam/backend/ErrorTermObservationBST.hpp>
 #include <aslam/backend/ErrorTermMotionBST.hpp>
 #include <aslam/backend/ErrorTermPriorBST.hpp>
+#include <aslam/backend/ExpressionErrorTerm.hpp>
 #include <aslam/backend/OptimizationProblem.hpp>
 #include <aslam/backend/Optimizer2.hpp>
 #include <aslam/backend/Optimizer2Options.hpp>
@@ -10,7 +10,7 @@
 #include <sm/random.hpp>
 #include <vector>
 #include <algorithm>
-#include <boost/foreach.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <aslam/backend/EuclideanPoint.hpp>
 #include <sm/kinematics/RotationVector.hpp>
@@ -41,7 +41,7 @@ int main(int argc, char ** argv)
 
       // Create random odometry
       std::vector<double> true_u_k(K);
-      BOOST_FOREACH(double& u, true_u_k)
+      for(double& u : true_u_k)
       {
         u = 1;//sm::random::uniform();
       }
@@ -114,16 +114,18 @@ int main(int argc, char ** argv)
       // odometry error terms and measurement error terms.
       for(int k = 0; k < K; ++k)
       {
-        // Create odometry error
+        // Create expression factory at time k, prepared for time derivatives up to 1 (for that we need the "<1>").
         auto exprFactory = robotPosSpline.getExpressionFactoryAt<1>(k);
-        auto vecVelExpr = exprFactory.getValueExpression(1);
+
+        // Create odometry error via ErrorTermMotionBST
+        auto vecVelExpr = exprFactory.getValueExpression(1); // 1 => first derivative of position ~ robot velocity
         boost::shared_ptr<aslam::backend::ErrorTermMotionBST> em(new aslam::backend::ErrorTermMotionBST(vecVelExpr, u_k[k], sigma_u * sigma_u));
         problem->addErrorTerm(em);
 
-        // Create observation error
-        auto vecPosExpr = exprFactory.getValueExpression(0);
-        boost::shared_ptr<aslam::backend::ErrorTermObservationBST> eo(new aslam::backend::ErrorTermObservationBST(vecPosExpr, dv_w,  y_k[k], sigma_n * sigma_n));
-        problem->addErrorTerm(eo);
+        // Create observation error using expressions and toErrorTerm to create an ExpressionErrorTerm
+        auto vecPosExpr = exprFactory.getValueExpression(0); // 0 => spline value itself ~ robot position
+        // We want to compute an error term e := dv_w / vecPosExpr[0] - y_k[k] + v, with v ~ N(0, sigma_n)
+        problem->addErrorTerm(toErrorTerm(dv_w->toExpression() / vecPosExpr.toScalarExpression<0>() - y_k[k], 1.0 / (sigma_n * sigma_n)));
       }
 
       // Now we have a valid optimization problem full of design variables and error terms.
@@ -148,12 +150,14 @@ int main(int argc, char ** argv)
 
       for(int i = 0; i < K; i++)
       {
-        auto exprFactory = robotPosSpline.getExpressionFactoryAt<1>(i);
-        auto vecPosExpr = exprFactory.getValueExpression(0);
-        auto vecVelExpr = exprFactory.getValueExpression(1);
+        // This time we don't need expressions because we are only going to print the values. There fore we only create an "evaluator" instead of an expression factory.
+        // Create evaluator at time k, supporting time derivatives up to 1 (for that we need the "<1>").
+        auto evaluator = robotPosSpline.getEvaluatorAt<1>(i);
+        auto vecPos = evaluator.evalD(0);
+        auto vecVel = evaluator.evalD(1);
 
-        std::cout << "Robot at " << i << " is: " << vecPosExpr.evaluate()(0) << std::endl;
-        std::cout << "Velocity at " << i << " is: " << vecVelExpr.evaluate()(0) << std::endl;
+        std::cout << "Robot at " << i << " is: " << vecPos(0) << std::endl;
+        std::cout << "Velocity at " << i << " is: " << vecVel(0) << std::endl;
       }
     }
   catch(const std::exception & e)

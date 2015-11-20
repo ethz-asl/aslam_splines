@@ -587,4 +587,23 @@ TEST(EuclideanBSplineTestSuite, testBSplineJacobianGenerically)
 	BSplineJacobianTester<TestSpline, 4>::testFunc(10, 1);
 }
 
+template <typename TSpline>
+void testIntegral(){
+	const auto t0 = typename TSpline::TimePolicy::time_t(0);
+	const auto t1 = t0 + TSpline::TimePolicy::getOne();
+	for(int segs = 1; segs < 5; segs ++){
+		TSpline spline;
+		spline.initConstantUniformSpline(t0, t1, segs, TSpline::point_t::Ones());
+		sm::eigen::assertNear(TSpline::point_t::Ones(), spline.evalIntegral(t0, t1), 1E-6, SM_SOURCE_FILE_POS, "");
+		sm::eigen::assertNear(TSpline::point_t::Ones() * 0.5, spline.evalIntegral(t0, TSpline::TimePolicy::linearlyInterpolate(t0, t1, 2, 1)), 1E-6, SM_SOURCE_FILE_POS, "");
+	}
+}
+
+TEST(EuclideanBSplineTestSuite, evalIntegral)
+{
+	testIntegral<TestSpline>();
+	testIntegral<TestSplineNsecTime>();
+	testIntegral<TestSplineLongTime>();
+}
+
 } //namespace bsplines

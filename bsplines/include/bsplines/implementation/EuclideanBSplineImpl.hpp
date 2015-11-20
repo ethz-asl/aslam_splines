@@ -74,7 +74,7 @@ namespace bsplines {
 		for(; it != end; it++)
 		{
 			this->computeLocalViInto(v, localVi, it);
-			computeControlVertexSequenceLinearCombinationInto<IteratorPosition_last, AddOrSet_add>(it, this->computeSegmentLength(it) * localVi, integral);
+			computeControlVertexSequenceLinearCombinationInto<IteratorPosition_last, AddOrSet_add>(it, this->getDurationAsDouble(this->computeSegmentLength(it)) * localVi, integral);
 		}
 
 		// RHS remainder.

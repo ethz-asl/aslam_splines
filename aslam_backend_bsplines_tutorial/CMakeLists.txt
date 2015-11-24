@@ -24,7 +24,7 @@ add_definitions(-DGTEST_USE_OWN_TR1_TUPLE=0)
 
 catkin_add_gtest(${PROJECT_NAME}_test
   test/test_main.cpp
-  test/TestErrorTestObservationBST.cpp
+  test/TestErrorTestMotionBST.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_exec ${PROJECT_NAME})

@@ -92,6 +92,7 @@ class IntervalUniformKnotGenerator : public KnotGenerator<typename TimePolicy_::
  public:
 	typedef typename TimePolicy_::time_t time_t;
 	inline IntervalUniformKnotGenerator(int splineOrder, time_t tMin, time_t tMax, int numSegments) : _timeCalculator(splineOrder, tMin, tMax, numSegments), _nextIndex(0), _numKnots(knot_arithmetics::getNumKnotsRequired(numSegments, splineOrder)) {
+	  SM_ASSERT_GT(std::runtime_error, numSegments, 0, "Number of segments must not be zero.");
 		SM_ASSERT_GT(std::runtime_error, tMax, tMin, "The max time is less than the min time");
 	}
 	virtual bool hasNextKnot() const { return _nextIndex < _numKnots; };

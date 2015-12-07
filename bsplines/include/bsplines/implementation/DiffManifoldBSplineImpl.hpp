@@ -619,8 +619,8 @@ namespace bsplines {
 	inline typename _CLASS::SegmentIterator _CLASS::getSegmentIterator(const time_t & t)
 	{
 		SegmentMapIterator ub;
-		SM_ASSERT_GE_DBG(Exception, t, getMinTime(), "The time is out of range by " << (computeDuration(getMinTime(), t)));
-		SM_ASSERT_LE_DBG(Exception, t, getMaxTime(), "The time is out of range by " << (computeDuration(t, getMaxTime())));
+		SM_ASSERT_GE(Exception, t, getMinTime(), "The time is less then the spline's minimum time" << (computeDuration(getMinTime(), t)));
+		SM_ASSERT_LE(Exception, t, getMaxTime(), "The time is greater than the spline's maximum time" << (computeDuration(t, getMaxTime())));
 		if(t == getMaxTime())
 		{
 			//TODO discuss

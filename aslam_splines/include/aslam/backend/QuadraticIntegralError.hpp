@@ -33,10 +33,12 @@ namespace algorithms = ::numeric_integrator::algorithms;
 typedef algorithms::Default DefaultAlgorithm;
 
 namespace internal {
-	inline void addErrorTermToProblem(OptimizationProblemBase & problem, ErrorTerm *et, bool problemOwnsErrorTerms){
+	template <typename ErrorTermReceiver, typename ErrorTerm>
+	inline void addErrorTermToProblem(ErrorTermReceiver & problem, ErrorTerm *et, bool problemOwnsErrorTerms){
 		problem.addErrorTerm(problemOwnsErrorTerms ? boost::shared_ptr<ErrorTerm>(et) : boost::shared_ptr<ErrorTerm>(et, sm::null_deleter()));
 	}
-	inline void addErrorTermToProblem(OptimizationProblemBase & problem, boost::shared_ptr<ErrorTerm> et, bool /* problemOwnsErrorTerms */){
+	template <typename ErrorTermReceiver, typename ErrorTerm>
+	inline void addErrorTermToProblem(ErrorTermReceiver & problem, boost::shared_ptr<ErrorTerm> et, bool /* problemOwnsErrorTerms */){
 		problem.addErrorTerm(et);
 	}
 }
@@ -60,13 +62,13 @@ So don't forget to take the square root of factor when you use the setSqrtInvR m
 
 When a shared_ptr is returned the problemOwnsErrorTerms flag is ignored. Otherwise true makes the problem deleting the error terms in its destructor.
  */
-template <typename Algorithm = DefaultAlgorithm, typename TTime, typename ErrorTermFactory>
-void addQuadraticIntegralErrorTerms(OptimizationProblemBase & problem, const TTime & a, const TTime & b, int numberOfPoints, const ErrorTermFactory & errorTermFactory, bool problemOwnsErrorTerms = true)
+template <typename Algorithm = DefaultAlgorithm, typename TTime, typename ErrorTermFactory, typename ErrorTermReceiver>
+void addQuadraticIntegralErrorTerms(ErrorTermReceiver & problem, const TTime & a, const TTime & b, int numberOfPoints, const ErrorTermFactory & errorTermFactory, bool problemOwnsErrorTerms = true)
 {
 	if(a == b) return;
 
 	auto integrator = Algorithm().template getIntegrator<double>(a, b, numberOfPoints);
-	SM_ASSERT_TRUE_DBG(std::runtime_error, !integrator.isAtEnd(), "too few integration points given : " << numberOfPoints);
+	SM_ASSERT_TRUE(std::runtime_error, !integrator.isAtEnd(), "too few integration points given : " << numberOfPoints);
 
 	const double commonFactor = integrator.getCommonFactor();
 	for(; !integrator.isAtEnd(); integrator.next()){
@@ -75,8 +77,8 @@ void addQuadraticIntegralErrorTerms(OptimizationProblemBase & problem, const TTi
 	}
 }
 
-template <typename TTime, typename ErrorTermFactory>
-void addQuadraticIntegralErrorTerms(OptimizationProblemBase & problem, const TTime & a, const TTime & b, int numberOfPoints, const ErrorTermFactory & errorTermFactory, bool problemOwnsErrorTerms = true){
+template <typename TTime, typename ErrorTermFactory, typename ErrorTermReceiver>
+void addQuadraticIntegralErrorTerms(ErrorTermReceiver & problem, const TTime & a, const TTime & b, int numberOfPoints, const ErrorTermFactory & errorTermFactory, bool problemOwnsErrorTerms = true){
 	addQuadraticIntegralErrorTerms(problem, a, b, numberOfPoints, errorTermFactory, problemOwnsErrorTerms);
 }
 
@@ -95,8 +97,8 @@ or
 
 member that returns E(t).
  */
-template <typename Algorithm, typename TTime, typename ExpressionFactory, typename DerivedMatrix>
-void addQuadraticIntegralExpressionErrorTerms(OptimizationProblemBase & problem, const TTime & a, const TTime & b, int numberOfPoints, const ExpressionFactory & expressionFactory, const Eigen::MatrixBase<DerivedMatrix> & sqrtInvR)
+template <typename Algorithm, typename TTime, typename ExpressionFactory, typename DerivedMatrix, typename ErrorTermReceiver>
+void addQuadraticIntegralExpressionErrorTerms(ErrorTermReceiver & problem, const TTime & a, const TTime & b, int numberOfPoints, const ExpressionFactory & expressionFactory, const Eigen::MatrixBase<DerivedMatrix> & sqrtInvR)
 {
 	addQuadraticIntegralErrorTerms<Algorithm>(
 			problem, a, b, numberOfPoints,
@@ -107,8 +109,8 @@ void addQuadraticIntegralExpressionErrorTerms(OptimizationProblemBase & problem,
 }
 
 // to specify a default for the algorithm,
-template <typename TTime, typename ExpressionFactory, typename DerivedMatrix>
-void addQuadraticIntegralExpressionErrorTerms(OptimizationProblemBase & problem, const TTime & a, const TTime & b, int numberOfPoints, const ExpressionFactory & expressionFactory, const Eigen::MatrixBase<DerivedMatrix> & sqrtInvR){
+template <typename TTime, typename ExpressionFactory, typename DerivedMatrix, typename ErrorTermReceiver>
+void addQuadraticIntegralExpressionErrorTerms(ErrorTermReceiver & problem, const TTime & a, const TTime & b, int numberOfPoints, const ExpressionFactory & expressionFactory, const Eigen::MatrixBase<DerivedMatrix> & sqrtInvR){
 	addQuadraticIntegralExpressionErrorTerms<DefaultAlgorithm>(problem, a, b, numberOfPoints, expressionFactory, sqrtInvR);
 }
 

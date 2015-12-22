@@ -187,7 +187,7 @@ struct OPTSplineTester{
 			auto fact = bspline.template getExpressionFactoryAt<maxDerivativeOrder> (t);
 
 			time_t timeExpLowerBound = t / 2;
-			time_t timeExpUpperBound = t == bspline.getMaxTime() ? bspline.getMaxTime() + 1: (t + bspline.getMaxTime()) / 2;
+			time_t timeExpUpperBound = (t + bspline.getMaxTime()) / 2;
 
 			auto factTimeExp = bspline.template getExpressionFactoryAt<maxDerivativeOrder> (timeExpression, timeExpLowerBound, timeExpUpperBound);
 

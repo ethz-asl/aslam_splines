@@ -115,6 +115,7 @@ typedef struct {
 
 	inline static time_t linearlyInterpolate(time_t from, time_t till, int segments, int pos)
 	{
+		if(pos == segments) return till;
 		return LongTime((till.v - from.v) / segments * pos);
 	}
 

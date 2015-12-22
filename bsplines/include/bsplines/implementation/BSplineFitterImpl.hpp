@@ -19,9 +19,16 @@ namespace bsplines{
 //TODO improve : support different containers of times and points
 _TEMPLATE
 inline void _CLASS::initUniformSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda, FittingBackend backend){
-	spline.assertConstructing();
 	SM_ASSERT_GE(Exception, times.size(), 2, "There must be at least two time point pairs");
-	IntervalUniformKnotGenerator<TimePolicy> knotGenerator(spline.getSplineOrder(), *times.begin(), *--times.end(), numSegments);
+	initUniformSpline(spline, times.front(), times.back(), times, points, numSegments, lambda, backend);
+}
+
+_TEMPLATE
+inline void _CLASS::initUniformSpline(TSpline & spline, time_t minT, time_t maxT, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda, FittingBackend backend){
+	spline.assertConstructing();
+	SM_ASSERT_GE(Exception, times.front(), minT, "Times must all be >= minT");
+	SM_ASSERT_LE(Exception, times.back(), maxT, "Times must all be <= maxT");
+	IntervalUniformKnotGenerator<TimePolicy> knotGenerator(spline.getSplineOrder(), minT, maxT, numSegments);
 	initSpline(spline, knotGenerator, times, points, lambda, backend);
 }
 

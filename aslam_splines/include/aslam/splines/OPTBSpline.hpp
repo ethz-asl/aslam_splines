@@ -213,7 +213,11 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 	class TimeExpressionFactoryData {
 	 public:
 		typedef typename spline_t::template Evaluator<IMaxDerivativeOrder != Eigen::Dynamic ? IMaxDerivativeOrder + 1 : Eigen::Dynamic> eval_t;
-		inline TimeExpressionFactoryData(const spline_t & spline, const TimeExpression & timeExp, time_t lowerBound, time_t upperBound) : _timeExp(timeExp), _lowerBound(lowerBound), _upperBound(upperBound), evalPtr(nullptr), _spline(spline) { SM_ASSERT_LT(std::runtime_error, lowerBound, upperBound, "upper bound must be greater than lower bound."); }
+		inline TimeExpressionFactoryData(const spline_t & spline, const TimeExpression & timeExp, time_t lowerBound, time_t upperBound) : _timeExp(timeExp), _lowerBound(lowerBound), _upperBound(upperBound), evalPtr(nullptr), _spline(spline) {
+			SM_ASSERT_LT(typename spline_t::Exception, lowerBound, upperBound, "upper bound must be greater than lower bound.");
+			SM_ASSERT_GE(typename spline_t::Exception, lowerBound, spline.getMinTime(), "lower bound must be >= min time of spline.");
+			SM_ASSERT_LE(typename spline_t::Exception, upperBound, spline.getMaxTime(), "upper bound must be <= max time of spline.");
+		}
 		~TimeExpressionFactoryData(){ delete evalPtr; }
 		inline const spline_t & getSpline() const { return _spline; };
 		inline void getDesignVariables(aslam::backend::DesignVariable::set_t & designVariables) const;

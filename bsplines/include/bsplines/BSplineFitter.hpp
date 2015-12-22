@@ -55,6 +55,7 @@ public :
 	 * @param fittingBackend the fitting backend. Usually one wants FittingBackend::SPARSE.
 	 */
 	static void initSpline(TSpline & spline, KnotGenerator<time_t> & knotGenerator, const std::vector<time_t> & times, const std::vector<point_t> & points, double lambda, FittingBackend fittingBackend = FittingBackend::DEFAULT);
+	static void initUniformSpline(TSpline & spline, time_t minT, time_t maxT, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda, FittingBackend backend = FittingBackend::DEFAULT);
 	static void initUniformSpline(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, int numSegments, double lambda, FittingBackend backend = FittingBackend::DEFAULT);
 	static DeltaUniformKnotGenerator<TimePolicy> initUniformSplineWithKnotDelta(TSpline & spline, const std::vector<time_t> & times, const std::vector<point_t> & points, const duration_t knotDelta, double lambda, FittingBackend backend = FittingBackend::DEFAULT);
 

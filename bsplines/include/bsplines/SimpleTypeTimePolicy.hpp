@@ -9,6 +9,7 @@
 #define SIMPLETYPETIMEPOLICY_HPP_
 
 #include <cmath>
+#include <cassert>
 
 namespace bsplines {
 	template <typename SimpleType_>

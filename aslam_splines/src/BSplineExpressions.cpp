@@ -543,7 +543,7 @@ namespace aslam {
           
         }
       
-        void TransformationTimeOffsetExpressionNode::getDesignVariablesImplementation(aslam::backend::JacobianContainer::set_t & designVariables) const
+        void TransformationTimeOffsetExpressionNode::getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const
         {
             //double observationTime = _time.toScalar();
             //Eigen::VectorXi dvidxs = _spline->spline().localVvCoefficientVectorIndices(observationTime);

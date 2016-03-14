@@ -93,7 +93,7 @@ namespace aslam {
           
       }
       
-      void RSLineDelayTransformationExpressionNode::getDesignVariablesImplementation(aslam::backend::JacobianContainer::set_t & designVariables) const
+      void RSLineDelayTransformationExpressionNode::getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const
       {
           double observationTime = _lineDelay->value()[0] * LINEDELAY_UNIT * _line + _integrationStartTime;
           Eigen::VectorXi dvidxs = _spline->spline().localVvCoefficientVectorIndices(observationTime);

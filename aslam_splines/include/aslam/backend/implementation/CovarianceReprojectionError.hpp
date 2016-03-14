@@ -18,7 +18,7 @@ namespace aslam {
       // if a spline is given, estimate the covariance in each iteration
       //if(!spline)
       //    parent_t::_invR = _frame->keypoint(_keypointIndex).invR();
-      JacobianContainer::set_t dvs;
+      DesignVariable::set_t dvs;
       point.getDesignVariables(dvs);	// point dv's
       camera.getDesignVariables(dvs);	// camera dv's
 

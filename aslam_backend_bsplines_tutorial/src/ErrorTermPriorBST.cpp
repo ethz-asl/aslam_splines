@@ -11,7 +11,7 @@ namespace aslam {
         setInvR( invR );
 
       // Tell the super class about the design variables:
-        JacobianContainer::set_t dvs;
+        DesignVariable::set_t dvs;
         robotPos.getDesignVariables(dvs);
         ErrorTermFs<1>::setDesignVariablesIterator(dvs.begin(), dvs.end());
 

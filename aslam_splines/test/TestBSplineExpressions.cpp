@@ -7,6 +7,7 @@
 #include <aslam/backend/EuclideanPoint.hpp>
 #include <aslam/backend/RotationExpression.hpp>
 #include <aslam/backend/HomogeneousPoint.hpp>
+#include <aslam/backend/JacobianContainerSparse.hpp>
 #include <aslam/splines/BSplinePoseDesignVariable.hpp>
 #include <aslam/splines/BSplineRSPoseDesignVariable.hpp>
 #include <sm/kinematics/EulerRodriguez.hpp>
@@ -37,7 +38,7 @@ struct ExpressionNodeFunctor
         {
     
             Eigen::VectorXd p = _dv.toValue();
-            JacobianContainer J(p.size());
+            JacobianContainerSparse J(p.size());
             _dv.evaluateJacobians(J);
 
             int offset = 0;
@@ -68,7 +69,7 @@ struct ExpressionNodeFunctor
             sm::eigen::NumericalDiff<ExpressionNodeFunctor> numdiff(*this);
             /// Discern the size of the jacobian container
             Eigen::VectorXd p = _dv.toValue();
-            JacobianContainer Jc(p.size());
+            JacobianContainerSparse Jc(p.size());
             _dv.evaluateJacobians(Jc);
 
             Eigen::VectorXd dp(Jc.cols());

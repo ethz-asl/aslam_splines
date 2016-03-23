@@ -129,7 +129,7 @@ namespace aslam {
 
         }
 
-        Eigen::Vector3d BSplinePositionExpressionNode::toEuclideanImplementation() const
+        Eigen::Vector3d BSplinePositionExpressionNode::evaluateImplementation() const
         {
 
             return _spline->eval(_time).head<3>();
@@ -188,7 +188,7 @@ namespace aslam {
 
         }
 
-        Eigen::Vector3d BSplineVelocityExpressionNode::toEuclideanImplementation() const
+        Eigen::Vector3d BSplineVelocityExpressionNode::evaluateImplementation() const
         {
 
             return _spline->evalD(_time,1).head<3>();
@@ -248,7 +248,7 @@ namespace aslam {
 
         }
 
-        Eigen::Vector3d BSplineAccelerationExpressionNode::toEuclideanImplementation() const
+        Eigen::Vector3d BSplineAccelerationExpressionNode::evaluateImplementation() const
         {
 
             return _spline->evalD(_time,2).head<3>();
@@ -305,7 +305,7 @@ namespace aslam {
     }
 
     Eigen::Vector3d BSplineAccelerationBodyFrameExpressionNode::
-        toEuclideanImplementation() const {
+        evaluateImplementation() const {
         return _spline->linearAccelerationBodyFrame(_time);
     }
 
@@ -356,7 +356,7 @@ namespace aslam {
 
         }
 
-        Eigen::Vector3d BSplineAngularVelocityBodyFrameExpressionNode::toEuclideanImplementation() const
+        Eigen::Vector3d BSplineAngularVelocityBodyFrameExpressionNode::evaluateImplementation() const
         {
 
             return _spline->angularVelocityBodyFrame(_time);
@@ -569,7 +569,7 @@ namespace aslam {
 
         }
 
-        Eigen::Vector3d BSplineEuclideanExpressionNode::toEuclideanImplementation() const
+        Eigen::Vector3d BSplineEuclideanExpressionNode::evaluateImplementation() const
         {
             return _spline->evalD(_time, _order);
         }
@@ -624,7 +624,7 @@ BSplineAngularAccelerationBodyFrameExpressionNode::~BSplineAngularAccelerationBo
 
 }
 
-Eigen::Vector3d BSplineAngularAccelerationBodyFrameExpressionNode::toEuclideanImplementation() const
+Eigen::Vector3d BSplineAngularAccelerationBodyFrameExpressionNode::evaluateImplementation() const
 {
 
 return _spline->angularAccelerationBodyFrame(_time);

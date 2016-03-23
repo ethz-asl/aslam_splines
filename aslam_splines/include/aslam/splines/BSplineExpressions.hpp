@@ -66,7 +66,7 @@ namespace aslam {
             virtual ~BSplinePositionExpressionNode();
 
         protected:
-            virtual Eigen::Vector3d toEuclideanImplementation() const;
+            virtual Eigen::Vector3d evaluateImplementation() const;
             virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const;
             virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const;
             virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const;
@@ -85,7 +85,7 @@ namespace aslam {
             virtual ~BSplineVelocityExpressionNode();
 
         protected:
-            virtual Eigen::Vector3d toEuclideanImplementation() const;
+            virtual Eigen::Vector3d evaluateImplementation() const;
             virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const;
             virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const;
             virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const;
@@ -106,7 +106,7 @@ namespace aslam {
             virtual ~BSplineAccelerationExpressionNode();
 
         protected:
-            virtual Eigen::Vector3d toEuclideanImplementation() const;
+            virtual Eigen::Vector3d evaluateImplementation() const;
             virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const;
             virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const;
             virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const;
@@ -126,7 +126,7 @@ namespace aslam {
         virtual ~BSplineAccelerationBodyFrameExpressionNode();
 
     protected:
-        virtual Eigen::Vector3d toEuclideanImplementation() const;
+        virtual Eigen::Vector3d evaluateImplementation() const;
         virtual void evaluateJacobiansImplementation(
           aslam::backend::JacobianContainer& outJacobians) const;
         virtual void evaluateJacobiansImplementation(
@@ -148,7 +148,7 @@ namespace aslam {
             virtual ~BSplineAngularVelocityBodyFrameExpressionNode();
 
         protected:
-            virtual Eigen::Vector3d toEuclideanImplementation() const;
+            virtual Eigen::Vector3d evaluateImplementation() const;
             virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const;
             virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const;
             virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const;
@@ -168,7 +168,7 @@ namespace aslam {
         virtual ~BSplineAngularAccelerationBodyFrameExpressionNode();
          
         protected:
-        virtual Eigen::Vector3d toEuclideanImplementation() const;
+        virtual Eigen::Vector3d evaluateImplementation() const;
         virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const;
         virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const;
         virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const;
@@ -236,7 +236,7 @@ namespace aslam {
             virtual ~BSplineEuclideanExpressionNode();
 
         protected:
-            virtual Eigen::Vector3d toEuclideanImplementation() const;
+            virtual Eigen::Vector3d evaluateImplementation() const;
             virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const;
             virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const;
             virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const;

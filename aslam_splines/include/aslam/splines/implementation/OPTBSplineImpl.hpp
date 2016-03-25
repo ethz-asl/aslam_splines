@@ -150,6 +150,7 @@ typename _CLASS::expression_t _CLASS::ExpressionFactory<FactoryData_>::getValueE
 	public:
 		ExpressionNode(const DataSharedPtr & dataPtr, int derivativeOrder) : _dataPtr(dataPtr), _derivativeOrder(derivativeOrder){}
 		virtual ~ExpressionNode(){}
+		virtual int getSize() const override { return _dataPtr->getSpline().getPointSize(); }
 	protected:
 		inline void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule) const {
 			const int dimension=_dataPtr->getSpline().getDimension(), pointSize = _dataPtr->getSpline().getPointSize(), splineOrder = _dataPtr->getSpline().getSplineOrder();

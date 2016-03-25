@@ -203,7 +203,7 @@ struct OPTSplineTester{
 				sm::eigen::assertEqual(factTimeExp.getEvaluator().evalD(derivativeOrder), expressionTimeExp.evaluate(), SM_SOURCE_FILE_POS);
 				sm::eigen::assertNear(expressionTimeExp.evaluate(), expression.evaluate(), 16 * eps, SM_SOURCE_FILE_POS);
 
-				JacobianContainerSparse jac(pointSize);
+				JacobianContainerSparse<> jac(pointSize);
 				DesignVariable::set_t set;
 				expression.getDesignVariables(set);
 
@@ -317,7 +317,7 @@ struct OPTSplineSpecializationTester<UnitQuaternionBSplineConfiguration<TDiffMan
 		sm::eigen::assertNear(eval.evalAngularVelocity(), avexpressionTE.evaluate(), 1E-9, SM_SOURCE_FILE_POS);
 		sm::eigen::assertNear(eval.evalAngularAcceleration(), aaexpressionTE.evaluate(), 1E-9, SM_SOURCE_FILE_POS);
 
-		JacobianContainerSparse jac(3);
+		JacobianContainerSparse<> jac(3);
 		typename TestBSpline::angular_jacobian_t J;
 
 		avexpression.evaluateJacobians(jac);

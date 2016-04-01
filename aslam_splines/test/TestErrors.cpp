@@ -46,10 +46,10 @@ TEST(SplineErrorTestSuite, testSimpleSplineError)
         VectorExpression<1> splineExpression =  initSpline.toExpression(5.0,0);
         SimpleSplineError<BSplineDesignVariable<1> > e(&initSpline, &splineExpression, values, 5.0);
         
-        JacobianContainerSparse estJ(e.dimension());
+        JacobianContainerSparse<> estJ(e.dimension());
         e.evaluateJacobiansFiniteDifference(estJ);
         
-        JacobianContainerSparse J(e.dimension());
+        JacobianContainerSparse<> J(e.dimension());
         e.evaluateJacobians(J);
         
         SCOPED_TRACE("");

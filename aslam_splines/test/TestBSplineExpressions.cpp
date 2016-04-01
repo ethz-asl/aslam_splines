@@ -38,7 +38,7 @@ struct ExpressionNodeFunctor
         {
     
             Eigen::VectorXd p = _dv.toValue();
-            JacobianContainerSparse J(p.size());
+            JacobianContainerSparse<> J(p.size());
             _dv.evaluateJacobians(J);
 
             int offset = 0;
@@ -69,7 +69,7 @@ struct ExpressionNodeFunctor
             sm::eigen::NumericalDiff<ExpressionNodeFunctor> numdiff(*this);
             /// Discern the size of the jacobian container
             Eigen::VectorXd p = _dv.toValue();
-            JacobianContainerSparse Jc(p.size());
+            JacobianContainerSparse<> Jc(p.size());
             _dv.evaluateJacobians(Jc);
 
             Eigen::VectorXd dp(Jc.cols());

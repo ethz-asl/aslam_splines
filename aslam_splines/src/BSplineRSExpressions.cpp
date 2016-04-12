@@ -34,35 +34,6 @@ namespace aslam {
       
       void RSLineDelayTransformationExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const
       {
-          
-          double observationTime = _lineDelay->value()[0] * LINEDELAY_UNIT * _line + _integrationStartTime;
-          Eigen::VectorXi dvidxs = _spline->spline().localVvCoefficientVectorIndices(observationTime);
-          
-          Eigen::MatrixXd J;
-          _spline->spline().transformationAndJacobian(observationTime, &J);
-          
-          for(int i = 0; i < dvidxs.size(); ++i)
-          {
-              outJacobians.add(_spline->designVariable(dvidxs[i]), J.block<6,6>(0,i*6) );
-          }        
-          
-          // evaluate time derivative of the curves
-          Eigen::VectorXd Phi_dot_c = _spline->spline().evalD(observationTime,1); // phi_dot * c (t_0)
-          // spline parameters:
-          Eigen::VectorXd r = _spline->spline().evalD(observationTime,0);
-          // rot kinematics:
-          sm::kinematics::RotationalKinematics::Ptr R = _spline->spline().rotation();
-          // S-Matrix
-          Eigen::Matrix3d S = R->parametersToSMatrix(r.tail<3>()); 
-          
-          // Add the jacobians wrt line delay: \mbf S * \mbsdot \Phi(t) * c * p_{i,v}
-          outJacobians.add(_lineDelay, S * Phi_dot_c * _line * LINEDELAY_UNIT);
-          
-      }
-      
-      void RSLineDelayTransformationExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const
-      {
-          
           Eigen::MatrixXd JT;
           Eigen::MatrixXd J;
           
@@ -75,24 +46,21 @@ namespace aslam {
           Eigen::VectorXd p;
           
           p = _spline->spline().evalDAndJacobian(observationTime,0,&JS, NULL);
-           
           
           _spline->spline().curveValueToTransformationAndJacobian( p, &JT );
           J = JT * JS;  
           
           for(int i = 0; i < dvidxs.size(); ++i)
-          {              
-              outJacobians.add(_spline->designVariable(dvidxs[i]), applyChainRule * J.block<6,6>(0,i*6) );
+          {
+              outJacobians.add(_spline->designVariable(dvidxs[i]), J.block<6,6>(0,i*6) );
           }
           // evaluate time derivative of the curves
           Eigen::VectorXd Phi_dot_c = _spline->spline().evalD(observationTime,1); // phi_dot * c (t_0)
           
-          
           // Add the jacobians wrt line delay: \mbf S_T * \mbsdot \Phi_dot(t) * c * p_{i,v}
-          outJacobians.add(_lineDelay, applyChainRule * JT * Phi_dot_c * _line * LINEDELAY_UNIT); //
-          
+          outJacobians.add(_lineDelay, JT * Phi_dot_c * _line * LINEDELAY_UNIT);
       }
-      
+       
       void RSLineDelayTransformationExpressionNode::getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const
       {
           double observationTime = _lineDelay->value()[0] * LINEDELAY_UNIT * _line + _integrationStartTime;

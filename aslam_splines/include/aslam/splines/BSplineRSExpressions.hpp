@@ -29,10 +29,9 @@ namespace aslam {
       virtual ~RSLineDelayTransformationExpressionNode();
 
     protected:
-      virtual Eigen::Matrix4d toTransformationMatrixImplementation();
-      virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const;
-      virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const;
-      virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const;
+      virtual Eigen::Matrix4d toTransformationMatrixImplementation() override;
+      virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const override;
+      virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const override;
 
 
       BSplinePoseDesignVariable * _spline;

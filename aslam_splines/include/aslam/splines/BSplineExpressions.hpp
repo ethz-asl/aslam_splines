@@ -150,25 +150,22 @@ namespace aslam {
 
         };
 
-        /*
-        // Fabio (not used and not tested):
+
         class BSplineAngularAccelerationBodyFrameExpressionNode : public aslam::backend::EuclideanExpressionNode
         {
-        public:
-        BSplineAngularAccelerationBodyFrameExpressionNode(bsplines::BSplinePose * spline, const std::vector<aslam::backend::DesignVariable *> & designVariables, double time);
-        virtual ~BSplineAngularAccelerationBodyFrameExpressionNode();
-         
-        protected:
-        virtual Eigen::Vector3d evaluateImplementation() const override;
-        virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const override;
-        virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const override;
-         
-        bsplines::BSplinePose * _spline;
-        std::vector<aslam::backend::DesignVariable *> _designVariables;
-        double _time;
-         
+         public:
+          BSplineAngularAccelerationBodyFrameExpressionNode(bsplines::BSplinePose * spline, const std::vector<aslam::backend::DesignVariable *> & designVariables, double time);
+          virtual ~BSplineAngularAccelerationBodyFrameExpressionNode();
+
+         protected:
+          virtual Eigen::Vector3d evaluateImplementation() const override;
+          virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const override;
+          virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const override;
+
+          bsplines::BSplinePose * _spline;
+          std::vector<aslam::backend::DesignVariable *> _designVariables;
+          double _time;
         };
-        */
 
         template<int DIM>
         class BSplineVectorExpressionNode : public aslam::backend::VectorExpressionNode<DIM>

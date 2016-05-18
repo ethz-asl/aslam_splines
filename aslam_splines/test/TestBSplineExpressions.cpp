@@ -195,8 +195,23 @@ TEST(BSplineExpressionTestSuite, testAccelerationExpression)
 
 // aslam::backend::EuclideanExpression linearAcceleration(double tk);
 
+TEST(BSplineExpressionTestSuite, testAngularAccelerationBodyFrameExpression)
+{
+    try {
+        BSplinePoseDesignVariable bdv = generateRandomSpline();
 
-// aslam::backend::EuclideanExpression angularVelocityBodyFrame(double tk);
+        EuclideanExpression ep = bdv.angularAccelerationBodyFrame(5.0);
+
+        ExpressionNodeFunctor<EuclideanExpression> functor(ep);
+
+        functor.testJacobian();
+    }
+    catch(const std::exception & e)
+    {
+        FAIL() << e.what();
+    }
+
+}
 TEST(BSplineExpressionTestSuite, testAngularVelocityExpression)
 {
     try {

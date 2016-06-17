@@ -31,20 +31,6 @@ namespace aslam {
             }
         }
 
-        void BSplineTransformationExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const
-        {
-            SM_ASSERT_EQ_DBG(aslam::Exception, applyChainRule.cols(), 6, "The chain rule matrix is the wrong size");
-
-            Eigen::MatrixXd J;
-            _spline->transformationAndJacobian(_time, &J);
-      
-            for(size_t i = 0; i < _designVariables.size(); ++i)
-            {
-                outJacobians.add(_designVariables[i], applyChainRule * J.block<6,6>(0,i*6) );
-            }
-
-        }
-
         void BSplineTransformationExpressionNode::getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const
         {
             for(size_t i = 0; i < _designVariables.size(); ++i)
@@ -89,23 +75,6 @@ namespace aslam {
             }
         }
 
-        void BSplineRotationExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const
-        {
-            SM_ASSERT_EQ_DBG(aslam::Exception, applyChainRule.cols(), 3, "The chain rule matrix is the wrong size");
-
-            Eigen::MatrixXd J;
-            _spline->orientationAndJacobian(_time, &J, NULL);
-
-            SM_ASSERT_EQ_DBG(aslam::Exception, J.rows(), 3, "Bad");
-            SM_ASSERT_EQ_DBG(aslam::Exception, J.cols(), 6 * (int)_designVariables.size(), "Bad");
-      
-            for(size_t i = 0; i < _designVariables.size(); ++i)
-            {
-                outJacobians.add(_designVariables[i], applyChainRule * J.block<3,6>(0,i*6) );
-            }
-
-        }
-
         void BSplineRotationExpressionNode::getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const
         {
             for(size_t i = 0; i < _designVariables.size(); ++i)
@@ -146,22 +115,6 @@ namespace aslam {
             {
                 outJacobians.add(_designVariables[i], J.block<3,6>(0,i*6) );
             }
-        }
-
-        void BSplinePositionExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const
-        {
-            SM_ASSERT_EQ_DBG(aslam::Exception, applyChainRule.cols(), 3, "The chain rule matrix is the wrong size");
-
-            Eigen::MatrixXd J;
-            _spline->evalDAndJacobian(_time, 0, &J, NULL);
-            SM_ASSERT_EQ_DBG(aslam::Exception, J.rows(), 6, "Bad");
-            SM_ASSERT_EQ_DBG(aslam::Exception, J.cols(), 6 * (int)_designVariables.size(), "Bad");
-      
-            for(size_t i = 0; i < _designVariables.size(); ++i)
-            {
-                outJacobians.add(_designVariables[i], applyChainRule * J.block<3,6>(0,i*6) );
-            }
-
         }
 
         void BSplinePositionExpressionNode::getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const
@@ -205,22 +158,6 @@ namespace aslam {
             {
                 outJacobians.add(_designVariables[i], J.block<3,6>(0,i*6) );
             }
-        }
-
-        void BSplineVelocityExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const
-        {
-            SM_ASSERT_EQ_DBG(aslam::Exception, applyChainRule.cols(), 3, "The chain rule matrix is the wrong size");
-
-            Eigen::MatrixXd J;
-            _spline->evalDAndJacobian(_time, 1, &J, NULL);
-            SM_ASSERT_EQ_DBG(aslam::Exception, J.rows(), 6, "Bad");
-            SM_ASSERT_EQ_DBG(aslam::Exception, J.cols(), 6 * (int)_designVariables.size(), "Bad");
-      
-            for(size_t i = 0; i < _designVariables.size(); ++i)
-            {
-                outJacobians.add(_designVariables[i], applyChainRule * J.block<3,6>(0,i*6) );
-            }
-
         }
 
         void BSplineVelocityExpressionNode::getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const
@@ -267,22 +204,6 @@ namespace aslam {
             }
         }
 
-        void BSplineAccelerationExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const
-        {
-            SM_ASSERT_EQ_DBG(aslam::Exception, applyChainRule.cols(), 3, "The chain rule matrix is the wrong size");
-
-            Eigen::MatrixXd J;
-            _spline->evalDAndJacobian(_time, 2, &J, NULL);
-            SM_ASSERT_EQ_DBG(aslam::Exception, J.rows(), 6, "Bad");
-            SM_ASSERT_EQ_DBG(aslam::Exception, J.cols(), 6 * (int)_designVariables.size(), "Bad");
-      
-            for(size_t i = 0; i < _designVariables.size(); ++i)
-            {
-                outJacobians.add(_designVariables[i], applyChainRule * J.block<3,6>(0,i*6) );
-            }
-
-        }
-
         void BSplineAccelerationExpressionNode::getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const
         {
             for(size_t i = 0; i < _designVariables.size(); ++i)
@@ -318,22 +239,8 @@ namespace aslam {
       SM_ASSERT_EQ_DBG(aslam::Exception, J.cols(),
         6 * (int)_designVariables.size(), "Bad");
       for (size_t i = 0; i < _designVariables.size(); ++i)
-        outJacobians.add(_designVariables[i], J.block<3, 6>(0, i * 6));
-    }
-
-    void BSplineAccelerationBodyFrameExpressionNode::
-        evaluateJacobiansImplementation(aslam::backend::JacobianContainer&
-        outJacobians, const Eigen::MatrixXd & applyChainRule) const {
-      SM_ASSERT_EQ_DBG(aslam::Exception, applyChainRule.cols(), 3,
-        "The chain rule matrix is the wrong size");
-      Eigen::MatrixXd J;
-      _spline->evalDAndJacobian(_time, 2, &J, NULL);
-      SM_ASSERT_EQ_DBG(aslam::Exception, J.rows(), 6, "Bad");
-      SM_ASSERT_EQ_DBG(aslam::Exception, J.cols(),
-        6 * (int)_designVariables.size(), "Bad");
-      for (size_t i = 0; i < _designVariables.size(); ++i)
         outJacobians.add(_designVariables[i],
-          applyChainRule * J.block<3 , 6>(0, i * 6));
+          J.block<3 , 6>(0, i * 6));
     }
 
     void BSplineAccelerationBodyFrameExpressionNode::
@@ -373,22 +280,6 @@ namespace aslam {
             {
                 outJacobians.add(_designVariables[i], J.block<3,6>(0,i*6) );
             }
-        }
-
-        void BSplineAngularVelocityBodyFrameExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const
-        {
-            SM_ASSERT_EQ_DBG(aslam::Exception, applyChainRule.cols(), 3, "The chain rule matrix is the wrong size");
-
-            Eigen::MatrixXd J;
-            _spline->angularVelocityBodyFrameAndJacobian(_time, &J, NULL);
-            SM_ASSERT_EQ_DBG(aslam::Exception, J.rows(), 3, "Bad");
-            SM_ASSERT_EQ_DBG(aslam::Exception, J.cols(), 6 * (int)_designVariables.size(), "Bad");
-      
-            for(size_t i = 0; i < _designVariables.size(); ++i)
-            {
-                outJacobians.add(_designVariables[i], applyChainRule * J.block<3,6>(0,i*6) );
-            }
-
         }
 
         void BSplineAngularVelocityBodyFrameExpressionNode::getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const
@@ -448,51 +339,7 @@ namespace aslam {
             return _spline->spline().transformation(_time.toScalar());
         }
       
-        void TransformationTimeOffsetExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians)  const
-        {
-          
-            Eigen::MatrixXd JT;
-            Eigen::MatrixXd J;
-          
-          
-            double observationTime = _time.toScalar();
-
-            SM_ASSERT_GE_LT(aslam::Exception, observationTime, _bufferTmin, _bufferTmax, "Spline Coefficient Buffer Exceeded. Set larger buffer margins!");
-
-            // the active indices
-            Eigen::VectorXi dvidxs = _spline->spline().localVvCoefficientVectorIndices(observationTime);
-            // nonzero Jacobians:
-            _spline->spline().transformationAndJacobian(observationTime, &J);
-            Eigen::MatrixXd JS;
-            Eigen::VectorXd p;
-          
-            p = _spline->spline().evalDAndJacobian(observationTime,0,&JS, NULL);
-           
-          
-            /*Eigen::Matrix4d T =*/ _spline->spline().curveValueToTransformationAndJacobian( p, &JT );    
-            J = JT * JS;
-
-            int minIdx = dvidxs(0);
-            int maxIdx = dvidxs(dvidxs.size() - 1);
-
-            for(int i = 0; i < _localCoefficientIndices.size(); i ++)
-            {
-            	// nonzero Jacobian
-            	if(_localCoefficientIndices[i] >= minIdx && _localCoefficientIndices[i] <= maxIdx )
-            		outJacobians.add(_spline->designVariable(_localCoefficientIndices[i]), J.block<6,6>(0,(i-minIdx)*6) );
-            	// zero Jacobian:
-            	else
-            		outJacobians.add(_spline->designVariable(_localCoefficientIndices[i]), Eigen::Matrix<double, 6,6>::Zero());
-            }
-
-            // evaluate time derivative of the curves
-            Eigen::VectorXd Phi_dot_c = _spline->spline().evalD(observationTime,1); // phi_dot * c (t_0)
-            
-            // Add the jacobians wrt line delay: \mbf S_T * \mbsdot \Phi_dot(t) * c * p_{i,v}
-            _time.evaluateJacobians(outJacobians, JT * Phi_dot_c );
-        }
-      
-        void TransformationTimeOffsetExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const
+        void TransformationTimeOffsetExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const
         {
           
             Eigen::MatrixXd JT;
@@ -525,12 +372,12 @@ namespace aslam {
             {
             	// nonzero Jacobian
             	if(_localCoefficientIndices[i] >= minIdx && _localCoefficientIndices[i] <= maxIdx ) {
-            		outJacobians.add(_spline->designVariable(_localCoefficientIndices[i]), applyChainRule * J.block<6,6>(0,(j)*6) );
+            		outJacobians.add(_spline->designVariable(_localCoefficientIndices[i]), J.block<6,6>(0,(j)*6) );
             		j++;
             	}
             	// zero Jacobian:
             	else {
-            		outJacobians.add(_spline->designVariable(_localCoefficientIndices[i]), applyChainRule * Eigen::Matrix<double, 6,6>::Zero());
+            		outJacobians.add(_spline->designVariable(_localCoefficientIndices[i]), Eigen::Matrix<double, 6,6>::Zero());
             	}
             }
 
@@ -538,9 +385,7 @@ namespace aslam {
             Eigen::VectorXd Phi_dot_c = _spline->spline().evalD(observationTime,1); // phi_dot * c (t_0)
           
           
-            _time.evaluateJacobians(outJacobians, applyChainRule * JT * Phi_dot_c );
-            
-          
+            _time.evaluateJacobians(outJacobians, JT * Phi_dot_c );
         }
       
         void TransformationTimeOffsetExpressionNode::getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const
@@ -582,18 +427,6 @@ namespace aslam {
             for(size_t i = 0; i < _designVariables.size(); ++i)
             {
                 outJacobians.add(_designVariables[i], J.block<3,3>(0,i*3) );
-            }
-
-        }
-
-        void BSplineEuclideanExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const
-        {
-            Eigen::MatrixXd J;
-            _spline->evalDAndJacobian(_time, _order, &J, NULL);
-
-            for(size_t i = 0; i < _designVariables.size(); ++i)
-            {
-                outJacobians.add(_designVariables[i], applyChainRule * J.block<3,3>(0,i*3) );
             }
 
         }
@@ -640,21 +473,6 @@ SM_ASSERT_EQ_DBG(aslam::Exception, J.cols(), 6 * (int)_designVariables.size(), "
 for(size_t i = 0; i < _designVariables.size(); ++i)
 {
 outJacobians.add(_designVariables[i], J.block<3,6>(0,i*6) );
-}
-}
-
-void BSplineAngularAccelerationBodyFrameExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd & applyChainRule) const
-{
-SM_ASSERT_EQ_DBG(aslam::Exception, applyChainRule.cols(), 3, "The chain rule matrix is the wrong size");
-
-Eigen::MatrixXd J;
-_spline->angularAccelerationBodyFrameAndJacobian(_time, &J, NULL);
-SM_ASSERT_EQ_DBG(aslam::Exception, J.rows(), 3, "Bad");
-SM_ASSERT_EQ_DBG(aslam::Exception, J.cols(), 6 * (int)_designVariables.size(), "Bad"); 
-
-for(size_t i = 0; i < _designVariables.size(); ++i)
-{
-outJacobians.add(_designVariables[i], applyChainRule * J.block<3,6>(0,i*6) );
 }
 }
 

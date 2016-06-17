@@ -14,7 +14,7 @@
 #include <aslam/backend/Scalar.hpp>
 
 using namespace aslam::backend;
-using namespace sm::kinematics;
+using sm::kinematics::EulerRodriguez;
 using namespace aslam::splines;
 using namespace bsplines;
 

@@ -113,7 +113,7 @@ class DeltaUniformKnotGenerator : public KnotGenerator<typename TimePolicy_::tim
 	typedef typename TimePolicy_::duration_t duration_t;
 	inline DeltaUniformKnotGenerator(int splineOrder, time_t start, time_t beyondThisTime, duration_t delta, bool splineIsAlreadyInitialized = false)
 		: _splineOrder(splineOrder), _delta(delta), _lastKnot(TimePolicy_::addScaledDuration(start, delta, splineIsAlreadyInitialized ? -1: -(knot_arithmetics::getNumRequiredPreambleKnots(splineOrder) + 1))), _beyondThisTime(getExtendedEndTime(beyondThisTime)) {}
-	DeltaUniformKnotGenerator() = default;
+
 	virtual bool hasNextKnot() const { return _lastKnot < _beyondThisTime; };
 	virtual time_t getNextKnot() { return (_lastKnot = TimePolicy_::addScaledDuration(_lastKnot, _delta, 1)); };
 	virtual void extendBeyondTime(const time_t beyondThisTime) { _beyondThisTime = getExtendedEndTime(beyondThisTime); }
@@ -139,7 +139,6 @@ class DeltaFreeKnotGenerator : public KnotGenerator<typename TimePolicy_::time_t
 			_beyondThisTime = getExtendedEndTime(beyondThisTime);
 	}
 
-	DeltaFreeKnotGenerator() = default;
 	virtual bool hasNextKnot() const { return _lastKnot < _beyondThisTime; };
 	virtual time_t getNextKnot()
 	{

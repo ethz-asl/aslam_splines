@@ -551,8 +551,7 @@ void testDiffManifoldBSplineFitting(int numberOfSegments, double tolerance = 1E-
 
 	BSplineFitter<TestSpline>::initUniformSplineWithKnotDelta(rbspline, timesV, interpolationPointsV, duration / numberOfSegments, lambda);
 	auto knotGeneratorOrg = rbspline2.initConstantUniformSplineWithKnotDelta(minTime, maxTime, duration / numberOfSegments, identity);
-	decltype(knotGeneratorOrg) knotGenerator;
-	knotGenerator = knotGeneratorOrg; // test knotGenerator copying.
+	auto knotGenerator = knotGeneratorOrg; // test knotGenerator copying.
 
 	ASSERT_EQ(rbspline2.getNumValidTimeSegments(), numberOfSegments);
 	BSplineFitter<TestSpline>::fitSpline(rbspline2, timesV, interpolationPointsV, lambda);

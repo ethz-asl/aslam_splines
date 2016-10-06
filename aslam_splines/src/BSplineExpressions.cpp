@@ -440,53 +440,36 @@ namespace aslam {
             
         }
 
+        BSplineAngularAccelerationBodyFrameExpressionNode::BSplineAngularAccelerationBodyFrameExpressionNode(bsplines::BSplinePose * spline, const std::vector<aslam::backend::DesignVariable *> & designVariables, double time) :
+        _spline(spline), _designVariables(designVariables), _time(time)
+        {
 
+        }
 
+        BSplineAngularAccelerationBodyFrameExpressionNode::~BSplineAngularAccelerationBodyFrameExpressionNode()
+        {
 
+        }
 
-/*
-///////////////////
-BSplineAngularAccelerationBodyFrameExpressionNode::BSplineAngularAccelerationBodyFrameExpressionNode(bsplines::BSplinePose * spline, const std::vector<aslam::backend::DesignVariable *> & designVariables, double time) :
-_spline(spline), _designVariables(designVariables), _time(time)
-{
+        Eigen::Vector3d BSplineAngularAccelerationBodyFrameExpressionNode::evaluateImplementation() const {
+          return _spline->angularAccelerationBodyFrame(_time);
+        }
 
-}
+        void BSplineAngularAccelerationBodyFrameExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const {
+          Eigen::MatrixXd J;
+          _spline->angularAccelerationBodyFrameAndJacobian(_time, &J, NULL);
+          SM_ASSERT_EQ_DBG(aslam::Exception, J.rows(), 3, "Bad"); SM_ASSERT_EQ_DBG(aslam::Exception, J.cols(), 6 * (int)_designVariables.size(), "Bad");
 
-BSplineAngularAccelerationBodyFrameExpressionNode::~BSplineAngularAccelerationBodyFrameExpressionNode()
-{
+          for (size_t i = 0; i < _designVariables.size(); ++i) {
+            outJacobians.add(_designVariables[i], J.block<3, 6>(0, i * 6));
+          }
+        }
 
-}
-
-Eigen::Vector3d BSplineAngularAccelerationBodyFrameExpressionNode::evaluateImplementation() const
-{
-
-return _spline->angularAccelerationBodyFrame(_time);
-}
-
-void BSplineAngularAccelerationBodyFrameExpressionNode::evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const
-{
-Eigen::MatrixXd J;
-_spline->angularAccelerationBodyFrameAndJacobian(_time, &J, NULL);
-SM_ASSERT_EQ_DBG(aslam::Exception, J.rows(), 3, "Bad");
-SM_ASSERT_EQ_DBG(aslam::Exception, J.cols(), 6 * (int)_designVariables.size(), "Bad");
-
-for(size_t i = 0; i < _designVariables.size(); ++i)
-{
-outJacobians.add(_designVariables[i], J.block<3,6>(0,i*6) );
-}
-}
-
-void BSplineAngularAccelerationBodyFrameExpressionNode::getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const
-{
-for(size_t i = 0; i < _designVariables.size(); ++i)
-{
-designVariables.insert(_designVariables[i]);
-}
-}
-*/
-
-
-
+        void BSplineAngularAccelerationBodyFrameExpressionNode::getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const {
+          for (size_t i = 0; i < _designVariables.size(); ++i) {
+            designVariables.insert(_designVariables[i]);
+          }
+        }
 
     } // namespace splines
 } // namespace aslam

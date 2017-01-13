@@ -5,7 +5,7 @@
   <description>aslam_splines_python</description>
   <maintainer email="paulfurgale@mavt.ethz.ch">Paul Furgale</maintainer>
   <author>Paul Furgale</author>
-  <license>New BSD</license>
+  <license>BSD-3-Clause</license>
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>catkin_simple</buildtool_depend>
 

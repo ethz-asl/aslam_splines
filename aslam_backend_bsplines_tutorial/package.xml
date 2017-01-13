@@ -5,7 +5,7 @@
   <description>aslam_backend_bsplines_tutorial</description>
   <maintainer email="mathias.buerki@mavt.ethz.ch">Mathias Buerki</maintainer>
   <author>Mathias Buerki</author>
-  <license>New BSD</license>
+  <license>BSD-3-Clause</license>
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>catkin_simple</buildtool_depend>
   <build_depend>aslam_backend</build_depend>

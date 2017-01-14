@@ -138,7 +138,7 @@ int main(int argc, char ** argv)
 //      options.doLevenbergMarquardt = true;
       // Force it to over-optimize
       options.convergenceDeltaX = 1e-12;
-      options.convergenceDeltaJ = 1e-12;
+      options.convergenceDeltaError = 1e-12;
       // Then create the optimizer and go!
       aslam::backend::Optimizer2 optimizer(options);
       optimizer.setProblem(problem);

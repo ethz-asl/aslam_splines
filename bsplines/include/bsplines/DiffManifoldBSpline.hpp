@@ -123,7 +123,8 @@ namespace bsplines {
 		};
 
 		template <typename Spline>
-		struct AssertInitializedSpline{
+		class AssertInitializedSpline{
+		 public:
 			AssertInitializedSpline(const Spline & s){
 				s.assertEvaluable();
 			}

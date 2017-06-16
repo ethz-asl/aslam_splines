@@ -17,7 +17,6 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<Facto
 	public:
 		ExpressionNode(const DataSharedPtr & dataPtr) : _dataPtr(dataPtr){}
 	private:
-		typedef typename node_t::vector_t vector_t;
 		const DataSharedPtr _dataPtr;
 		inline void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule) const {
 			const int dimension=_dataPtr->getSpline().getDimension(), pointSize = dimension, splineOrder = _dataPtr->getSpline().getSplineOrder();
@@ -38,7 +37,7 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<Facto
 		}
 
 	protected:
-		virtual vector_t evaluateImplementation() const {
+		virtual node_t::vector_t evaluateImplementation() const {
 			return _dataPtr->getEvaluator().evalAngularVelocity();
 		}
 
@@ -64,7 +63,6 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<Facto
 
 	class ExpressionNode : public node_t {
 	private:
-		typedef typename node_t::vector_t vector_t;
 		_CLASS::ExpressionFactory<FactoryData_>::DataSharedPtr _dataPtr;
 	public:
 		ExpressionNode(const DataSharedPtr & dataPtr) : _dataPtr(dataPtr){}
@@ -89,7 +87,7 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<Facto
 		}
 
 	protected:
-		virtual vector_t evaluateImplementation() const {
+		virtual node_t::vector_t evaluateImplementation() const {
 			return _dataPtr->getEvaluator().evalAngularAcceleration();
 		}
 

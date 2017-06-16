@@ -44,7 +44,7 @@ namespace manifolds {
 	}
 
 	_TEMPLATE
-	void _CLASS::dlogInto(const point_t & point, const tangent_vector_t & vec, dmatrix_transposed_t & result) const{
+	void _CLASS::dlogInto(const point_t & /*point*/, const tangent_vector_t & /*vec*/, dmatrix_transposed_t & result) const{
 		result = dmatrix_t::Identity(result.rows(), result.cols());
 	}
 

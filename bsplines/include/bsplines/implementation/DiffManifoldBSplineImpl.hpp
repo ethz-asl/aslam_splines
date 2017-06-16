@@ -597,7 +597,7 @@ namespace bsplines {
 
 		const auto twiceSplineOrder = getSplineOrder() * eigenTools::DynamicOrTemplateInt<2>();
 		typedef decltype(twiceSplineOrder) TwiceSplineOrder;
-		Eigen::Matrix<double, TwiceSplineOrder::VALUE, 1> vals(twiceSplineOrder);
+		Eigen::Matrix<double, TwiceSplineOrder::VALUE, 1> vals(static_cast<int>(twiceSplineOrder));
 		for (int i = 0, n = vals.rows(); i < n; ++i)
 		{
 			vals[i] = 1.0/(i + 1.0);
@@ -732,7 +732,7 @@ namespace bsplines {
 	template <int IMaximalDerivativeOrder>
 	_CLASS::Evaluator<IMaximalDerivativeOrder >::Evaluator(const spline_t & spline, const time_t & t) :
 		internal::AssertInitializedSpline<spline_t>(spline),
-		_tmp(spline.getSplineOrder()),
+		_tmp(static_cast<int>(spline.getSplineOrder())),
 		_spline(spline),
 		_t(t),
 		_ti(spline.getSegmentIterator(t)),
@@ -776,7 +776,7 @@ namespace bsplines {
 	template <int IMaximalDerivativeOrder>
 	inline void _CLASS::Evaluator<IMaximalDerivativeOrder>::computeLocalBiInto(SplineOrderVector & ret, int derivativeOrder) const
 	{
-		SplineOrderVector u(_spline.getSplineOrder());
+		SplineOrderVector u(static_cast<int>(_spline.getSplineOrder()));
 		computeUInto(derivativeOrder, u);
 		fastMultiplyAtransposedTimesBInto(_ti->getBasisMatrix(), u, ret);
 	}
@@ -904,7 +904,7 @@ namespace bsplines {
 	_TEMPLATE
 	template <int IMaximalDerivativeOrder>
 	inline void _CLASS::Evaluator<IMaximalDerivativeOrder>::computeLocalViInto(SplineOrderVector& localVi) const {
-		SplineOrderVector v(_spline.getSplineOrder());
+		SplineOrderVector v(static_cast<int>(_spline.getSplineOrder()));
 		computeVInto(v);
 		spline_t::computeLocalViInto(v, localVi, _ti);
 	}

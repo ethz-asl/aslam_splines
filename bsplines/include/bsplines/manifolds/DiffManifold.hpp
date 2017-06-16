@@ -66,13 +66,13 @@ namespace manifolds {
 			typedef typename Types::point_t point_t;
 			typedef typename Types::tangent_vector_t tangent_vector_t;
 			typedef typename Types::Manifold Manifold;
-			inline static void update(const Manifold & manifold, point_t & point, const tangent_vector_t & vec){
+			inline static void update(const Manifold & /*manifold*/, point_t & /*point*/, const tangent_vector_t & /*vec*/){
 				SM_THROW(std::runtime_error, NotImplementedMessage);
 			}
-			inline static void minimalDifference(const Manifold &, const Eigen::MatrixXd& xHat, const typename Manifold::point_t & to, Eigen::VectorXd& outDifference) {
+			inline static void minimalDifference(const Manifold &, const Eigen::MatrixXd& /*xHat*/, const typename Manifold::point_t & /*to*/, Eigen::VectorXd& /*outDifference*/) {
 				SM_THROW(std::runtime_error, NotImplementedMessage);
 			};
-			inline static void minimalDifferenceAndJacobian(const Manifold &, const Eigen::MatrixXd& xHat, const typename Manifold::point_t & to, Eigen::VectorXd& outDifference, Eigen::MatrixXd& outJacobian) {
+			inline static void minimalDifferenceAndJacobian(const Manifold &, const Eigen::MatrixXd& /*xHat*/, const typename Manifold::point_t & /*to*/, Eigen::VectorXd& /*outDifference*/, Eigen::MatrixXd& /*outJacobian*/) {
 				SM_THROW(std::runtime_error, NotImplementedMessage);
 			};
 		 private:

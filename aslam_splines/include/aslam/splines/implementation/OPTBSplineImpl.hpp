@@ -144,7 +144,6 @@ typename _CLASS::expression_t _CLASS::ExpressionFactory<FactoryData_>::getValueE
 	typedef aslam::backend::VectorExpressionNode<PointSize> node_t;
 
 	class ExpressionNode : public node_t {
-		typedef typename node_t::vector_t vector_t;
 		DataSharedPtr _dataPtr;
 		const int _derivativeOrder;
 	public:
@@ -174,11 +173,11 @@ typename _CLASS::expression_t _CLASS::ExpressionFactory<FactoryData_>::getValueE
 			}
 		}
 
-		virtual vector_t evaluateImplementation() const {
+		virtual typename node_t::vector_t evaluateImplementation() const override {
 			return _dataPtr->getEvaluator().evalD(_derivativeOrder);
 		}
 
-		virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const {
+		virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const override {
 			evaluateJacobiansImplementation(outJacobians, NULL);
 		}
 
@@ -186,7 +185,7 @@ typename _CLASS::expression_t _CLASS::ExpressionFactory<FactoryData_>::getValueE
 			evaluateJacobiansImplementation(outJacobians, &applyChainRule);
 		}
 
-		virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const {
+		virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const override {
 			_dataPtr->getDesignVariables(designVariables);
 		}
 	};

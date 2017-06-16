@@ -5,6 +5,14 @@ find_package(catkin_simple REQUIRED)
 
 catkin_simple(ALL_DEPS_REQUIRED)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+
+# enable C++11 support
+if(CMAKE_VERSION VERSION_LESS "3.1")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-deprecated-register ")
+else()
+  set(CMAKE_CXX_STANDARD 11)
+endif()
 
 
 cs_add_library(${PROJECT_NAME} 

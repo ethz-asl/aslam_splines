@@ -5,6 +5,7 @@ import numpy
 import scipy
 import scipy.interpolate.fitpack as fp
 import scipy.integrate as si
+import scipy.misc
 import bisect;
 
 import unittest

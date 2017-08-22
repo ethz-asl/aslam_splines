@@ -32,6 +32,7 @@ public:
 	class NodeCacheSlot;
 
 	class PerNodeCache{
+	 public:
 		class PerNodeCacheEntry{
 		public:
 			EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -39,7 +40,6 @@ public:
 			bool isValid();
 		};
 
-	public:
 		template <typename TValue> friend class PerNodeCacheValue;
 		template <typename TValue> friend class NodeCacheSlot;
 

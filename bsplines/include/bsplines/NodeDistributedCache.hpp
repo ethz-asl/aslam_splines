@@ -40,9 +40,6 @@ public:
 			bool isValid();
 		};
 
-		template <typename TValue> friend class PerNodeCacheValue;
-		template <typename TValue> friend class NodeCacheSlot;
-
 		template <typename TValue>
 		class PerNodeCacheValue : public PerNodeCacheEntry {
 			TValue _value;
@@ -90,6 +87,10 @@ public:
 	private:
 		std::vector<PerNodeCacheEntry *> entries;
 
+		template <typename TValue> friend class PerNodeCacheValue;
+		template <typename TValue> friend class NodeCacheSlot;
+
+	public: //TODO This public should not be needed thanks to the friend declaration above. But clang++-3.8 disagrees!
 		PerNodeCacheEntry * & getEntry(size_t index){
 			if(index >= entries.size()){
 				entries.resize(index+1);

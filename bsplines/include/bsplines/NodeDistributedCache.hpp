@@ -32,16 +32,13 @@ public:
 	class NodeCacheSlot;
 
 	class PerNodeCache{
+	 public:
 		class PerNodeCacheEntry{
 		public:
 			EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 			void setValid(bool valid);
 			bool isValid();
 		};
-
-	public:
-		template <typename TValue> friend class PerNodeCacheValue;
-		template <typename TValue> friend class NodeCacheSlot;
 
 		template <typename TValue>
 		class PerNodeCacheValue : public PerNodeCacheEntry {
@@ -90,6 +87,10 @@ public:
 	private:
 		std::vector<PerNodeCacheEntry *> entries;
 
+		template <typename TValue> friend class PerNodeCacheValue;
+		template <typename TValue> friend class NodeCacheSlot;
+
+	public: //TODO This public should not be needed thanks to the friend declaration above. But clang++-3.8 disagrees!
 		PerNodeCacheEntry * & getEntry(size_t index){
 			if(index >= entries.size()){
 				entries.resize(index+1);

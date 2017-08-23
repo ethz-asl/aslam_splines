@@ -27,7 +27,7 @@ namespace aslam {
             virtual ~BSplineTransformationExpressionNode();
 
         protected:
-            virtual Eigen::Matrix4d toTransformationMatrixImplementation();
+            virtual Eigen::Matrix4d toTransformationMatrixImplementation() override;
             virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const override;
             virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const override;
 
@@ -198,7 +198,7 @@ namespace aslam {
             virtual ~TransformationTimeOffsetExpressionNode();
 
         protected:
-            virtual Eigen::Matrix4d toTransformationMatrixImplementation();
+            virtual Eigen::Matrix4d toTransformationMatrixImplementation() override;
             virtual void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians) const override;
             virtual void getDesignVariablesImplementation(aslam::backend::DesignVariable::set_t & designVariables) const override;
 

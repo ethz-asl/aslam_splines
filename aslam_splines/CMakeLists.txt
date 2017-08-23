@@ -4,8 +4,22 @@ project(aslam_splines)
 find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
-find_package(Boost REQUIRED COMPONENTS system )
+find_package(Boost REQUIRED COMPONENTS system)
+include_directories(${Boost_INCLUDE_DIRS})
 
+# enable warnings
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  # deprecated-register warnings are cause by old Eigen versions
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-register")
+endif()
+
+# enable C++11 support
+if(CMAKE_VERSION VERSION_LESS "3.1")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+else()
+  set(CMAKE_CXX_STANDARD 11)
+endif()
 
 cs_add_library(${PROJECT_NAME}
   src/BSplinePoseDesignVariable.cpp
@@ -14,10 +28,8 @@ cs_add_library(${PROJECT_NAME}
   src/BSplineRSExpressions.cpp
   src/EuclideanBSplineDesignVariable.cpp
 )
-
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 
-add_definitions(-DGTEST_USE_OWN_TR1_TUPLE=0)
 catkin_add_gtest(${PROJECT_NAME}_tests
   test/test_main.cpp
   test/TestBSplineExpressions.cpp

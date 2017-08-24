@@ -108,7 +108,7 @@ struct OPTSplineTester{
 	typedef typename TestBSpline::tangent_vector_t tangent_vector_t;
 	typedef typename TestBSpline::scalar_t scalar_t;
 	typedef typename TestBSpline::TimeExpression TimeExpression;
-	typedef GenericScalar<typename TestBSpline::TimeExpression::Scalar> TimeDesignVariable;
+	typedef GenericScalar<typename TimeExpression::Scalar> TimeDesignVariable;
 
 	constexpr static scalar_t eps = std::numeric_limits<scalar_t>::epsilon();
 
@@ -166,6 +166,14 @@ struct OPTSplineTester{
 		return (std::uintmax_t)TimePolicy::getOne();
 	}
 
+	static double toTimeScalar(double t){
+		return t;
+	}
+
+	static typename TimeExpression::Scalar toTimeScalar(NsecTimePolicy::time_t t){
+		return typename TimeExpression::Scalar::Numerator{t};
+	}
+
 	void testExpressions(){
 		const int pointSize = bspline.getPointSize();
 
@@ -174,16 +182,16 @@ struct OPTSplineTester{
 			time_t t = ((k % 2 == 0) ? ((double) (k / 2) / ((numberOfTimesToProbe - 1)/ 2)) : ((double) rand() / RAND_MAX)) * (duration * TimePolicy::getOne());
 			const int maxDerivativeOrder = MaxDerivative<typename TSplineMap::configuration_t, ISplineOrder>::VALUE;
 
-			TimeDesignVariable offsetVar(1000000L);
+			TimeDesignVariable offsetVar(1e-3);
 			offsetVar.setActive(true);
 
 			typename TestBSpline::TimeExpression
 					variableOffset(offsetVar.toExpression()),
 					constOffset(variableOffset.evaluate()),
-					timePoint(t),
+					timePoint(toTimeScalar(t)),
 					timeExpression(variableOffset - constOffset + timePoint);
 
-			ASSERT_DOUBLE_EQ(typename TestBSpline::TimeExpression::Scalar(t), timeExpression.evaluate());
+			ASSERT_DOUBLE_EQ(typename TestBSpline::TimeExpression::Scalar(toTimeScalar(t)), timeExpression.evaluate());
 
 			auto fact = bspline.template getExpressionFactoryAt<maxDerivativeOrder> (t);
 
@@ -528,6 +536,7 @@ class OPTBSplineTestSuiteT2 : public ::testing::Test  {
 		typedef typename TestBSpline::TimePolicy TimePolicy;
 		TestBSpline testSpline(Tester::createMyConf());
 		typedef typename TimePolicy::time_t time_t;
+
 		const time_t endTime = 4 * TimePolicy::getOne(), halfTime = endTime / 2;
 
 		auto zero = Eigen::Vector2d::Zero();
@@ -543,7 +552,7 @@ class OPTBSplineTestSuiteT2 : public ::testing::Test  {
 		OptimizationProblem problem;
 		testSpline.addDesignVariables(problem);
 
-		typename Tester::TimeDesignVariable timeVar(endTime/4);
+		typename Tester::TimeDesignVariable timeVar(Tester::toTimeScalar(endTime/4));
 		problem.addDesignVariable(&timeVar, false);
 		timeVar.setActive(true);
 
@@ -556,7 +565,7 @@ class OPTBSplineTestSuiteT2 : public ::testing::Test  {
 		opt.options().convergenceDeltaX = 1E-9;
 		opt.optimize();
 
-		ASSERT_NEAR(typename Tester::TimeDesignVariable::Scalar(halfTime), timeVar.toScalar(), 1E-5);
+		ASSERT_NEAR(typename Tester::TimeDesignVariable::Scalar(Tester::toTimeScalar(halfTime)), timeVar.toScalar(), 1E-5);
 	}
 
 	void testOptimizingEvaluationTimeLarge(){
@@ -614,7 +623,7 @@ class OPTBSplineTestSuiteT2 : public ::testing::Test  {
 				problem.addErrorTerm(toErrorTerm(convertToGME(estimate.template getExpressionFactoryAt<0>(times[i]).getValueExpression(0)) - GenericMatrixExpression<2, 1>(posMeasurement), Eigen::Matrix2d::Identity() / posNoiseMagnitude));
 
 				Vec velMeasurement = groundTrouth.template getEvaluatorAt<1>(times[i]).evalD(1) + Vec::Random() * velNoiseMagnitude;
-				problem.addErrorTerm(toErrorTerm(convertToGME(estimate.template getExpressionFactoryAt<1>(timeVar.toExpression() + GenericScalarExpression<TimeScalar>(TimeScalar(times[i]) - TimeScalar(realDelay)), 0, endTime).getValueExpression(1)) - GenericMatrixExpression<2, 1>(velMeasurement), Eigen::Matrix2d::Identity() / velNoiseMagnitude));
+				problem.addErrorTerm(toErrorTerm(convertToGME(estimate.template getExpressionFactoryAt<1>(timeVar.toExpression() + GenericScalarExpression<TimeScalar>(Tester::toTimeScalar(times[i]) - TimeScalar(Tester::toTimeScalar(realDelay))), 0, endTime).getValueExpression(1)) - GenericMatrixExpression<2, 1>(velMeasurement), Eigen::Matrix2d::Identity() / velNoiseMagnitude));
 			}
 		}
 		BSplineFitter<TestBSpline>::fitSpline(estimate, times, points, 0.01);

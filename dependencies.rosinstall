@@ -2,8 +2,8 @@
     local-name: catkin_simple
     uri: https://github.com/catkin/catkin_simple.git
 - git:
-    local-name: Schweizer-Messer
-    uri: https://github.com/ethz-asl/Schweizer-Messer.git
+    local-name: schweizer_messer
+    uri: https://github.com/ethz-asl/schweizer_messer.git
 - git:
     local-name: eigen_catkin
     uri: https://github.com/ethz-asl/eigen_catkin.git

@@ -878,7 +878,10 @@ namespace bsplines {
 		const auto splineOrder = _spline.getSplineOrder();
 
 		if(NeedsCumulativeBasisMatrices == BCumulative && derivativeOrder < NumberOfPreparedDerivatives){
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
 			return _localBi[derivativeOrder];
+#pragma GCC diagnostic pop
 		}
 		else {
 			if(derivativeOrder >= splineOrder) {

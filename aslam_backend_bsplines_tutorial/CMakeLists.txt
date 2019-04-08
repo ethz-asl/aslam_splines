@@ -9,10 +9,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 # enable warnings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  # deprecated-register warnings are cause by old Eigen versions
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-register")
-endif()
 
 # enable C++11 support
 if(CMAKE_VERSION VERSION_LESS "3.1")
@@ -28,7 +24,6 @@ cs_add_library(${PROJECT_NAME}
 )
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 
-
 cs_add_executable(${PROJECT_NAME}_exec
   src/exampleBST.cpp
 )
@@ -36,8 +31,8 @@ target_link_libraries(${PROJECT_NAME}_exec ${PROJECT_NAME})
 
 if(CATKIN_ENABLE_TESTING)
   catkin_add_gtest(${PROJECT_NAME}_tests
-    test/test_main.cpp
     test/TestErrorTestMotionBST.cpp
+    test/test_main.cpp
   )
   if(TARGET ${PROJECT_NAME}_tests)
     target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})

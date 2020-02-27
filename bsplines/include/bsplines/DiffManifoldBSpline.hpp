@@ -394,8 +394,8 @@ namespace bsplines {
 			const double _relativePositionInSegment;
 
 			inline void computeLocalViInto(SplineOrderVector & localVi) const;
-			inline const SplineOrderVector & getLocalBi(int derivativeOrder = 0) const;
-			inline const SplineOrderVector & getLocalCumulativeBi(int derivativeOrder = 0) const;
+			inline const SplineOrderVector getLocalBi(int derivativeOrder = 0) const;
+			inline const SplineOrderVector getLocalCumulativeBi(int derivativeOrder = 0) const;
 			inline void computeLocalBiInto(SplineOrderVector & ret, int derivativeOrder = 0) const;
 			inline void computeLocalCumulativeBiInto(SplineOrderVector & ret, int derivativeOrder = 0) const;
 			inline void computeLocalCumulativeBiInto(const SplineOrderVector & localBi, SplineOrderVector & ret, int derivativeOrder = 0, bool argumentsAreTheSame = false) const;
@@ -404,7 +404,7 @@ namespace bsplines {
 			inline void computeVInto(SplineOrderVector & v) const;
 
 			template<bool BCumulative> inline void computeLocalBiIntoT(SplineOrderVector& ret, int derivativeOrder) const;
-			template<bool BCumulative> inline const SplineOrderVector& getLocalBiT(int derivativeOrder = 0) const;
+			template<bool BCumulative> inline const SplineOrderVector getLocalBiT(int derivativeOrder = 0) const;
 
 			//friends:
 			template<typename TSpline> friend class BSplineFitter;

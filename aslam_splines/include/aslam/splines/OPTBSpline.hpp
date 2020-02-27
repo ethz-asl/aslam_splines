@@ -8,6 +8,8 @@
 #ifndef OPTBSPLINE_HPP_
 #define OPTBSPLINE_HPP_
 
+#include <mutex>
+
 #include <aslam/backend/DesignVariableMappedVector.hpp>
 #include <bsplines/DiffManifoldBSpline.hpp>
 #include <Eigen/StdVector>
@@ -195,12 +197,19 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 	class ConstTimeFactoryData {
 	 public:
 		typedef typename spline_t::template Evaluator<IMaxDerivativeOrder> eval_t;
+		ConstTimeFactoryData(ConstTimeFactoryData&&) = default;
+		ConstTimeFactoryData(const ConstTimeFactoryData& other) :
+			_eval{other._eval}{}
+
+		ConstTimeFactoryData& operator=(const ConstTimeFactoryData&) = delete; //TODO what about this
+		ConstTimeFactoryData& operator=(ConstTimeFactoryData&&) = default;
 		inline const eval_t & getEvaluator() const { return _eval; };
 		inline const spline_t & getSpline() const { return _eval.getSpline(); };
 		inline ConstTimeFactoryData(const spline_t & spline, time_t t) : _eval(spline, t) {}
 		inline void getDesignVariables(aslam::backend::DesignVariable::set_t & designVariables) const { for(auto & i : _eval) { designVariables.insert(const_cast<aslam::backend::DesignVariable *>(&i.getDesignVariable())); }}
 		inline bool hasTimeExpression(){ return false; }
 		inline const TimeExpression & getTimeExpression(){ throw std::runtime_error("not implemented"); }
+		std::mutex evalLock;
 	 protected:
 		inline ConstTimeFactoryData() = default;
 	 private:
@@ -219,6 +228,16 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 			SM_ASSERT_LE(typename spline_t::Exception, upperBound, spline.getMaxTime(), "upper bound must be <= max time of spline.");
 		}
 		~TimeExpressionFactoryData(){ delete evalPtr; }
+		TimeExpressionFactoryData(TimeExpressionFactoryData&&) = default;
+		TimeExpressionFactoryData(const TimeExpressionFactoryData& other) :
+			_timeExp{other._timeExp},
+			_lowerBound{other._lowerBound},
+			_upperBound{other._upperBound},
+			evalPtr{other.evalPtr ? new eval_t(*other.evalPtr) : nullptr},
+			_spline{other._spline}{}
+
+		TimeExpressionFactoryData& operator=(const TimeExpressionFactoryData&) = delete;
+		TimeExpressionFactoryData& operator=(TimeExpressionFactoryData&&) = default;
 		inline const spline_t & getSpline() const { return _spline; };
 		inline void getDesignVariables(aslam::backend::DesignVariable::set_t & designVariables) const;
 		const eval_t & getEvaluator() const;
@@ -227,6 +246,7 @@ class DiffManifoldBSpline<aslam::splines::DesignVariableSegmentBSplineConf<TModi
 		/* the following is only public because of a bug in gcc4.6's c++0x impl. */
 		inline SegmentConstIterator begin() const { return _spline.getFirstRelevantSegmentByLast(_spline.getSegmentIterator(std::max(_spline.getMinTime(), _lowerBound))); }
 		inline SegmentConstIterator end() const { auto end = _spline.getSegmentIterator(std::min(_spline.getMaxTime(),_upperBound)); if(end != _spline.end()) end++; return end; }
+		std::mutex evalLock;
 	 private:
 		friend class DiffManifoldBSpline;
 		TimeExpression _timeExp;

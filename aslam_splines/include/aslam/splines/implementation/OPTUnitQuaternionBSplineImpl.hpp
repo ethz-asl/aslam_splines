@@ -1,6 +1,8 @@
 #ifndef OPTUNITQUATERNIONBSPLINEIMPL_HPP_
 #define OPTUNITQUATERNIONBSPLINEIMPL_HPP_
 
+#include <mutex>
+
 #include "aslam/backend/JacobianContainer.hpp"
 
 namespace bsplines {
@@ -21,6 +23,8 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<Facto
 		inline void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule) const {
 			const int dimension=_dataPtr->getSpline().getDimension(), pointSize = dimension, splineOrder = _dataPtr->getSpline().getSplineOrder();
 			typename _CLASS::angular_jacobian_t J(pointSize, dimension * splineOrder);
+			//TODO lock dataPtr
+			std::lock_guard<std::mutex> mlock(_dataPtr->evalLock);
 			auto & eval = _dataPtr->getEvaluator();
 			eval.evalAngularVelocityJacobian(J);
 
@@ -38,6 +42,8 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<Facto
 
 	protected:
 		virtual node_t::vector_t evaluateImplementation() const {
+			//TODO lock dataPtr
+			std::lock_guard<std::mutex> mlock(_dataPtr->evalLock);
 			return _dataPtr->getEvaluator().evalAngularVelocity();
 		}
 
@@ -71,6 +77,8 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<Facto
 		inline void evaluateJacobiansImplementation(aslam::backend::JacobianContainer & outJacobians, const Eigen::MatrixXd * applyChainRule) const {
 			const int dimension=_dataPtr->getSpline().getDimension(), pointSize = dimension, splineOrder = _dataPtr->getSpline().getSplineOrder();
 			typename _CLASS::angular_jacobian_t J(pointSize, dimension * splineOrder);
+			//TODO lock dataPtr
+			std::lock_guard<std::mutex> mlock(_dataPtr->evalLock);
 			auto & eval = _dataPtr->getEvaluator();
 
 			eval.evalAngularAccelerationJacobian(J);
@@ -88,6 +96,8 @@ typename _CLASS::angular_derivative_expression_t _CLASS::ExpressionFactory<Facto
 
 	protected:
 		virtual node_t::vector_t evaluateImplementation() const {
+			//TODO lock dataPtr
+			std::lock_guard<std::mutex> mlock(_dataPtr->evalLock);
 			return _dataPtr->getEvaluator().evalAngularAcceleration();
 		}
 

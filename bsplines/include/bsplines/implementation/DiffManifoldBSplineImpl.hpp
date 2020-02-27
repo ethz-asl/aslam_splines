@@ -870,10 +870,12 @@ namespace bsplines {
 			computeLocalBiInto(ret, derivativeOrder);
 	}
 
+	//TODO(huberya): think about how to make caching thread save and reenable it
+	//actually I'm not even sure if caching was working before
 	_TEMPLATE
 	template <int IMaximalDerivativeOrder>
 	template<bool BCumulative>
-	inline const typename _CLASS::SplineOrderVector & _CLASS::Evaluator<IMaximalDerivativeOrder>::getLocalBiT(int derivativeOrder) const {
+	inline const typename _CLASS::SplineOrderVector _CLASS::Evaluator<IMaximalDerivativeOrder>::getLocalBiT(int derivativeOrder) const {
 		SM_ASSERT_GE_DBG(Exception, derivativeOrder, 0, "");
 		const auto splineOrder = _spline.getSplineOrder();
 
@@ -885,11 +887,12 @@ namespace bsplines {
 		}
 		else {
 			if(derivativeOrder >= splineOrder) {
-				return _tmp = SplineOrderVector::Zero(splineOrder);
+				return SplineOrderVector::Zero(splineOrder);
 			}
 			else {
-				computeLocalBiIntoT<BCumulative>(_tmp, derivativeOrder);
-				return _tmp;
+				SplineOrderVector tmp(static_cast<int>(_spline.getSplineOrder()));
+				computeLocalBiIntoT<BCumulative>(tmp, derivativeOrder);
+				return tmp;
 			}
 		}
 	}
@@ -915,14 +918,14 @@ namespace bsplines {
 
 	_TEMPLATE
 	template <int IMaximalDerivativeOrder>
-	inline const typename _CLASS::SplineOrderVector & _CLASS::Evaluator<IMaximalDerivativeOrder>::getLocalBi(int derivativeOrder) const {
+	inline const typename _CLASS::SplineOrderVector _CLASS::Evaluator<IMaximalDerivativeOrder>::getLocalBi(int derivativeOrder) const {
 		return getLocalBiT<false>(derivativeOrder);
 	}
 
 
 	_TEMPLATE
 	template <int IMaximalDerivativeOrder>
-	inline const typename _CLASS::SplineOrderVector & _CLASS::Evaluator<IMaximalDerivativeOrder>::getLocalCumulativeBi(int derivativeOrder) const {
+	inline const typename _CLASS::SplineOrderVector _CLASS::Evaluator<IMaximalDerivativeOrder>::getLocalCumulativeBi(int derivativeOrder) const {
 		return getLocalBiT<true>(derivativeOrder);
 	}
 

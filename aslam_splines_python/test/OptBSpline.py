@@ -68,7 +68,7 @@ def numericJacobian(spline, t, knots):
     for i in range(0, order):
         vI = i + iStart;
         orgCV = numpy.matrix(vertices[vI]);
-        jacobian[:, i] = scipy.misc.derivative(lambda(cV) : evalSplineWithUpdatedCVs(spline, vertices, vI, cV, orgCV, t), orgCV);
+        jacobian[:, i] = scipy.misc.derivative(lambda cV : evalSplineWithUpdatedCVs(spline, vertices, vI, cV, orgCV, t), orgCV);
         vertices[vI] = orgCV;
         
     spline.setControlVertices(vertices)
@@ -182,7 +182,8 @@ class TestOptBSpline(BSplineTestCase):
                 a = aspl.eval(i)
                 for j in range(0,f.shape[0]):
                     a = aspl.evalD(i,j)
-                    self.assertAlmostEqual(a, f[j])
+                    self.assertEqual(a.shape, (1,))
+                    self.assertAlmostEqual(a[0], f[j])
 
     def test_random(self):
         numpy.random.seed(3)
@@ -204,7 +205,8 @@ class TestOptBSpline(BSplineTestCase):
                 a = aspl.eval(i)
                 for j in range(0,f.shape[0]):
                     a = aspl.evalD(i,j)
-                    self.assertAlmostEqual(a, f[j])
+                    self.assertEqual(a.shape, (1,))
+                    self.assertAlmostEqual(a[0], f[j])
 
     def test_integral(self):
         for order in range(2,8,2):
@@ -225,7 +227,8 @@ class TestOptBSpline(BSplineTestCase):
                         #print "Eval at %f\n" % (i)
                         f = fp.splint(a,float(i),fspl)
                         b = aspl.evalI(a,i)
-                        self.assertAlmostEqual(b, f, msg="order %d spline integral evaluated on [%f,%f] (%f != %f) was not right" % (order, a,i,float(b),f))
+                        self.assertEqual(b.shape, (1,))
+                        self.assertAlmostEqual(b[0], f, msg="order %d spline integral evaluated on [%f,%f] (%f != %f) was not right" % (order, a,i,float(b),f))
    
     def test_jacobian(self):
         for order in range(2,8,2):
@@ -269,7 +272,8 @@ class TestOptBSpline(BSplineTestCase):
                     #print "Eval at %f\n" % (i)
                     f = fp.splint(a,float(i),fspl)
                     b = aspl.evalI(a,i)
-                    self.assertAlmostEqual(b, f, msg="order %d spline integral evaluated on [%f,%f] (%f != %f) was not right" % (order, a,i,float(b),f))
+                    self.assertEqual(b.shape, (1,))
+                    self.assertAlmostEqual(b[0], f, msg="order %d spline integral evaluated on [%f,%f] (%f != %f) was not right" % (order, a,i,float(b),f))
     
     def test_constant_init(self):
         tmin = 0.0

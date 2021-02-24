@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 import bsplines
 import numpy
 import scipy.interpolate.fitpack as fp
@@ -508,7 +510,7 @@ class TestBSplines(BSplineTestCase):
                 
                 for a in numpy.arange(aspl.t_min(),aspl.t_max()-1e-15,0.4*dt):
                     for i in numpy.arange(aspl.t_min(), aspl.t_max()-1e-15, 0.4*dt):
-                        print "Eval at %f\n" % (i)
+                        print("Eval at %f\n" % (i))
                         f = fp.splint(a,float(i),fspl)
                         b = aspl.evalI(a,i)
                         self.assertAlmostEqual(b, f, msg="order %d spline integral evaluated on [%f,%f] (%f != %f) was not right" % (order, a,i,float(b),f))
@@ -530,7 +532,7 @@ class TestBSplines(BSplineTestCase):
             
             for a in numpy.arange(aspl.t_min(),aspl.t_max()-1e-15,0.4):
                 for i in numpy.arange(aspl.t_min(), aspl.t_max()-1e-15, 0.4):
-                    print "Eval at %f\n" % (i)
+                    print("Eval at %f\n" % (i))
                     f = fp.splint(a,float(i),fspl)
                     b = aspl.evalI(a,i)
                     self.assertAlmostEqual(b, f, msg="order %d spline integral evaluated on [%f,%f] (%f != %f) was not right" % (order, a,i,float(b),f))
@@ -557,7 +559,7 @@ class TestBSplines(BSplineTestCase):
             
             for a in numpy.arange(aspl.t_min(),aspl.t_max()-1e-15,0.4):
                 for i in numpy.arange(aspl.t_min(), aspl.t_max()-1e-15, 0.4):
-                    print "Eval at %f\n" % (i)
+                    print("Eval at %f\n" % (i))
                     f = fp.splint(a,float(i),fspl)
                     b = aspl.evalI(a,i)
                     self.assertAlmostEqual(b, f, msg="order %d spline integral evaluated on [%f,%f] (%f != %f) was not right" % (order, a,i,float(b),f))
